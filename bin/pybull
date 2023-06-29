@@ -79,7 +79,7 @@ def main(args: list):
             func_group,
             confcode
         )
-        converged, mmff_energies = pybull.geo.generate_conformations(
+        unconverged, mmff_energies = pybull.geo.generate_conformations(
             func_bullvalene
         )     
         conformer_idxs = pybull.utils.argsort(mmff_energies)[:args.m_confs]  
@@ -88,12 +88,15 @@ def main(args: list):
         if not d.is_dir():
             d.mkdir()
         for idx in conformer_idxs:
-            if args.m_confs > 1:
-                xyz_f = d / f'./{confcode_str}_{idx}.xyz'
+            if unconverged[idx]:
+                pass
             else:
-                xyz_f = d / f'./{confcode_str}.xyz'
-            with open(xyz_f, 'w') as f:
-                f.write(Chem.MolToXYZBlock(func_bullvalene, confId = idx))
+                if args.m_confs > 1:
+                    xyz_f = d / f'./{confcode_str}_{idx}.xyz'
+                else:
+                    xyz_f = d / f'./{confcode_str}.xyz'
+                with open(xyz_f, 'w') as f:
+                    f.write(Chem.MolToXYZBlock(func_bullvalene, confId = idx))
     
     print(f'...done!\n')
 

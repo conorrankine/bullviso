@@ -89,6 +89,6 @@ def generate_conformations(
         numThreads = n_proc
     )
     
-    converged, mmff_energies = zip(*mmff_opt)
+    unconverged, mmff_energies = zip(*mmff_opt)
 
-    return converged, mmff_energies
+    return unconverged, mmff_energies
