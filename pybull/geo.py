@@ -49,6 +49,10 @@ def functionalise(
         Chem.Mol: A functionalised molecule.
     """
 
+    if len(confcode) != mol.GetNumAtoms():
+        raise ValueError('the configuration code `confcode` is incompatible '\
+            'with the molecule `mol`')
+
     func_sites = tuple(i for i in range(len(confcode)) if confcode[i])
 
     func_mol = Chem.Mol(mol)
@@ -58,7 +62,7 @@ def functionalise(
             Chem.CombineMols(func_mol, func_group)
         )
         func_mol.AddBond(
-            func_site, 10 + (i * func_group.GetNumAtoms()),
+            func_site, mol.GetNumAtoms() + (i * func_group.GetNumAtoms()),
             order = Chem.rdchem.BondType.SINGLE
         )
         func_mol = func_mol.GetMol()
