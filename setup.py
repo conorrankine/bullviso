@@ -22,7 +22,7 @@ setup(
     packages = find_packages(),
     scripts = ['bin/pybull'],
     install_requires = [
-        'numpy',
-        'rdkit'
+        'rdkit',
+        'tqdm'
     ]
 )
