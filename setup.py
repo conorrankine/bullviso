@@ -20,6 +20,7 @@ setup(
         ' molecular structures of functionalised bullvalenes'),
     licence = 'GPL',
     packages = find_packages(),
+    scripts = ['bin/pybull'],
     install_requires = [
         'numpy',
         'rdkit'
