@@ -22,6 +22,7 @@ this program.  If not, see <https://www.gnu.org/licenses/>.
 ###############################################################################
 
 import sys
+import tqdm
 from pathlib import Path
 from argparse import ArgumentParser
 from rdkit import Chem
@@ -73,7 +74,7 @@ def main(args: list):
     print(f'>> {len(confcodes)} unique structural isomer(s)\n')
 
     print(f'>> constructing structural isomer(s)...')
-    for confcode in confcodes:       
+    for confcode in tqdm.tqdm(confcodes, ncols = 80):       
         func_bullvalene = pybull.geo.functionalise(
             bullvalene,
             func_group,
@@ -97,6 +98,7 @@ def main(args: list):
                     xyz_f = d / f'./{confcode_str}.xyz'
                 with open(xyz_f, 'w') as f:
                     f.write(Chem.MolToXYZBlock(func_bullvalene, confId = idx))
+    print()
     
     print(f'...done!\n')
 
