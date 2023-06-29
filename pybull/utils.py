@@ -20,13 +20,13 @@ this program.  If not, see <https://www.gnu.org/licenses/>.
 ###############################################################################
 
 def rotate_tuple(t: tuple, n: int) -> tuple:
-    # rotates/rolls a tuple `t` forward by `n` positions, e.g. `rotate_tuple(
+    # rotates/rolls the tuple `t` forward by `n` positions, e.g. `rotate_tuple(
     # (1,2,3,4,5,6), 2)` returns the rotated/rolled tuple `(5,6,1,2,3,4)`
     
     return t[-n:] + t[:-n]
 
 def tuple_to_str(t: tuple) -> str:
-    # returns a representation of a tuple `t` as a string
+    # returns a representation of the tuple `t` as a string
 
     str_ = ''
     for t_ in t:
@@ -34,3 +34,7 @@ def tuple_to_str(t: tuple) -> str:
 
     return str_
 
+def argsort(t: tuple) -> list:
+    # returns the indices that would sort the tuple `t`
+
+    return sorted(range(len(t)), key = t.__getitem__)

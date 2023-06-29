@@ -25,7 +25,6 @@ import sys
 from pathlib import Path
 from argparse import ArgumentParser
 from rdkit import Chem
-from rdkit.Chem import AllChem
 import pybull.confcodes
 import pybull.geo
 import pybull.utils
@@ -43,6 +42,9 @@ def parse_args(args: list):
     )
     p.add_argument('--n_func_groups', '-n', type = int, default = 1,
         help = ('number of functional groups to add')
+    )
+    p.add_argument('--m_confs', '-m', type = int, default = 1,
+        help = ('number of conformations to generate')
     )
 
     args = p.parse_args()
@@ -71,29 +73,28 @@ def main(args: list):
     print(f'>> {len(confcodes)} unique structural isomer(s)\n')
 
     print(f'>> constructing structural isomer(s)...')
-    for confcode in confcodes:
+    for confcode in confcodes:       
         func_bullvalene = pybull.geo.functionalise(
             bullvalene,
             func_group,
             confcode
         )
-        AllChem.EmbedMultipleConfs(
-            func_bullvalene,
-            numConfs = 50,
-            randomSeed = 1,
-            pruneRmsThresh = 0.1
-        )
-        mmff_opt = AllChem.MMFFOptimizeMoleculeConfs(func_bullvalene)
+        converged, mmff_energies = pybull.geo.generate_conformations(
+            func_bullvalene
+        )     
+        conformer_idxs = pybull.utils.argsort(mmff_energies)[:args.m_confs]  
         confcode_str = pybull.utils.tuple_to_str(confcode)
         d = Path(f'./{confcode_str}')
         if not d.is_dir():
             d.mkdir()
-        with open(d / f'./{confcode_str}.xyz', 'w') as f:
-            f.write(
-                Chem.MolToXYZBlock(
-                    func_bullvalene, confId = mmff_opt.index(min(mmff_opt))
-                )
-            )
+        for idx in conformer_idxs:
+            if args.m_confs > 1:
+                xyz_f = d / f'./{confcode_str}_{idx}.xyz'
+            else:
+                xyz_f = d / f'./{confcode_str}.xyz'
+            with open(xyz_f, 'w') as f:
+                f.write(Chem.MolToXYZBlock(func_bullvalene, confId = idx))
+    
     print(f'...done!\n')
 
 ################################################################################

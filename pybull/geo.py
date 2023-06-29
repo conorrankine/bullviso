@@ -68,3 +68,27 @@ def functionalise(
     func_mol = Chem.AddHs(func_mol)
 
     return func_mol
+
+def generate_conformations(
+        mol: Chem.Mol,
+        n_proc: int = 1,
+        n_trial_confs: int = 10,
+        rms_threshold: float = 0.1
+) -> tuple:
+    
+    AllChem.EmbedMultipleConfs(
+        mol,
+        numThreads = n_proc,
+        numConfs = n_trial_confs,
+        pruneRmsThresh = rms_threshold,
+        randomSeed = 1,
+    )
+    
+    mmff_opt = AllChem.MMFFOptimizeMoleculeConfs(
+        mol,
+        numThreads = n_proc
+    )
+    
+    converged, mmff_energies = zip(*mmff_opt)
+
+    return converged, mmff_energies
