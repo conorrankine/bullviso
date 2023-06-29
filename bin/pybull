@@ -27,7 +27,7 @@ from pathlib import Path
 from argparse import ArgumentParser
 from rdkit import Chem
 import pybull.confcodes
-import pybull.geo
+import pybull.geoms
 import pybull.utils
 
 ###############################################################################
@@ -75,12 +75,12 @@ def main(args: list):
 
     print(f'>> constructing structural isomer(s)...')
     for confcode in tqdm.tqdm(confcodes, ncols = 80):       
-        func_bullvalene = pybull.geo.functionalise(
+        func_bullvalene = pybull.geoms.functionalise(
             bullvalene,
             func_group,
             confcode
         )
-        unconverged, mmff_energies = pybull.geo.generate_conformations(
+        unconverged, mmff_energies = pybull.geoms.generate_conformations(
             func_bullvalene
         )     
         conformer_idxs = pybull.utils.argsort(mmff_energies)[:args.m_confs]  
