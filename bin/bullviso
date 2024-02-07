@@ -26,9 +26,9 @@ import tqdm
 from pathlib import Path
 from argparse import ArgumentParser
 from rdkit import Chem
-import pybull.confcodes
-import pybull.geoms
-import pybull.utils
+import bullviso.confcodes
+import bullviso.geoms
+import bullviso.utils
 
 ###############################################################################
 ############################## ARGUMENT PARSING ###############################
@@ -70,21 +70,21 @@ def main(args: list):
 
     print(f'>> {args.n_func_groups} functional groups')
 
-    confcodes = pybull.confcodes.gen_confcodes(args.n_func_groups)
+    confcodes = bullviso.confcodes.gen_confcodes(args.n_func_groups)
     print(f'>> {len(confcodes)} unique structural isomer(s)\n')
 
     print(f'>> constructing structural isomer(s)...')
     for confcode in tqdm.tqdm(confcodes, ncols = 80):       
-        func_bullvalene = pybull.geoms.functionalise(
+        func_bullvalene = bullviso.geoms.functionalise(
             bullvalene,
             func_group,
             confcode
         )
-        unconverged, mmff_energies = pybull.geoms.generate_conformations(
+        unconverged, mmff_energies = bullviso.geoms.generate_conformations(
             func_bullvalene
         )     
-        conformer_idxs = pybull.utils.argsort(mmff_energies)[:args.m_confs]  
-        confcode_str = pybull.utils.tuple_to_str(confcode)
+        conformer_idxs = bullviso.utils.argsort(mmff_energies)[:args.m_confs]  
+        confcode_str = bullviso.utils.tuple_to_str(confcode)
         d = Path(f'./{confcode_str}')
         if not d.is_dir():
             d.mkdir()
