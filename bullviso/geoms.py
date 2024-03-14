@@ -75,8 +75,7 @@ def functionalise(
 
 def generate_conformations(
         mol: Chem.Mol,
-        n_threads: int = 1,
-        n_confs: int = 10,
+        n_confs: int = 50,
         rms_threshold: float = 0.1
 ) -> tuple:
     """
@@ -102,7 +101,6 @@ def generate_conformations(
     
     params = getattr(Chem.rdDistGeom, "ETKDGv2")()
     params.pruneRmsThresh = rms_threshold
-    params.randomSeed = 0
 
     AllChem.EmbedMultipleConfs(
         mol,
@@ -111,8 +109,7 @@ def generate_conformations(
     )
     
     uff_opt = AllChem.UFFOptimizeMoleculeConfs(
-        mol,
-        numThreads = n_threads
+        mol
     )
     
     unconverged, uff_energies = zip(*uff_opt)
