@@ -80,10 +80,10 @@ def main(args: list):
             func_group,
             confcode
         )
-        unconverged, mmff_energies = bullviso.geoms.generate_conformations(
+        unconverged, uff_energies = bullviso.geoms.generate_conformations(
             func_bullvalene
         )     
-        conformer_idxs = bullviso.utils.argsort(mmff_energies)[:args.m_confs]  
+        conformer_idxs = bullviso.utils.argsort(uff_energies)[:args.m_confs]  
         confcode_str = bullviso.utils.tuple_to_str(confcode)
         d = Path(f'./{confcode_str}')
         if not d.is_dir():

@@ -76,43 +76,45 @@ def functionalise(
 def generate_conformations(
         mol: Chem.Mol,
         n_threads: int = 1,
-        n_trial_confs: int = 10,
+        n_confs: int = 10,
         rms_threshold: float = 0.1
 ) -> tuple:
     """
-    Embeds `n_trial_confs` conformations of a Chem.Mol molecule `mol` with an
-    RMS threshold of `rms_threshold` and optimises the conformations using the
-    Merck Molecular Forcefield (MMFF); if a parallel installation of `rdkit` is
+    Embeds `n_confs` conformations of a Chem.Mol molecule `mol` with an RMS
+    threshold of `rms_threshold` and optimises the conformations using the
+    Universal Forcefield (UFF); if a parallel installation of `rdkit` is
     available, these routines can run parallelised over `n_threads` threads.
 
     Args:
         mol (Chem.Mol): A molecule to generate conformations for.
         n_threads (int, optional): The number of threads to use if a parallel
             installation of `rdkit` is available. Defaults to 1.
-        n_trial_confs (int, optional): The number of trial conformations of
-            `mol` to embed. Defaults to 10.
+        n_confs (int, optional): The number of conformations of `mol` to
+            embed. Defaults to 10.
         rms_threshold (float, optional): The RMS threshold for embedding the
             trial conformations of `mol`. Defaults to 0.1.
 
     Returns:
         unconverged (list): A list of binary elements (e.g. 1/0; True/False)
-            indicating MMFF convergence for each conformation.
-        mmff_energies (list): A list of MMFF energies for each conformation.
+            indicating UFF convergence for each conformation.
+        uff_energies (list): A list of UFF energies for each conformation.
     """
     
+    params = getattr(Chem.rdDistGeom, "ETKDGv2")()
+    params.pruneRmsThresh = rms_threshold
+    params.randomSeed = 0
+
     AllChem.EmbedMultipleConfs(
         mol,
-        numThreads = n_threads,
-        numConfs = n_trial_confs,
-        pruneRmsThresh = rms_threshold,
-        randomSeed = 1,
+        numConfs = n_confs,
+        params = params
     )
     
-    mmff_opt = AllChem.MMFFOptimizeMoleculeConfs(
+    uff_opt = AllChem.UFFOptimizeMoleculeConfs(
         mol,
         numThreads = n_threads
     )
     
-    unconverged, mmff_energies = zip(*mmff_opt)
+    unconverged, uff_energies = zip(*uff_opt)
 
-    return unconverged, mmff_energies
+    return unconverged, uff_energies
