@@ -29,6 +29,7 @@ from rdkit import Chem
 import bullviso.confcodes
 import bullviso.geoms
 import bullviso.utils
+import bullviso.io
 
 ###############################################################################
 ############################## ARGUMENT PARSING ###############################
@@ -88,19 +89,17 @@ def main(args: list):
         d = Path(f'./{confcode_str}')
         if not d.is_dir():
             d.mkdir()
-        for idx in conformer_idxs:
-            if unconverged[idx]:
+        for conf_idx in conformer_idxs:
+            if unconverged[conf_idx]:
                 pass
             else:
                 if args.m_confs > 1:
-                    xyz_f = d / f'./{confcode_str}_{idx}.xyz'
+                    out_f = d / f'./{confcode_str}_{conf_idx}'
                 else:
-                    xyz_f = d / f'./{confcode_str}.xyz'
-                with open(xyz_f, 'w') as f:
-                    f.write(Chem.MolToXYZBlock(func_bullvalene, confId = idx))
-    print()
-    
-    print(f'...done!\n')
+                    out_f = d / f'./{confcode_str}'
+                bullviso.io.mol_to_xyz_f(
+                    out_f, func_bullvalene, conf_idx = conf_idx
+                )
 
 ################################################################################
 ############################## PROGRAM STARTS HERE #############################
