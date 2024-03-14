@@ -48,3 +48,47 @@ def mol_to_xyz_f(
             )
     
     return None
+
+def mol_to_gaussian_input_f(
+    filepath: Path,
+    mol: Chem.Mol,
+    conf_idx: int = 0,
+    method: str = 'PBE1PBE',
+    basis: str = 'DEF2SVPP',
+    charge: int = 0,
+    multiplicity: int = 1,
+    n_proc: int = 1,
+    memory: int = 4000
+) -> None:
+    
+    with open(filepath.with_suffix('.gjf'), 'w') as f:
+        # write .chk filepath and resource specifications
+        f.write(
+            f'%CHK={filepath.stem}.chk\n%MEM={memory}MB\n%NPROC={n_proc}\n'
+        )
+        # write route line
+        f.write(
+            f'#N {method}/{basis} OPT FREQ\n\n'
+        )
+        # write title line
+        f.write(
+            f'CONFIGURATIONAL ISOMER: {filepath.stem}\n\n'
+        )
+        # write charge, multiplicity, and Cartesian coordinate lines
+        f.write(
+            f'{charge} {multiplicity}\n'
+        )
+        for i, atom in enumerate(mol.GetAtoms()):
+            coord = mol.GetConformer(conf_idx).GetAtomPosition(i)
+            coord_line_fmt = '{:<2}{:>14.8f}{:>14.8f}{:>14.8f}\n'
+            f.write(
+                coord_line_fmt.format(
+                    atom.GetSymbol(), coord.x, coord.y, coord.z
+                )
+            )
+        # write terminating blank line
+        f.write(
+            '\n'
+        )
+
+    return None
