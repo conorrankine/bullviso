@@ -1,7 +1,7 @@
 <table align="center">
 <tr><td align="center" width="10000">
 
-# <strong> P Y B U L L </strong>
+# <strong> B U L L V I S O </strong>
 
 <p>
     <a href="https://linkedin.com/in/conorrankine">Dr. Conor D. Rankine </a> @ <a href="https://york.ac.uk">The University of York </a>

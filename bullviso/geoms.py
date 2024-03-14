@@ -1,5 +1,5 @@
 """
-PYBULL
+BULLVISO
 Copyright (C) 2022  Conor D. Rankine
 
 This program is free software: you can redistribute it and/or modify it under
