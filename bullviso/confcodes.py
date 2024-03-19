@@ -1,6 +1,6 @@
 """
 BULLVISO
-Copyright (C) 2022  Conor D. Rankine
+Copyright (C) 2024  Conor D. Rankine
 
 This program is free software: you can redistribute it and/or modify it under
 the terms of the GNU General Public License as published by the Free Software 
