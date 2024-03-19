@@ -92,3 +92,36 @@ def mol_to_gaussian_input_f(
         )
 
     return None
+
+def mol_to_orca_input_f(
+    filepath: Path,
+    mol: Chem.Mol,
+    conf_idx: int = 0,
+    method: str = 'PBE0',
+    basis: str = 'DEF2-SV(P)',
+    charge: int = 0,
+    multiplicity: int = 1,
+    n_proc: int = 1,
+    memory: int = 4000
+) -> None:
+    
+    with open(filepath.with_suffix('.in'), 'w') as f:
+        # write route line
+        f.write(
+            f'! {method} {basis} OPT FREQ\n\n'
+        )
+        # write charge, multiplicity, and Cartesian coordinate lines
+        f.write(
+            f'* XYZ {charge} {multiplicity}\n'
+        )
+        for i, atom in enumerate(mol.GetAtoms()):
+            coord = mol.GetConformer(conf_idx).GetAtomPosition(i)
+            coord_line_fmt = '{:<2}{:>14.8f}{:>14.8f}{:>14.8f}\n'
+            f.write(
+                coord_line_fmt.format(
+                    atom.GetSymbol(), coord.x, coord.y, coord.z
+                )
+            )
+        f.write(
+            '\n*'
+        )
