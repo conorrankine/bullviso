@@ -98,7 +98,10 @@ def main(args: list):
                 pass
             else:
                 if args.m_confs > 1:
-                    out_f = d / f'./{confcode_str}_{conf_idx}'
+                    out_d = d / f'./{confcode_str}_{conf_idx:03d}'
+                    if not out_d.is_dir():
+                        out_d.mkdir()
+                    out_f = out_d / f'./{confcode_str}_{conf_idx:03d}'
                 else:
                     out_f = d / f'./{confcode_str}'
                 bullviso.io.mol_to_out_f(

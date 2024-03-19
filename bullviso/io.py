@@ -144,5 +144,5 @@ def mol_to_orca_input_f(
                 )
             )
         f.write(
-            '\n*'
+            '*'
         )
