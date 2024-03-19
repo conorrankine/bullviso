@@ -30,7 +30,8 @@ def mol_to_out_f(
     filepath: Path,
     filetype: str,
     mol: Chem.Mol,
-    conf_idx: int = 0
+    conf_idx: int = 0,
+    **kwargs
 ) -> None:
     
     mol_to_out_f_ = {
@@ -42,7 +43,8 @@ def mol_to_out_f(
     mol_to_out_f_[filetype](
         filepath = filepath,
         mol = mol,
-        conf_idx = conf_idx
+        conf_idx = conf_idx,
+        **kwargs
     )
 
     return None
