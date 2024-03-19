@@ -48,6 +48,10 @@ def parse_args(args: list):
     p.add_argument('--m_confs', '-m', type = int, default = 1,
         help = ('number of conformations to generate')
     )
+    p.add_argument('--out_f_type', '-o', type = str, default = 'xyz',
+        choices = ('xyz', 'gaussian', 'orca'),
+        help = ('file type for output geometries')
+    )
 
     args = p.parse_args()
 
@@ -97,8 +101,8 @@ def main(args: list):
                     out_f = d / f'./{confcode_str}_{conf_idx}'
                 else:
                     out_f = d / f'./{confcode_str}'
-                bullviso.io.mol_to_xyz_f(
-                    out_f, func_bullvalene, conf_idx = conf_idx
+                bullviso.io.mol_to_out_f(
+                    out_f, args.out_f_type, func_bullvalene, conf_idx = conf_idx
                 )
 
 ################################################################################

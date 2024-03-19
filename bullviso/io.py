@@ -26,6 +26,27 @@ from rdkit import Chem
 ################################## FUNCTIONS ##################################
 ###############################################################################
 
+def mol_to_out_f(
+    filepath: Path,
+    filetype: str,
+    mol: Chem.Mol,
+    conf_idx: int = 0
+) -> None:
+    
+    mol_to_out_f_ = {
+        'xyz': mol_to_xyz_f,
+        'gaussian': mol_to_gaussian_input_f,
+        'orca': mol_to_orca_input_f
+    }
+
+    mol_to_out_f_[filetype](
+        filepath = filepath,
+        mol = mol,
+        conf_idx = conf_idx
+    )
+
+    return None
+
 def mol_to_xyz_f(
     filepath: Path,
     mol: Chem.Mol,
