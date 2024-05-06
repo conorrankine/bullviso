@@ -81,31 +81,26 @@ def main(args: list):
     print(f'>> constructing structural isomer(s)...')
     for confcode in tqdm.tqdm(confcodes, ncols = 80):       
         func_bullvalene = bullviso.geoms.functionalise(
-            bullvalene,
-            func_group,
-            confcode
+            bullvalene, func_group, confcode
         )
-        unconverged, uff_energies = bullviso.geoms.generate_conformations(
-            func_bullvalene
-        )     
-        conformer_idxs = bullviso.utils.argsort(uff_energies)[:args.m_confs]  
-        confcode_str = bullviso.utils.tuple_to_str(confcode)
-        d = Path(f'./{confcode_str}')
-        if not d.is_dir():
-            d.mkdir()
-        for conf_idx in conformer_idxs:
-            if unconverged[conf_idx]:
-                pass
-            else:
-                if args.m_confs > 1:
-                    out_d = d / f'./{confcode_str}_{conf_idx:03d}'
-                    if not out_d.is_dir():
-                        out_d.mkdir()
-                    out_f = out_d / f'./{confcode_str}_{conf_idx:03d}'
-                else:
-                    out_f = d / f'./{confcode_str}'
+        func_bullvalene = bullviso.geoms.generate_conformations(
+            func_bullvalene, m_confs = args.m_confs
+        )
+        if func_bullvalene.GetNumConformers() > 0:
+            confcode_str = bullviso.utils.tuple_to_str(confcode)
+            d = Path(f'./{confcode_str}')
+            if not d.is_dir():
+                d.mkdir()
+            for conf in func_bullvalene.GetConformers():
+                out_d = d / f'./{confcode_str}_{conf.GetId()+1:03d}'
+                if not out_d.is_dir():
+                    out_d.mkdir()
+                out_f = out_d / f'./{confcode_str}_{conf.GetId()+1:03d}'
                 bullviso.io.mol_to_out_f(
-                    out_f, args.out_f_type, func_bullvalene, conf_idx = conf_idx
+                    out_f,
+                    args.out_f_type,
+                    func_bullvalene,
+                    conf_idx = conf.GetId()
                 )
 
 ################################################################################

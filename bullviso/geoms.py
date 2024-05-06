@@ -19,8 +19,12 @@ this program.  If not, see <https://www.gnu.org/licenses/>.
 ############################### LIBRARY IMPORTS ###############################
 ###############################################################################
 
+import copy
 from rdkit import Chem
 from rdkit.Chem import AllChem
+from rdkit.Chem import rdDistGeom
+from rdkit.Chem import rdForceFieldHelpers
+from rdkit.Chem import rdMolDescriptors
 
 ###############################################################################
 ################################## FUNCTIONS ##################################
@@ -75,8 +79,8 @@ def functionalise(
 
 def generate_conformations(
         mol: Chem.Mol,
-        n_confs: int = 50,
-        rms_threshold: float = 0.1
+        m_confs: int = 10,
+        rms_threshold: float = 0.5
 ) -> tuple:
     """
     Embeds `n_confs` conformations of a Chem.Mol molecule `mol` with an RMS
@@ -88,10 +92,10 @@ def generate_conformations(
         mol (Chem.Mol): A molecule to generate conformations for.
         n_threads (int, optional): The number of threads to use if a parallel
             installation of `rdkit` is available. Defaults to 1.
-        n_confs (int, optional): The number of conformations of `mol` to
-            embed. Defaults to 10.
+        m_confs (int, optional): The number of conformations of `mol` to
+            return. Defaults to 10.
         rms_threshold (float, optional): The RMS threshold for embedding the
-            trial conformations of `mol`. Defaults to 0.1.
+            trial conformations of `mol`. Defaults to 0.5.
 
     Returns:
         unconverged (list): A list of binary elements (e.g. 1/0; True/False)
@@ -102,16 +106,37 @@ def generate_conformations(
     params = getattr(Chem.rdDistGeom, "ETKDGv2")()
     params.pruneRmsThresh = rms_threshold
 
-    AllChem.EmbedMultipleConfs(
-        mol,
-        numConfs = n_confs,
-        params = params
-    )
-    
-    uff_opt = AllChem.UFFOptimizeMoleculeConfs(
-        mol
-    )
-    
-    unconverged, uff_energies = zip(*uff_opt)
+    n_rotatable_bonds = rdMolDescriptors.CalcNumRotatableBonds(mol)
+    n_confs = 30 if n_rotatable_bonds < 8 else 120
 
-    return unconverged, uff_energies
+    rdDistGeom.EmbedMultipleConfs(
+        mol, numConfs = n_confs, params = params
+    )
+
+    rdForceFieldHelpers.UFFOptimizeMoleculeConfs(
+        mol, maxIters = 120
+    )
+
+    for conf in mol.GetConformers():
+        ff = rdForceFieldHelpers.UFFGetMoleculeForceField(
+            mol, confId = conf.GetId()
+        )
+        conf.SetDoubleProp(
+            'energy', ff.CalcEnergy()
+        )
+    
+    conf_energies = [
+        conf.GetProp('energy') for conf in mol.GetConformers()
+    ]
+
+    mol_copy = copy.deepcopy(mol)
+    ordered_confs = [
+        conf for _, conf in sorted(
+            zip(conf_energies, mol_copy.GetConformers()), key = lambda x: x[0]
+        )
+    ]
+    mol.RemoveAllConformers()
+    for conf in ordered_confs[:m_confs]:
+        mol.AddConformer(conf, assignId = True)
+
+    return mol
