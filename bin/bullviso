@@ -42,8 +42,11 @@ def parse_args(args: list):
     p.add_argument('func_group_smile', type = str,
         help = 'SMILES string representation for the functional group'
     )
+    p.add_argument('--func_group_attach_idx', '-a', type = int, default = 1,
+        help =()
+    )
     p.add_argument('--n_func_groups', '-n', type = int, default = 1,
-        help = ('number of functional groups to add')
+        help = ('number of functional groups to attach')
     )
     p.add_argument('--m_confs', '-m', type = int, default = 1,
         help = ('number of conformational isomers to generate')
@@ -81,10 +84,14 @@ def main(args: list):
     print(f'>> constructing structural isomer(s)...')
     for confcode in tqdm.tqdm(confcodes, ncols = 80):       
         func_bullvalene = bullviso.geoms.functionalise(
-            bullvalene, func_group, confcode
+            bullvalene,
+            func_group,
+            confcode,
+            func_group_attach_idx = args.func_group_attach_idx
         )
         func_bullvalene = bullviso.geoms.generate_conformations(
-            func_bullvalene, m_confs = args.m_confs
+            func_bullvalene,
+            m_confs = args.m_confs
         )
         if func_bullvalene.GetNumConformers() > 0:
             confcode_str = bullviso.utils.tuple_to_str(confcode)
