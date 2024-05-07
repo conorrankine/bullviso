@@ -55,7 +55,7 @@ bullviso C -n 3
 
 generates the 42 unique constitutional isomers of trimethylbullvalene.
 
-For larger/flexible substituents, you might also want to generate the conformational and/or configurational isomers of each constitutional isomer. BULLVISO generates only the lowest-energy conformational/configurational isomer (minimised under the Universal Force Field) of each constitutional isomer by default.
+For larger substituents, you might want to generate the conformational and/or configurational isomers of each constitutional isomer. BULLVISO generates only the lowest-energy conformational/configurational isomer (minimised under the Universal Force Field) of each constitutional isomer by default.
 
 You can use the `-m [M_CONFS]` flag to generate the *m* lowest-energy conformational/configurational isomers of each constitutional isomer instead, *e.g.*,
 
@@ -64,6 +64,22 @@ bullviso CCCC -n 2 -m 6
 ```
 
 generates (up to a maximum of) the six lowest-energy conformational/configurational isomers of each of the 15 unique constitutional isomers of dibutylbullvalene.
+
+For larger substituents, you might also want to specify an alternative attachment point on the SMILES string of the substituent. BULLVISO attachs the substituent *via* the first atom in the SMILES string by default.
+
+You can use the `-a [SUB_ATTACH_IDX]` flag to specify an alternative attachment point, *e.g.*,
+
+```
+bullviso CCCC
+```
+
+generates the four unique constitutional isomers of *n*-butylbullvalene, while
+
+```
+bullviso CCCC -a 2
+```
+
+generates the four unique constitutional isomers of 2-butylbullvalene.
 
 BULLVISO outputs the structures of the substituted bullvalenes in .xyz format by default, although you can use the `-o [OUT_F_TYPE]` flag to output in an alternative format, *e.g.* a basic (customisable) input file for Gaussian (`-o gaussian`) or Orca (`-o orca`). 
 
