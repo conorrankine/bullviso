@@ -4,7 +4,7 @@
 # <strong> B U L L V I S O </strong>
 
 <p>
-    <a href="https://linkedin.com/in/conorrankine"> Dr. Conor D. Rankine </a> and <a href="https://linkedin.com/in/conorrankine"> Dr. Paul McGonigal </a> @ <a href="https://york.ac.uk">The University of York </a>
+    <a href="https://linkedin.com/in/conorrankine"> Dr. Conor D. Rankine </a> and <a href="https://york.ac.uk/chemistry/people/pmcgonigal/"> Dr. Paul McGonigal </a> @ <a href="https://york.ac.uk">The University of York </a>
 </p>
 
 <p>
