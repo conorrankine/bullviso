@@ -95,32 +95,31 @@ def functionalise(
 
 def generate_conformations(
         mol: Chem.Mol,
-        m_confs: int = 10,
-        rms_threshold: float = 0.5
+        m_confs: int = 1,
+        prune_rms_thresh: float = 0.5
 ) -> tuple:
     """
-    Embeds `n_confs` conformations of a Chem.Mol molecule `mol` with an RMS
-    threshold of `rms_threshold` and optimises the conformations using the
-    Universal Forcefield (UFF); if a parallel installation of `rdkit` is
-    available, these routines can run parallelised over `n_threads` threads.
+    Embeds `k` conformations of a Chem.Mol molecule `mol` and optimises the
+    conformations using the Universal Forcefield (UFF); returns a Chem.Mol
+    molecule with only the `m_confs` lowest-energy conformations attached.
+    For molecules with less than eight rotatable bonds, `k` = 30; for
+    molecules with more than eight rotatable bonds, `k` = 120.
 
     Args:
         mol (Chem.Mol): A molecule to generate conformations for.
-        n_threads (int, optional): The number of threads to use if a parallel
-            installation of `rdkit` is available. Defaults to 1.
-        m_confs (int, optional): The number of conformations of `mol` to
-            return. Defaults to 10.
-        rms_threshold (float, optional): The RMS threshold for embedding the
-            trial conformations of `mol`. Defaults to 0.5.
+        m_confs (int, optional): The number of conformations to attach to
+            `mol`; the lowest-energy `m_confs` conformations will be attached.
+            of those generated. Defaults to 1.
+        prune_rms_thresh (float, optional): The RMSD threshold for pruning the
+            generated conformations; conformations below the RMSD threshold
+            are considered the same and are pruned. Defaults to 0.5.
 
     Returns:
-        unconverged (list): A list of binary elements (e.g. 1/0; True/False)
-            indicating UFF convergence for each conformation.
-        uff_energies (list): A list of UFF energies for each conformation.
+        Chem.Mol: A molecule with generated conformations attached.
     """
     
     params = getattr(Chem.rdDistGeom, "ETKDGv2")()
-    params.pruneRmsThresh = rms_threshold
+    params.pruneRmsThresh = prune_rms_thresh
 
     n_rotatable_bonds = rdMolDescriptors.CalcNumRotatableBonds(mol)
     n_confs = 30 if n_rotatable_bonds < 8 else 120
