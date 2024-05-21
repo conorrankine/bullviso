@@ -93,29 +93,24 @@ def functionalise(
 
     return func_mol
 
-def generate_conformations(
+def generate_confs(
         mol: Chem.Mol,
-        m_confs: int = 1,
         prune_rms_thresh: float = 0.5
 ) -> tuple:
     """
-    Embeds `k` conformations of a Chem.Mol molecule `mol` and optimises the
-    conformations using the Universal Forcefield (UFF); returns a Chem.Mol
-    molecule with only the `m_confs` lowest-energy conformations attached.
-    For molecules with less than eight rotatable bonds, `k` = 30; for
-    molecules with more than eight rotatable bonds, `k` = 120.
+    Embeds `k` conformers of a Chem.Mol molecule `mol` and optimises the
+    conformers using the Universal Forcefield (UFF). For molecules with less
+    than eight rotatable bonds, `k` = 30; for molecules with more than eight
+    rotatable bonds, `k` = 120.
 
     Args:
-        mol (Chem.Mol): A molecule to generate conformations for.
-        m_confs (int, optional): The number of conformations to attach to
-            `mol`; the lowest-energy `m_confs` conformations will be attached.
-            of those generated. Defaults to 1.
+        mol (Chem.Mol): A molecule to embed conformers for.
         prune_rms_thresh (float, optional): The RMSD threshold for pruning the
-            generated conformations; conformations below the RMSD threshold
-            are considered the same and are pruned. Defaults to 0.5.
+            generated conformers; conformers below the RMSD threshold are
+            considered the same and are pruned. Defaults to 0.5.
 
     Returns:
-        Chem.Mol: A molecule with generated conformations attached.
+        Chem.Mol: A molecule with embedded conformers.
     """
     
     params = getattr(Chem.rdDistGeom, "ETKDGv2")()
@@ -139,19 +134,43 @@ def generate_conformations(
         conf.SetDoubleProp(
             'energy', ff.CalcEnergy()
         )
-    
+
+    mol = order_confs_by_energy(mol)
+
+    return mol
+
+def order_confs_by_energy(
+        mol: Chem.Mol,
+) -> Chem.Mol:
+    """
+    Orders the conformers of a Chem.Mol molecule `mol` from lowest to highest
+    energy; requires the 'energy' property to be set for each conformer, i.e.
+    accessible via `conf.GetProp('energy')` for each instance of `conf`
+    returned via `mol.GetConformers()`.
+
+    Args:
+        mol (Chem.Mol): A molecule with embedded conformers.
+
+    Returns:
+        Chem.Mol: A molecule with embedded conformers ordered from lowest to
+            highest energy.
+    """
+       
     conf_energies = [
         conf.GetProp('energy') for conf in mol.GetConformers()
     ]
 
-    mol_copy = copy.deepcopy(mol)
+    mol_ = copy.deepcopy(mol)
+    
     ordered_confs = [
         conf for _, conf in sorted(
-            zip(conf_energies, mol_copy.GetConformers()), key = lambda x: x[0]
+            zip(conf_energies, mol_.GetConformers()),
+            key = lambda x: x[0]
         )
     ]
+    
     mol.RemoveAllConformers()
-    for conf in ordered_confs[:m_confs]:
+    for conf in ordered_confs:
         mol.AddConformer(conf, assignId = True)
 
     return mol
