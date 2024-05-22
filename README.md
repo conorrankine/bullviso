@@ -67,6 +67,8 @@ generates (up to a maximum of) the six lowest-energy conformational isomers of e
 
 BULLVISO prunes similar conformational isomers by root-mean-square deviation (RMSD) thresholding; the default RMSD threshold is 0.5 Angstrom, although this can be set to an alternative (*e.g.* tighter or looser) threshold using the `-rmsd [PRUNE_RMS_THRESH]` flag. Any conformational isomers that have an RMSD lower than the RMSD threshold when evaluated against any of the conformational isomers already generated are pruned (*i.e.* discarded).
 
+The generation of the conformational isomers is the most time- and compute-intensive part of the BULLVISO workflow. Fortunately, you can accelerate the generation of the conformational isomers using multithreading. BULLVISO uses only one thread by default, although you can use the `-nt [NUM_THREADS]` flag to request additional threads (up to as many as your machine supports) for faster conformational isomer generation.
+
 For larger substituents, you might also want to specify an alternative attachment point on the SMILES string of the substituent. BULLVISO attachs the substituent *via* the first atom in the SMILES string by default.
 
 You can use the `-a [SUB_ATTACH_IDX]` flag to specify an alternative attachment point, *e.g.*,
