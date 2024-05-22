@@ -95,7 +95,8 @@ def functionalise(
 
 def generate_confs(
         mol: Chem.Mol,
-        prune_rms_thresh: float = 0.5
+        prune_rms_thresh: float = 0.5,
+        num_threads: int = 1
 ) -> tuple:
     """
     Embeds `k` conformers of a Chem.Mol molecule `mol` and optimises the
@@ -107,7 +108,7 @@ def generate_confs(
         mol (Chem.Mol): A molecule to embed conformers for.
         prune_rms_thresh (float, optional): The RMSD threshold for pruning the
             generated conformers; conformers below the RMSD threshold are
-            considered the same and are pruned. Defaults to 0.5.
+            considered the same and are pruned. Defaults to 0.5 Angstrom.
 
     Returns:
         Chem.Mol: A molecule with embedded conformers.
@@ -115,6 +116,7 @@ def generate_confs(
     
     params = getattr(Chem.rdDistGeom, "ETKDGv2")()
     params.pruneRmsThresh = prune_rms_thresh
+    params.numThreads = num_threads
 
     n_rotatable_bonds = rdMolDescriptors.CalcNumRotatableBonds(mol)
     n_confs = 30 if n_rotatable_bonds < 8 else 120

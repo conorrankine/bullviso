@@ -51,6 +51,9 @@ def parse_args(args: list):
     p.add_argument('--m_confs', '-m', type = int, default = 1,
         help = ('number of conformational isomers to generate')
     )
+    p.add_argument('--num_threads', '-nt', type = int, default = 1,
+        help = ('number of threads for generating conformational isomers')
+    )
     p.add_argument('--prune_rms_thresh', '-rmsd', type = float, default = 0.5,
         help = ('RMSD threshold for pruning conformational isomers')
     )
@@ -94,7 +97,8 @@ def main(args: list):
         )
         func_bullvalene = bullviso.geoms.generate_confs(
             func_bullvalene,
-            prune_rms_thresh = args.prune_rms_thresh
+            prune_rms_thresh = args.prune_rms_thresh,
+            num_threads = args.num_threads
         )
         m_confs = min(
             func_bullvalene.GetNumConformers(), args.m_confs
