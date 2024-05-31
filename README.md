@@ -13,6 +13,12 @@
 
 <p>
     <a href="https://www.mcgonigalgroup.com/"> The McGonigal Group </a>
+    <br>
+    with special thanks to
+    <br>
+    <a href="https://www.linkedin.com/in/robives5"> Rob Ives </a>
+    <br>
+    <a href="https://www.linkedin.com/in/will-maturi-930738196"> Will Maturi </a>
 </p>
 
 </td></tr></table>
