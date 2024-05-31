@@ -1,6 +1,10 @@
 <table align="center">
 <tr><td align="center" width="10000">
 
+<p>
+    <img src = "./assets/images/bv_network_diagram.png" width = "200">
+</p>
+
 # <strong> B U L L V I S O </strong>
 
 <p>
