@@ -49,11 +49,15 @@ def parse_args():
     p.add_argument('--m_confs', '-m', type = int, default = 1,
         help = ('number of conformational isomers to generate')
     )
-    p.add_argument('--num_threads', '-nt', type = int, default = 1,
-        help = ('number of threads for generating conformational isomers')
+    p.add_argument('--forcefield', '-ff', type = str, default = 'uff',
+        choices = ('uff', 'mmff'),
+        help = ('forcefield for optimising conformational isomers')
     )
     p.add_argument('--prune_rms_thresh', '-rmsd', type = float, default = 0.5,
         help = ('RMSD threshold for pruning conformational isomers')
+    )
+    p.add_argument('--num_threads', '-nt', type = int, default = 1,
+        help = ('number of threads for generating conformational isomers')
     )
     p.add_argument('--out_f_type', '-o', type = str, default = 'xyz',
         choices = ('xyz', 'gaussian', 'orca'),
@@ -95,6 +99,7 @@ def main():
         )
         func_bullvalene = bullviso.geoms.generate_confs(
             func_bullvalene,
+            forcefield = args.forcefield,
             prune_rms_thresh = args.prune_rms_thresh,
             num_threads = args.num_threads
         )

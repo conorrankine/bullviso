@@ -95,17 +95,21 @@ def functionalise(
 
 def generate_confs(
         mol: Chem.Mol,
+        forcefield: str = 'uff',
         prune_rms_thresh: float = 0.5,
         num_threads: int = 1
-) -> tuple:
+) -> Chem.Mol:
     """
     Embeds `k` conformers of a Chem.Mol molecule `mol` and optimises the
-    conformers using the Universal Forcefield (UFF). For molecules with less
+    conformers using a forcefield `forcefield`. For molecules with less
     than eight rotatable bonds, `k` = 30; for molecules with more than eight
     rotatable bonds, `k` = 120.
 
     Args:
         mol (Chem.Mol): A molecule to embed conformers for.
+        forcefield (str, optional): The forcefield to use for optimising the
+            generated conformers; options are the Universal Forcefield ('uff')
+            or the Merck Molecular Forcefield ('mmff'). Defaults to 'uff'.
         prune_rms_thresh (float, optional): The RMSD threshold for pruning the
             generated conformers; conformers below the RMSD threshold are
             considered the same and are pruned. Defaults to 0.5 Angstrom.
@@ -128,16 +132,36 @@ def generate_confs(
         mol, numConfs = n_confs, params = params
     )
 
-    rdForceFieldHelpers.UFFOptimizeMoleculeConfs(
+    _ff_optimise = {
+        'uff': rdForceFieldHelpers.UFFOptimizeMoleculeConfs,
+        'mmff': rdForceFieldHelpers.MMFFOptimizeMoleculeConfs
+    }
+    ff_optimise = _ff_optimise.get(forcefield)
+
+    ff_optimise(
         mol, numThreads = num_threads
     )
 
+    _ff = {
+        'uff': rdForceFieldHelpers.UFFGetMoleculeForceField,
+        'mmff': rdForceFieldHelpers.MMFFGetMoleculeForceField
+    }
+    ff = _ff.get(forcefield)
+
+    if forcefield == 'mmff':
+        mol_props = rdForceFieldHelpers.MMFFGetMoleculeProperties(mol)
+
     for conf in mol.GetConformers():
-        ff = rdForceFieldHelpers.UFFGetMoleculeForceField(
-            mol, confId = conf.GetId()
-        )
+        if forcefield == 'mmff':
+            conf_ff = ff(
+                mol, mol_props, confId = conf.GetId()
+            )
+        else:
+            conf_ff = ff(
+                mol, confId = conf.GetId()
+            )            
         conf.SetDoubleProp(
-            'energy', ff.CalcEnergy()
+            'energy', conf_ff.CalcEnergy()
         )
 
     mol = order_confs_by_energy(mol)
