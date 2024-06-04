@@ -65,7 +65,7 @@ bullviso C -n 3
 
 generates the 42 unique constitutional isomers of trimethylbullvalene.
 
-For larger substituents, you might want to generate the conformational isomers of each constitutional isomer. BULLVISO generates only the lowest-energy conformational isomer (minimised under the Universal Force Field) of each constitutional isomer by default.
+For larger substituents, you might want to generate the conformational isomers of each constitutional isomer. BULLVISO generates only the lowest-energy conformational isomer of each constitutional isomer by default.
 
 You can use the `-m [M_CONFS]` flag to generate the *m* lowest-energy conformational isomers of each constitutional isomer instead, *e.g.*,
 
@@ -74,6 +74,8 @@ bullviso CCCC -n 2 -m 6
 ```
 
 generates (up to a maximum of) the six lowest-energy conformational isomers of each of the 15 unique constitutional isomers of dibutylbullvalene.
+
+The energy minimisation (or '*geometry optimisation*') can be carried out using either the Universal Forcefield (UFF) or Merck Molecular Forcefield (MMFF), and this can be toggled using the `-ff [FORCEFIELD]` flag. BULLVISO uses the UFF by default.
 
 BULLVISO prunes similar conformational isomers by root-mean-square deviation (RMSD) thresholding; the default RMSD threshold is 0.5 Angstrom, although this can be set to an alternative (*e.g.* tighter or looser) threshold using the `-rmsd [PRUNE_RMS_THRESH]` flag. Any conformational isomers that have an RMSD lower than the RMSD threshold when evaluated against any of the conformational isomers already generated are pruned (*i.e.* discarded).
 
