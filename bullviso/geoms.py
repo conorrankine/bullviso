@@ -109,6 +109,9 @@ def generate_confs(
         prune_rms_thresh (float, optional): The RMSD threshold for pruning the
             generated conformers; conformers below the RMSD threshold are
             considered the same and are pruned. Defaults to 0.5 Angstrom.
+        num_threads(int, optional): The number of threads to use for generating
+            conformers; `num_threads` threads are used for each of the
+            embedding and optimisation procedures. Defaults to 1.
 
     Returns:
         Chem.Mol: A molecule with embedded conformers.
