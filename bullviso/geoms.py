@@ -129,7 +129,7 @@ def generate_confs(
     )
 
     rdForceFieldHelpers.UFFOptimizeMoleculeConfs(
-        mol, maxIters = 120
+        mol, numThreads = num_threads
     )
 
     for conf in mol.GetConformers():
