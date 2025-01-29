@@ -1,0 +1,17 @@
+[project]
+name = "bullviso"
+version = "2.0"
+description = """
+A Python package for generating 3D molecular structures of the
+constitutional, configurational, and conformational isomers of
+functionalised bullvalenes
+"""
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "rdkit>=2024.9.4",
+    "tqdm>=4.67.1",
+]
+
+[project.scripts]
+bullviso = "bullviso:cli.main"
