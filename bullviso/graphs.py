@@ -26,27 +26,39 @@ from rdkit import Chem
 ################################## FUNCTIONS ##################################
 ###############################################################################
 
-def mol_to_graph(mol: Chem.Mol) -> nx.Graph:
+def mol_to_graph(mol: Chem.Mol, node_label_prefix: str = None) -> nx.Graph:
     """
     Converts a molecule (RDKit Mol object) into a molecular graph (Network-X
     Graph object).
 
     Args:
         mol (Chem.Mol): molecule (RDKit Mol object).
+        node_label_prefix (str, optional): prefix to use for labelling nodes in
+            the molecular graph.
 
     Returns:
         nx.Graph: molecular graph (Network-X Graph object).
     """
 
     G = nx.Graph()
+
+    if node_label_prefix is None:
+        node_label_prefix = ''
     
     for atom in mol.GetAtoms():
         i = atom.GetIdx()
-        G.add_node(i, element = atom.GetSymbol())
+        G.add_node(
+            node_label_prefix + f'{i}',
+            element = atom.GetSymbol()
+        )
 
     for bond in mol.GetBonds():
         i, j = bond.GetBeginAtomIdx(), bond.GetEndAtomIdx()
-        G.add_edge(i, j, bond_type = bond.GetBondType())
+        G.add_edge(
+            node_label_prefix + f'{i}',
+            node_label_prefix + f'{j}',
+            bond_type = bond.GetBondType()
+        )
 
     return G
 
@@ -76,7 +88,11 @@ def graph_to_mol(G: nx.Graph) -> Chem.Mol:
 
     return mol
 
-def smiles_to_graph(smiles: str, sanitize: bool = True) -> nx.Graph:
+def smiles_to_graph(
+    smiles: str,
+    sanitize: bool = True,
+    node_label_prefix: str = None
+) -> nx.Graph:
     """
     Converts the SMILES string for a molecule into a molecular graph (Network-X
     Graph object).
@@ -85,13 +101,15 @@ def smiles_to_graph(smiles: str, sanitize: bool = True) -> nx.Graph:
         smiles (str): SMILES string.
         sanitize (bool, optional): toggles sanitization of the intermediate
             molecule generated from the SMILES string. Defaults to True.
+        node_label_prefix (str, optional): prefix to use for labelling nodes in
+            the molecular graph.
 
     Returns:
         nx.Graph: molecular graph (Network-X object).
     """
 
     mol = Chem.MolFromSmiles(smiles, sanitize = sanitize)
-    G = mol_to_graph(mol)
+    G = mol_to_graph(mol, node_label_prefix = node_label_prefix)
     
     return G
 
