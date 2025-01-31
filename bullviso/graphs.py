@@ -54,3 +54,29 @@ def mol_to_graph(mol: Chem.Mol) -> nx.Graph:
         )
 
     return G
+
+def graph_to_mol(G: nx.Graph) -> Chem.Mol:
+    """
+    Converts a molecular graph (Network-X Graph object) into a molecule (RDKit
+    Mol object).
+
+    Args:
+        G (nx.Graph): molecular graph (Network-X Graph object).
+
+    Returns:
+        Chem.Mol: molecule (RDKit Mol object).
+    """
+
+    mol = Chem.RWMol()
+
+    for node, data in G.nodes(data = True):
+        atom = Chem.Atom(data.get('element'))
+        mol.AddAtom(atom)
+
+    for node_i, node_j, data in G.edges(data = True):
+        bond_type = data.get('bond_type')
+        mol.AddBond(node_i, node_j, bond_type)
+
+    mol = mol.GetMol()
+
+    return mol
