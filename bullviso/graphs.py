@@ -81,7 +81,7 @@ def graph_to_mol(G: nx.Graph) -> Chem.Mol:
 
     return mol
 
-def smiles_to_graph(smiles: str, sanitize = True) -> nx.Graph:
+def smiles_to_graph(smiles: str, sanitize: bool = True) -> nx.Graph:
     """
     Converts the SMILES string for a molecule into a molecular graph (Network-X
     Graph object).
@@ -96,9 +96,11 @@ def smiles_to_graph(smiles: str, sanitize = True) -> nx.Graph:
     """
 
     mol = Chem.MolFromSmiles(smiles, sanitize = sanitize)
-    return mol_to_graph(mol)
+    G = mol_to_graph(mol)
+    
+    return G
 
-def graph_to_smiles(G: nx.Graph, sanitize = True) -> str:
+def graph_to_smiles(G: nx.Graph, sanitize: bool = True) -> str:
     """
     Converts a molecular graph (Network-X Graph object) into a SMILES string
     for the molecule.
@@ -115,4 +117,6 @@ def graph_to_smiles(G: nx.Graph, sanitize = True) -> str:
     mol = graph_to_mol(G)
     if sanitize:
         Chem.SanitizeMol(mol)
-    return Chem.MolToSmiles(mol)
+    smiles = Chem.MolToSmiles(mol)
+
+    return smiles
