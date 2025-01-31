@@ -76,13 +76,21 @@ def graph_to_mol(G: nx.Graph) -> Chem.Mol:
 
     mol = Chem.RWMol()
 
-    for _, data in G.nodes(data = True):
-        element = data.get('element')
-        mol.AddAtom(Chem.Atom(element))
+    node_to_atom_mapping = {}
 
-    for i, j, data in G.edges(data = True):
+    for node_i, data in G.nodes(data = True):
+        element = data.get('element')
+        node_to_atom_mapping[node_i] = mol.AddAtom(
+            Chem.Atom(element)
+        )
+
+    for node_i, node_j, data in G.edges(data = True):
         bond_type = data.get('bond_type')
-        mol.AddBond(i, j, bond_type)
+        mol.AddBond(
+            node_to_atom_mapping[node_i],
+            node_to_atom_mapping[node_j],
+            bond_type
+        )
 
     mol = mol.GetMol()
 
