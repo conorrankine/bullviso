@@ -41,17 +41,12 @@ def mol_to_graph(mol: Chem.Mol) -> nx.Graph:
     G = nx.Graph()
     
     for atom in mol.GetAtoms():
-        G.add_node(
-            atom.GetIdx(),
-            element = atom.GetSymbol()
-        )
+        i = atom.GetIdx()
+        G.add_node(i, element = atom.GetSymbol())
 
     for bond in mol.GetBonds():
-        G.add_edge(
-            bond.GetBeginAtomIdx(),
-            bond.GetEndAtomIdx(),
-            bond_type = bond.GetBondType()
-        )
+        i, j = bond.GetBeginAtomIdx(), bond.GetEndAtomIdx()
+        G.add_edge(i, j, bond_type = bond.GetBondType())
 
     return G
 
@@ -69,13 +64,13 @@ def graph_to_mol(G: nx.Graph) -> Chem.Mol:
 
     mol = Chem.RWMol()
 
-    for node, data in G.nodes(data = True):
-        atom = Chem.Atom(data.get('element'))
-        mol.AddAtom(atom)
+    for _, data in G.nodes(data = True):
+        element = data.get('element')
+        mol.AddAtom(Chem.Atom(element))
 
-    for node_i, node_j, data in G.edges(data = True):
+    for i, j, data in G.edges(data = True):
         bond_type = data.get('bond_type')
-        mol.AddBond(node_i, node_j, bond_type)
+        mol.AddBond(i, j, bond_type)
 
     mol = mol.GetMol()
 
