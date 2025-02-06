@@ -25,7 +25,7 @@ this program.  If not, see <https://www.gnu.org/licenses/>.
 
 class BVBarcode:
 
-    def __init__(self, barcode: tuple):
+    def __init__(self, barcode: tuple, grouped_barcode: tuple = None):
         """
         Instantiates a bullvalene isomer barcode.
 
@@ -45,8 +45,20 @@ class BVBarcode:
             self._barcode = barcode
         else:
             raise ValueError(
-                f'{barcode} is not a valid bullvalene isomer barcode'
+                f'{barcode} is not a valid barcode'
             )
+        
+        if grouped_barcode is not None:
+            if len(grouped_barcode) == 10 and all(
+                isinstance(x, int) and 0 <= x <= 9 for x in grouped_barcode
+            ):        
+                self._grouped_barcode = grouped_barcode
+            else:
+                raise ValueError(
+                    f'{grouped_barcode} is not a valid grouped barcode'
+                )
+        else:
+            self._grouped_barcode = barcode
 
     @property
     def barcode(self) -> tuple:
@@ -58,3 +70,15 @@ class BVBarcode:
         """
 
         return self._barcode
+    
+    @property
+    def grouped_barcode(self) -> tuple:
+        """
+        Returns the grouped bullvalene isomer barcode as a tuple.
+
+        Returns:
+            tuple: The grouped bullvalene isomer barcode as a tuple.
+        """
+
+        return self._grouped_barcode
+    
