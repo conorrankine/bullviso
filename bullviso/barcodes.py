@@ -29,7 +29,12 @@ from typing import Generator, Tuple
 
 class BVBarcode:
 
-    def __init__(self, barcode: tuple, grouped_barcode: tuple = None):
+    def __init__(
+        self,
+        barcode: tuple,
+        grouped_barcode: tuple = None,
+        canonicalize: bool = False
+    ):
         """
         Instantiates a bullvalene isomer barcode.
 
@@ -69,6 +74,9 @@ class BVBarcode:
                 )
         else:
             self._grouped_barcode = barcode
+
+        if canonicalize:
+            self.canonicalize()
 
     def __hash__(self) -> int:
         """
