@@ -64,20 +64,20 @@ class BVBarcode:
         """
         Returns a hash for the `BVBarcode` instance; two `BVBarcode` instances
         will have the same hash if they have the same grouped barcode
-        representation (i.e. the same `self._grouped_barcode`).
+        representation (i.e. the same `self.grouped_barcode`).
 
         Returns:
-            int: _Hash for the `BVBarcode` instance.
+            int: Hash for the `BVBarcode` instance.
         """
         
-        return hash(self._grouped_barcode)
+        return hash(self.grouped_barcode)
     
     def __eq__(self, barcode: object) -> bool:
         """
         Returns the result of an equality test between the `BVBarcode` instance
         and another `BVBarcode` instance (`barcode`); two `BVBarcode` instances
         are considered equal if they have the same grouped barcode
-        representation (i.e. the same `self._grouped_barcode`).
+        representation (i.e. the same `self.grouped_barcode`).
 
         Args:
             barcode (BVBarcode): `BVBarcode` instance to test for equality.
