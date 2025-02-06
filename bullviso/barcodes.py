@@ -213,7 +213,8 @@ class BVBarcode:
         """
 
         canonical_equivalent = min(
-            self.equivalents(), key = lambda barcode: barcode.barcode
+            self.equivalents(),
+            key = lambda equivalent: equivalent.grouped_barcode
         )
 
         if inplace:
