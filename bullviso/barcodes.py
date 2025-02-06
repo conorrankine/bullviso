@@ -19,6 +19,9 @@ this program.  If not, see <https://www.gnu.org/licenses/>.
 ############################### LIBRARY IMPORTS ###############################
 ###############################################################################
 
+from itertools import permutations
+from typing import Generator
+
 ###############################################################################
 ################################### CLASSES ###################################
 ###############################################################################
@@ -114,3 +117,28 @@ class BVBarcode:
 
         return self._grouped_barcode
     
+    def permutations(self) -> Generator['BVBarcode', None, None]:
+        """
+        Generates all permutations of the bullvalene isomer barcode, yielding a
+        `BVBarcode` instance for each permutation; the `BVBarcode` instances
+        that the method yields are instantiated with the permuted attributes 
+        `barcode` and `grouped_barcode`.
+
+        Yields:
+            BVBarcode: `BVBarcode` instances for each bullvalene isomer barcode
+            permutation.
+        """
+
+        for permutation_idx in permutations(
+            tuple(i for i in range(len(self.barcode)))
+        ):
+            barcode = tuple(
+                self.barcode[i] for i in permutation_idx
+            )
+            grouped_barcode = tuple(
+                self.grouped_barcode[i] for i in permutation_idx
+            )
+            yield BVBarcode(
+                barcode,
+                grouped_barcode = grouped_barcode
+            )
