@@ -60,6 +60,18 @@ class BVBarcode:
         else:
             self._grouped_barcode = barcode
 
+    def __hash__(self) -> int:
+        """
+        Returns a hash for the `BVBarcode` instance; two `BVBarcode` instances
+        will have the same hash if they have the same grouped barcode
+        representation (i.e. the same `self._grouped_barcode`).
+
+        Returns:
+            int: _Hash for the `BVBarcode` instance.
+        """
+        
+        return hash(self._grouped_barcode)
+
     @property
     def barcode(self) -> tuple:
         """
