@@ -35,11 +35,17 @@ class BVBarcode:
         Args:
             barcode (tuple): A tuple of 10 integers in the range 0-9 inclusive
                 representing the bullvalene isomer barcode.
+            grouped_barcode (tuple): A tuple of 10 integers in the range 0-9
+                inclusive representing the grouped bullvalene isomer barcode;
+                e.g. for the barcode (0,0,0,0,0,0,1,2,3,4) and the grouped
+                barcode (0,0,0,0,0,0,1,1,1,2), the implication is that
+                substituents 1, 2, and 3 are equivalent, while substituent
+                4 is unique (i.e. the bullvalene has two unique substituents).
 
         Raises:
-            ValueError: If the barcode i) is not of length 10, ii) contains
-                non-integer elements, or iii) contains integers less than 0
-                or greater than 9 (i.e. not in the range 0-9 inclusive).
+            ValueError: If the barcode or grouped barcode i) are not of length
+                10, ii) contain non-integer elements, or iii) contain integers
+                less than 0 or greater than 9.
         """
 
         if len(barcode) == 10 and all(
