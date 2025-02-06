@@ -126,7 +126,7 @@ class BVBarcode:
     
     def permutations(self) -> Generator['BVBarcode', None, None]:
         """
-        Generates all permutations of the `bullvalene isomer barcode`, yielding a
+        Generates all permutations of the bullvalene isomer barcode, yielding a
         `BVBarcode` instance for each permutation; the `BVBarcode` instances
         that the method yields are instantiated with the permuted attributes 
         `barcode` and `grouped_barcode`.
@@ -184,3 +184,18 @@ class BVBarcode:
             )
 
         return tuple(equivalents)
+    
+    def canonicalize(self):
+        """
+        Canonicalizes the bullvalene isomer barcode; updates the `barcode` and
+        `grouped_barcode` attributes of the `BVBarcode` instance to the
+        canonical representation (i.e. the smallest bullvalene isomer barcode
+        lexicographically).
+        """
+
+        canonical_equivalent = min(
+            self.equivalents(), key = lambda barcode: barcode.barcode
+        )
+
+        self._barcode = canonical_equivalent.barcode
+        self._grouped_barcode = canonical_equivalent.grouped_barcode
