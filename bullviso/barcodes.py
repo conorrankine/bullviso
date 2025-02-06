@@ -185,17 +185,34 @@ class BVBarcode:
 
         return tuple(equivalents)
     
-    def canonicalize(self):
+    def canonicalize(self, inplace: bool = True) -> 'BVBarcode':
         """
         Canonicalizes the bullvalene isomer barcode; updates the `barcode` and
         `grouped_barcode` attributes of the `BVBarcode` instance to the
         canonical representation (i.e. the smallest bullvalene isomer barcode
-        lexicographically).
+        lexicographically) if `inplace = True`, else returns a new `BVBarcode`
+        instance corresponding to the canonical representation.
+
+        Args:
+            inplace (bool): If `True`, the `barcode` and `grouped_barcode`
+                attributes are updated in place, else (if `False`) a new
+                `BVBarcode` instance is returned with the updated `barcode`
+                and `grouped_barcode` attributes. 
+
+        Returns:
+            BVBarcode: Canonicalized `BVBarcode` instance if `inplace = False`, 
+                else `None` if `inplace = True`.
         """
 
         canonical_equivalent = min(
             self.equivalents(), key = lambda barcode: barcode.barcode
         )
 
-        self._barcode = canonical_equivalent.barcode
-        self._grouped_barcode = canonical_equivalent.grouped_barcode
+        if inplace:
+            self._barcode = canonical_equivalent.barcode
+            self._grouped_barcode = canonical_equivalent.grouped_barcode
+        else:
+            return BVBarcode(
+                canonical_equivalent.barcode,
+                grouped_barcode = canonical_equivalent.grouped_barcode
+            )
