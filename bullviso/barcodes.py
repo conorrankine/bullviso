@@ -105,7 +105,7 @@ class BVBarcode:
         """
         
         return hash(
-            self.canonicalize(inplace = False).grouped_barcode
+            self.canonical_grouped_barcode
         )
     
     def __eq__(self, barcode: object) -> bool:
