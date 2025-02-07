@@ -47,6 +47,11 @@ class BVBarcode:
                 barcode (0,0,0,0,0,0,1,1,1,2), the implication is that
                 substituents 1, 2, and 3 are equivalent, while substituent
                 4 is unique (i.e. the bullvalene has two unique substituents).
+            canonicalize (bool): If `True`, the `barcode` and `grouped_barcode`
+                attributes are converted to the canonical representation (i.e.
+                the smallest grouped bullvalene isomer barcode
+                lexicographically), else (if `False`) the `barcode` and
+                `grouped_barcode` attributes are stored as-is.
 
         Raises:
             ValueError: If the barcode or grouped barcode i) are not of length
