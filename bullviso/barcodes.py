@@ -126,8 +126,8 @@ class BVBarcode:
 
         if isinstance(barcode, BVBarcode):
             return (
-                self.canonicalize(inplace = False).grouped_barcode
-                == barcode.canonicalize(inplace = False).grouped_barcode
+                self.canonical_grouped_barcode
+                == barcode.canonical_grouped_barcode
             )
         else:
             return False
