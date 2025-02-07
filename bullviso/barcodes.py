@@ -202,15 +202,17 @@ class BVBarcode:
         """
         Canonicalizes the bullvalene isomer barcode; updates the `barcode` and
         `grouped_barcode` attributes of the `BVBarcode` instance to the
-        canonical representation (i.e. the smallest bullvalene isomer barcode
-        lexicographically) if `inplace = True`, else returns a new `BVBarcode`
-        instance corresponding to the canonical representation.
+        canonical representation (i.e. the smallest grouped bullvalene isomer
+        barcode lexicographically) if `inplace = True`, else returns a new
+        `BVBarcode` instance with the `barcode` and `grouped_barcode`
+        attributes corresponding to the canonical representation.
 
         Args:
             inplace (bool): If `True`, the `barcode` and `grouped_barcode`
                 attributes are updated in place, else (if `False`) a new
-                `BVBarcode` instance is returned with the updated `barcode`
-                and `grouped_barcode` attributes. 
+                `BVBarcode` instance is returned with the `barcode` and
+                `grouped_barcode` attributes corresponding to the canonical
+                representation.
 
         Returns:
             BVBarcode: Canonicalized `BVBarcode` instance if `inplace = False`, 
