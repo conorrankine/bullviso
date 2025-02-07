@@ -86,14 +86,17 @@ class BVBarcode:
     def __hash__(self) -> int:
         """
         Returns a hash for the `BVBarcode` instance; two `BVBarcode` instances
-        will have the same hash if they have the same grouped barcode
-        representation (i.e. the same `self.grouped_barcode`).
+        will have the same hash if their canonical representations (i.e. the
+        smallest grouped bullvalene isomer barcodes lexicographically) are the
+        same.
 
         Returns:
             int: Hash for the `BVBarcode` instance.
         """
         
-        return hash(self.grouped_barcode)
+        return hash(
+            self.canonicalize(inplace = False).grouped_barcode
+        )
     
     def __eq__(self, barcode: object) -> bool:
         """
