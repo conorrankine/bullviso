@@ -82,6 +82,16 @@ class BVBarcode:
 
         if canonicalize:
             self.canonicalize()
+            self._canonical_barcode = self.barcode
+            self._canonical_grouped_barcode = self.grouped_barcode
+        else:
+            canonical_equivalent = self.canonicalize(inplace = False)
+            self._canonical_barcode = (
+                canonical_equivalent.barcode
+            )
+            self._canonical_grouped_barcode = (
+                canonical_equivalent.grouped_barcode
+            )
 
     def __hash__(self) -> int:
         """
@@ -143,6 +153,28 @@ class BVBarcode:
         """
 
         return self._grouped_barcode
+    
+    @property
+    def canonical_barcode(self) -> tuple:
+        """
+        Returns the canonical bullvalene isomer barcode as a tuple.
+
+        Returns:
+            tuple: The canonical bullvalene isomer barcode as a tuple.
+        """
+
+        return self._canonical_barcode
+
+    @property
+    def canonical_grouped_barcode(self) -> tuple:
+        """
+        Returns the canonical grouped isomer barcode as a tuple.
+
+        Returns:
+            tuple: The canonical grouped bullvalene isomer barcode as a tuple.
+        """
+
+        return self._canonical_grouped_barcode
     
     def permutations(self) -> Generator['BVBarcode', None, None]:
         """
