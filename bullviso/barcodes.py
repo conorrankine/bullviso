@@ -31,8 +31,8 @@ class BVBarcode:
 
     def __init__(
         self,
-        barcode: tuple,
-        grouped_barcode: tuple = None,
+        barcode: tuple[int, ...],
+        grouped_barcode: tuple[int, ...] = None,
         canonicalize: bool = False
     ):
         """
@@ -140,7 +140,7 @@ class BVBarcode:
     @property
     def barcode(
         self
-    ) -> tuple:
+    ) -> tuple[int, ...]:
         """
         Returns the bullvalene isomer barcode as a tuple.
 
@@ -153,7 +153,7 @@ class BVBarcode:
     @property
     def grouped_barcode(
         self
-    ) -> tuple:
+    ) -> tuple[int, ...]:
         """
         Returns the grouped bullvalene isomer barcode as a tuple.
 
@@ -166,7 +166,7 @@ class BVBarcode:
     @property
     def canonical_barcode(
         self
-    ) -> tuple:
+    ) -> tuple[int, ...]:
         """
         Returns the canonical bullvalene isomer barcode as a tuple.
 
@@ -179,7 +179,7 @@ class BVBarcode:
     @property
     def canonical_grouped_barcode(
         self
-    ) -> tuple:
+    ) -> tuple[int, ...]:
         """
         Returns the canonical grouped isomer barcode as a tuple.
 
