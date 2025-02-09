@@ -291,3 +291,29 @@ class BVBarcode:
                 canonical_equivalent.barcode,
                 grouped_barcode = canonical_equivalent.grouped_barcode
             )
+
+    def _get_equivalent_barcodes(
+        self
+    ) -> tuple[tuple[tuple[int, ...], tuple[int, ...]]]:
+        """
+        Returns a tuple of three (`barcode`, `grouped_barcode`) pairs, each
+        represented as a tuple of two tuples; the three (`barcode`,
+        `grouped_barcode`) pairs are equivalent by rotation around the
+        threefold symmetry axis of the bullvalene, i.e. they correspond to
+        the same configurational isomer of the bullvalene.
+
+        Returns:
+            tuple[tuple[tuple[int, ...], tuple[int, ...]]]: Tuple of three
+            (`barcode`, `grouped_barcode`) pairs that are equivalent by
+            rotation around the threefold symmetry axis of the bullvalene.
+        """
+        
+        return tuple(
+            (rotate_tuple(
+                self._barcode[:-1], i * 3
+            ) + self._barcode[-1:], 
+            rotate_tuple(
+                self._grouped_barcode[:-1], i * 3
+            ) + self._grouped_barcode[-1:])
+            for i in range(3)
+        )
