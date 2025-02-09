@@ -261,6 +261,12 @@ class BVBarcode:
                 grouped_barcode = self._canonicalized_grouped_barcode
             )
 
+    def is_canonicalized(self) -> bool:
+
+        return (
+            self._grouped_barcode == self._canonicalized_grouped_barcode
+        )
+
     def _get_equivalent_barcodes(
         self
     ) -> tuple[tuple[tuple[int, ...], tuple[int, ...]]]:
