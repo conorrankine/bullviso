@@ -252,18 +252,13 @@ class BVBarcode:
                 else `None` if `inplace = True`.
         """
 
-        canonical_equivalent = min(
-            self.equivalents(),
-            key = lambda equivalent: equivalent.grouped_barcode
-        )
-
         if inplace:
-            self._barcode = canonical_equivalent.barcode
-            self._grouped_barcode = canonical_equivalent.grouped_barcode
+            self._barcode = self._canonicalized_barcode
+            self._grouped_barcode = self._canonicalized_grouped_barcode
         else:
             return BVBarcode(
-                canonical_equivalent.barcode,
-                grouped_barcode = canonical_equivalent.grouped_barcode
+                self._canonicalized_barcode,
+                grouped_barcode = self._canonicalized_grouped_barcode
             )
 
     def _get_equivalent_barcodes(
