@@ -134,10 +134,10 @@ class BVBarcode:
         self
     ) -> tuple[int, ...]:
         """
-        Returns the bullvalene isomer barcode as a tuple.
+        Returns the isomer barcode as a tuple.
 
         Returns:
-            tuple: The bullvalene isomer barcode as a tuple.
+            tuple: The isomer barcode as a tuple.
         """
 
         return self._barcode
@@ -147,39 +147,39 @@ class BVBarcode:
         self
     ) -> tuple[int, ...]:
         """
-        Returns the grouped bullvalene isomer barcode as a tuple.
+        Returns the grouped isomer barcode as a tuple.
 
         Returns:
-            tuple: The grouped bullvalene isomer barcode as a tuple.
+            tuple: The grouped isomer barcode as a tuple.
         """
 
         return self._grouped_barcode
     
     @property
-    def canonical_barcode(
+    def canonicalized_barcode(
         self
     ) -> tuple[int, ...]:
         """
-        Returns the canonical bullvalene isomer barcode as a tuple.
+        Returns the canonicalized isomer barcode as a tuple.
 
         Returns:
-            tuple: The canonical bullvalene isomer barcode as a tuple.
+            tuple: The canonicalized isomer barcode as a tuple.
         """
 
-        return self._canonical_barcode
+        return self._canonicalized_barcode
 
     @property
-    def canonical_grouped_barcode(
+    def canonicalized_grouped_barcode(
         self
     ) -> tuple[int, ...]:
         """
-        Returns the canonical grouped isomer barcode as a tuple.
+        Returns the canonicalized grouped isomer barcode as a tuple.
 
         Returns:
-            tuple: The canonical grouped bullvalene isomer barcode as a tuple.
+            tuple: The canonicalized grouped isomer barcode as a tuple.
         """
 
-        return self._canonical_grouped_barcode
+        return self._canonicalized_grouped_barcode
     
     def permutations(
         self
