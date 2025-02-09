@@ -266,6 +266,14 @@ class BVBarcode:
         return (
             self._grouped_barcode == self._canonicalized_grouped_barcode
         )
+    
+    def is_chiral(self) -> bool:
+
+        return (
+            len(set(
+                self._grouped_barcode[(i * 3):(i * 3) + 3] for i in range(3)
+            )) == 3
+        )
 
     def _get_equivalent_barcodes(
         self
