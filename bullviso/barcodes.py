@@ -21,7 +21,7 @@ this program.  If not, see <https://www.gnu.org/licenses/>.
 
 from itertools import permutations
 from utils import rotate_tuple
-from typing import Generator, Tuple
+from typing import Generator
 
 ###############################################################################
 ################################### CLASSES ###################################
@@ -219,12 +219,11 @@ class BVBarcode:
 
     def equivalents(
         self
-    ) -> Tuple['BVBarcode']:
+    ) -> tuple['BVBarcode']:
         """
-        Returns a tuple of three `BVBarcode` instances that are equivalent
-        by rotation around the threefold symmetry axis of the bullvalene; the
-        `BVBarcode` instances that the method returns are instantiated with
-        the threefold-rotated attributes `barcode` and `grouped_barcode`.
+        Returns a tuple of three `BVBarcode` instances that are equivalent by
+        rotation around the threefold symmetry axis of the bullvalene, i.e.
+        they correspond to the same configurational isomer.
 
         Returns:
             Tuple[BVBarcode]: Tuple of three `BVBarcode` instances that are
@@ -232,27 +231,10 @@ class BVBarcode:
             bullvalene.
         """
 
-        equivalents = []
-
-        for i in range(3):
-            barcode = (
-                rotate_tuple(
-                    self.barcode[:-1], 3 * i
-                ) + self.barcode[-1:]
-            )
-            grouped_barcode = (
-                rotate_tuple(
-                    self.grouped_barcode[:-1], 3 * i
-                ) + self.grouped_barcode[-1:]
-            )
-            equivalents.append(
-                BVBarcode(
-                    barcode,
-                    grouped_barcode = grouped_barcode
-                )
-            )
-
-        return tuple(equivalents)
+        return tuple(
+            BVBarcode(barcode, grouped_barcode = grouped_barcode)
+                for barcode, grouped_barcode in self._get_equivalent_barcodes()
+        )
     
     def canonicalize(
         self,
@@ -300,7 +282,7 @@ class BVBarcode:
         represented as a tuple of two tuples; the three (`barcode`,
         `grouped_barcode`) pairs are equivalent by rotation around the
         threefold symmetry axis of the bullvalene, i.e. they correspond to
-        the same configurational isomer of the bullvalene.
+        the same configurational isomer.
 
         Returns:
             tuple[tuple[tuple[int, ...], tuple[int, ...]]]: Tuple of three
