@@ -80,18 +80,12 @@ class BVBarcode:
         else:
             self._grouped_barcode = barcode
 
+        self._canonicalized_barcode, self._canonicalized_grouped_barcode = (
+            min(self._get_equivalent_barcodes(), key = lambda t: t[1])
+        )
+
         if canonicalize:
             self.canonicalize()
-            self._canonical_barcode = self.barcode
-            self._canonical_grouped_barcode = self.grouped_barcode
-        else:
-            canonical_equivalent = self.canonicalize(inplace = False)
-            self._canonical_barcode = (
-                canonical_equivalent.barcode
-            )
-            self._canonical_grouped_barcode = (
-                canonical_equivalent.grouped_barcode
-            )
 
     def __hash__(
         self
