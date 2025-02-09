@@ -110,22 +110,21 @@ class BVBarcode:
         """
         Returns the result of an equality test between the `BVBarcode` instance
         and another `BVBarcode` instance (`barcode`); two `BVBarcode` instances
-        are considered equal if their canonical representations (i.e. the
-        smallest grouped bullvalene isomer barcodes lexicographically) are the
-        same..
+        are considered equal if their canonical representations (i.e. their
+        `_canonicalized_grouped_barcode` attributes) are the same.
 
         Args:
             barcode (BVBarcode): `BVBarcode` instance to test for equality.
 
         Returns:
-            bool: True if both `BVBarcode` instances have the same grouped
-                barcode representation, else False.
+            bool: True if both `BVBarcode` instances have the same
+            canonicalized grouped barcode representation, else False.
         """
 
         if isinstance(barcode, BVBarcode):
             return (
-                self.canonical_grouped_barcode
-                == barcode.canonical_grouped_barcode
+                self._canonicalized_grouped_barcode
+                == barcode._canonicalized_grouped_barcode
             )
         else:
             return False
