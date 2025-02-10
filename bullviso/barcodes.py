@@ -269,7 +269,9 @@ class BVBarcode:
                 grouped_barcode = self._canonicalized_grouped_barcode
             )
 
-    def is_canonicalized(self) -> bool:
+    def is_canonicalized(
+        self
+    ) -> bool:
         """
         Checks if the bullvalene isomer barcode is canonicalized, i.e. if
         the `_grouped_barcode` and `_canonicalized_grouped_barcode` attributes
@@ -286,7 +288,9 @@ class BVBarcode:
             self._grouped_barcode == self._canonicalized_grouped_barcode
         )
     
-    def is_chiral(self) -> bool:
+    def is_chiral(
+        self
+    ) -> bool:
         """
         Checks if the bullvalene isomer barcode corresponds to a chiral
         bullvalene, i.e. (a1,a2,a3) != (b1,b2,b3) != (c1,c2,c3) for the
