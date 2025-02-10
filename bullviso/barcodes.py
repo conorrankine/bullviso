@@ -228,6 +228,14 @@ class BVBarcode:
                 for barcode, grouped_barcode in self._get_equivalent_barcodes()
         )
     
+    def connections(
+        self
+    ) -> tuple['BVBarcode']:
+        
+        raise NotImplementedError(
+            '`connections()` is currently a placeholder method'
+        )
+    
     def canonicalize(
         self,
         inplace: bool = True
