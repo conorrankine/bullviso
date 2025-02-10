@@ -279,6 +279,15 @@ class BVBarcode:
         )
     
     def is_chiral(self) -> bool:
+        """
+        Checks if the bullvalene isomer barcode corresponds to a chiral
+        bullvalene, i.e. (a1,a2,a3) != (b1,b2,b3) != (c1,c2,c3) for the
+        bullvalene isomer barcode (a1,a2,a3,b1,b2,b3,c1,c2,c3,d1)
+
+        Returns:
+            bool: `True` if the bullvalene isomer barcode corresponds to a
+                chiral bullvalene, else `False`.
+        """
 
         return (
             len(set(
