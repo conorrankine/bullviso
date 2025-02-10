@@ -262,6 +262,17 @@ class BVBarcode:
             )
 
     def is_canonicalized(self) -> bool:
+        """
+        Checks if the bullvalene isomer barcode is canonicalized, i.e. if
+        the `_grouped_barcode` and `_canonicalized_grouped_barcode` attributes
+        of the `BVBarcode` instance are the same; if canonicalized, the
+        bullvalene isomer barcode corresponds to the smallest of the set of
+        equivalent barcodes lexicographically.
+
+        Returns:
+            bool: `True` if the bullvalene isomer barcode is canonicalized,
+                else `False`.
+        """
 
         return (
             self._grouped_barcode == self._canonicalized_grouped_barcode
