@@ -294,6 +294,14 @@ class BVBarcode:
                 self._grouped_barcode[(i * 3):(i * 3) + 3] for i in range(3)
             )) == 3
         )
+    
+    def is_connected(
+        self
+    ) -> bool:
+        
+        raise NotImplementedError(
+            '`is_connected()` is currently a placeholder method'
+        )
 
     def _get_equivalent_barcodes(
         self
