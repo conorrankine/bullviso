@@ -282,7 +282,7 @@ class BVBarcode:
         """
         Checks if the bullvalene isomer barcode corresponds to a chiral
         bullvalene, i.e. (a1,a2,a3) != (b1,b2,b3) != (c1,c2,c3) for the
-        bullvalene isomer barcode (a1,a2,a3,b1,b2,b3,c1,c2,c3,d1)
+        bullvalene isomer barcode (a1,a2,a3,b1,b2,b3,c1,c2,c3,d1).
 
         Returns:
             bool: `True` if the bullvalene isomer barcode corresponds to a
@@ -319,4 +319,12 @@ class BVBarcode:
                 self._grouped_barcode[:-1], i * 3
             ) + self._grouped_barcode[-1:])
             for i in range(3)
+        )
+
+    def _get_connected_barcodes(
+        self
+    ) ->  tuple[tuple[tuple[int, ...], tuple[int, ...]]]:
+        
+        raise NotImplementedError(
+            '`_get_connected_barcodes()` is currently a placeholder method'
         )
