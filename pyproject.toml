@@ -9,6 +9,7 @@ functionalised bullvalenes
 readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [
+    "networkx>=3.4.2",
     "rdkit>=2024.9.4",
     "tqdm>=4.67.1",
 ]
