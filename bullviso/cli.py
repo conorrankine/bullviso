@@ -19,50 +19,51 @@ this program.  If not, see <https://www.gnu.org/licenses/>.
 ############################### LIBRARY IMPORTS ###############################
 ###############################################################################
 
-import sys
-import tqdm
-from pathlib import Path
-from argparse import ArgumentParser
-from rdkit import Chem
-import bullviso.confcodes
-import bullviso.geoms
-import bullviso.utils
-import bullviso.io
+from argparse import ArgumentParser, Namespace
+from bullviso.graphs import smiles_to_graph
 
 ###############################################################################
 ############################## ARGUMENT PARSING ###############################
 ###############################################################################
 
-def parse_args():
+def parse_args() -> Namespace:
+    """
+    Parses command line arguments for `bullviso:cli.py`.
+
+    Returns:
+        argparse.Namespace: Parsed command line arguments as an
+        argparse.Namespace object that holds the arguments as attributes.
+    """
 
     p = ArgumentParser()
 
-    p.add_argument('func_group_smile', type = str,
-        help = 'SMILES string representation for the functional group'
+    p.add_argument('sub_smiles', type = list,
+        help = 'SMILES string representation for each unique substituent'
     )
-    p.add_argument('--func_group_attach_idx', '-a', type = int, default = 1,
-        help =()
+    p.add_argument('--n_sub', '-n', type = list, default = [1],
+        help = ('number of each unique substituent to add')
     )
-    p.add_argument('--n_func_groups', '-n', type = int, default = 1,
-        help = ('number of functional groups to attach')
+    p.add_argument('--sub_attachment_idx', '-a', type = list, default = [1],
+        help =('atomic index of the substituent-bullvalene attachment point '
+            'for each unique substituent')
     )
-    p.add_argument('--m_confs', '-m', type = int, default = 1,
-        help = ('number of conformational isomers to generate')
-    )
-    p.add_argument('--forcefield', '-ff', type = str, default = 'uff',
-        choices = ('uff', 'mmff'),
-        help = ('forcefield for optimising conformational isomers')
-    )
-    p.add_argument('--prune_rms_thresh', '-rmsd', type = float, default = 0.5,
-        help = ('RMSD threshold for pruning conformational isomers')
-    )
-    p.add_argument('--num_threads', '-nt', type = int, default = 1,
-        help = ('number of threads for generating conformational isomers')
-    )
-    p.add_argument('--out_f_type', '-o', type = str, default = 'xyz',
-        choices = ('xyz', 'gaussian', 'orca'),
-        help = ('file type for output geometries')
-    )
+    # p.add_argument('--m_confs', '-m', type = int, default = 1,
+    #     help = ('number of conformational isomers to generate')
+    # )
+    # p.add_argument('--forcefield', '-ff', type = str, default = 'uff',
+    #     choices = ('uff', 'mmff'),
+    #     help = ('forcefield for optimising conformational isomers')
+    # )
+    # p.add_argument('--prune_rms_thresh', '-rmsd', type = float, default = 0.5,
+    #     help = ('RMSD threshold for pruning conformational isomers')
+    # )
+    # p.add_argument('--num_threads', '-nt', type = int, default = 1,
+    #     help = ('number of threads for generating conformational isomers')
+    # )
+    # p.add_argument('--out_f_type', '-o', type = str, default = 'xyz',
+    #     choices = ('xyz', 'gaussian', 'orca'),
+    #     help = ('file type for output geometries')
+    # )
 
     args = p.parse_args()
 
@@ -77,51 +78,52 @@ def main():
     args = parse_args()
 
     bullvalene_smile = 'C12C=C4.C13C=C5.C23C=CC45'
-    print(f'>> bullvalene SMILE: {bullvalene_smile}')
-    bullvalene = Chem.MolFromSmiles(bullvalene_smile)
+    bullvalene_graph = smiles_to_graph(
+        bullvalene_smile, node_label_prefix = 'bullvalene_'
+    )
     
-    func_group_smile = args.func_group_smile
-    print(f'>> functional group SMILE: {func_group_smile}')
-    func_group = Chem.MolFromSmiles(func_group_smile)
+    # func_group_smile = args.func_group_smile
+    # print(f'>> functional group SMILE: {func_group_smile}')
+    # func_group = Chem.MolFromSmiles(func_group_smile)
 
-    print(f'>> {args.n_func_groups} functional groups')
+    # print(f'>> {args.n_func_groups} functional groups')
 
-    confcodes = bullviso.confcodes.gen_confcodes(args.n_func_groups)
-    print(f'>> {len(confcodes)} unique structural isomer(s)\n')
+    # confcodes = bullviso.confcodes.gen_confcodes(args.n_func_groups)
+    # print(f'>> {len(confcodes)} unique structural isomer(s)\n')
 
-    print(f'>> constructing structural isomer(s)...')
-    for confcode in tqdm.tqdm(confcodes, ncols = 80):       
-        func_bullvalene = bullviso.geoms.functionalise(
-            bullvalene,
-            func_group,
-            confcode,
-            func_group_attach_idx = args.func_group_attach_idx
-        )
-        func_bullvalene = bullviso.geoms.generate_confs(
-            func_bullvalene,
-            forcefield = args.forcefield,
-            prune_rms_thresh = args.prune_rms_thresh,
-            num_threads = args.num_threads
-        )
-        m_confs = min(
-            func_bullvalene.GetNumConformers(), args.m_confs
-        )
-        if m_confs > 0:
-            confcode_str = bullviso.utils.tuple_to_str(confcode)
-            d = Path(f'./{confcode_str}')
-            if not d.is_dir():
-                d.mkdir()
-            for conf_idx in range(m_confs):
-                out_d = d / f'./{confcode_str}_{conf_idx+1:03d}'
-                if not out_d.is_dir():
-                    out_d.mkdir()
-                out_f = out_d / f'./{confcode_str}_{conf_idx+1:03d}'
-                bullviso.io.mol_to_out_f(
-                    out_f,
-                    args.out_f_type,
-                    func_bullvalene,
-                    conf_idx = conf_idx
-                )
+    # print('>> constructing structural isomer(s)...')
+    # for confcode in tqdm.tqdm(confcodes, ncols = 80):       
+    #     func_bullvalene = bullviso.geoms.functionalise(
+    #         bullvalene,
+    #         func_group,
+    #         confcode,
+    #         func_group_attach_idx = args.func_group_attach_idx
+    #     )
+    #     func_bullvalene = bullviso.geoms.generate_confs(
+    #         func_bullvalene,
+    #         forcefield = args.forcefield,
+    #         prune_rms_thresh = args.prune_rms_thresh,
+    #         num_threads = args.num_threads
+    #     )
+    #     m_confs = min(
+    #         func_bullvalene.GetNumConformers(), args.m_confs
+    #     )
+    #     if m_confs > 0:
+    #         confcode_str = bullviso.utils.tuple_to_str(confcode)
+    #         d = Path(f'./{confcode_str}')
+    #         if not d.is_dir():
+    #             d.mkdir()
+    #         for conf_idx in range(m_confs):
+    #             out_d = d / f'./{confcode_str}_{conf_idx+1:03d}'
+    #             if not out_d.is_dir():
+    #                 out_d.mkdir()
+    #             out_f = out_d / f'./{confcode_str}_{conf_idx+1:03d}'
+    #             bullviso.io.mol_to_out_f(
+    #                 out_f,
+    #                 args.out_f_type,
+    #                 func_bullvalene,
+    #                 conf_idx = conf_idx
+    #             )
 
 ################################################################################
 ############################## PROGRAM STARTS HERE #############################
