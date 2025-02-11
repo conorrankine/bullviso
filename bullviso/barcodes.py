@@ -155,32 +155,6 @@ class BVBarcode:
 
         return self._grouped_barcode
     
-    @property
-    def canonicalized_barcode(
-        self
-    ) -> tuple[int, ...]:
-        """
-        Returns the canonicalized isomer barcode as a tuple.
-
-        Returns:
-            tuple: The canonicalized isomer barcode as a tuple.
-        """
-
-        return self._canonicalized_barcode
-
-    @property
-    def canonicalized_grouped_barcode(
-        self
-    ) -> tuple[int, ...]:
-        """
-        Returns the canonicalized grouped isomer barcode as a tuple.
-
-        Returns:
-            tuple: The canonicalized grouped isomer barcode as a tuple.
-        """
-
-        return self._canonicalized_grouped_barcode
-    
     def permutations(
         self
     ) -> Generator['BVBarcode', None, None]:
