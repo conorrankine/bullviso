@@ -20,7 +20,7 @@ this program.  If not, see <https://www.gnu.org/licenses/>.
 ###############################################################################
 
 from argparse import ArgumentParser, Namespace
-from bullviso.graphs import smiles_to_graph
+from bullviso.graphs import compose_bullvalene_supergraph_from_smiles
 
 ###############################################################################
 ############################## ARGUMENT PARSING ###############################
@@ -80,18 +80,9 @@ def main():
 
     args = parse_args()
 
-    bullvalene_smile = 'C12C=C4.C13C=C5.C23C=CC45'
-    bullvalene_graph = smiles_to_graph(
-        bullvalene_smile, node_label_prefix = 'bullvalene_'
+    super_G = compose_bullvalene_supergraph_from_smiles(
+        sub_smiles = args.sub_smiles
     )
-    
-    sub_graphs = [
-        smiles_to_graph(
-            sub_smile, node_label_prefix = f'sub{i}_'
-        ) for i, sub_smile in enumerate(args.sub_smiles)
-    ]
-
-    print(sub_graphs)
 
     # func_group_smile = args.func_group_smile
     # print(f'>> functional group SMILE: {func_group_smile}')
