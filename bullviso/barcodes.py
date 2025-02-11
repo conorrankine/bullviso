@@ -196,13 +196,13 @@ class BVBarcode:
         """
 
         for permutation_idx in permutations(
-            tuple(i for i in range(len(self.barcode)))
+            tuple(i for i in range(len(self._barcode)))
         ):
             barcode = tuple(
-                self.barcode[i] for i in permutation_idx
+                self._barcode[i] for i in permutation_idx
             )
             grouped_barcode = tuple(
-                self.grouped_barcode[i] for i in permutation_idx
+                self._grouped_barcode[i] for i in permutation_idx
             )
             yield BVBarcode(
                 barcode,
