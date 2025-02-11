@@ -84,6 +84,14 @@ def main():
     bullvalene_graph = smiles_to_graph(
         bullvalene_smile, node_label_prefix = 'bullvalene_'
     )
+    
+    sub_graphs = [
+        smiles_to_graph(
+            sub_smile, node_label_prefix = f'sub{i}_'
+        ) for i, sub_smile in enumerate(args.sub_smiles)
+    ]
+
+    print(sub_graphs)
 
     # func_group_smile = args.func_group_smile
     # print(f'>> functional group SMILE: {func_group_smile}')
