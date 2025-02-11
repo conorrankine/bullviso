@@ -37,13 +37,16 @@ def parse_args() -> Namespace:
 
     p = ArgumentParser()
 
-    p.add_argument('sub_smiles', type = list,
+    p.add_argument(
+        'sub_smiles', type = str, nargs = '+',
         help = 'SMILES string representation for each unique substituent'
     )
-    p.add_argument('--n_sub', '-n', type = list, default = [1],
+    p.add_argument(
+        '--n_sub', '-n', type = int, nargs = '+', default = 1,
         help = ('number of each unique substituent to add')
     )
-    p.add_argument('--sub_attachment_idx', '-a', type = list, default = [1],
+    p.add_argument(
+        '--sub_attachment_idx', '-a', type = int, nargs = '+', default = 1,
         help =('atomic index of the substituent-bullvalene attachment point '
             'for each unique substituent')
     )
@@ -81,7 +84,7 @@ def main():
     bullvalene_graph = smiles_to_graph(
         bullvalene_smile, node_label_prefix = 'bullvalene_'
     )
-    
+
     # func_group_smile = args.func_group_smile
     # print(f'>> functional group SMILE: {func_group_smile}')
     # func_group = Chem.MolFromSmiles(func_group_smile)
