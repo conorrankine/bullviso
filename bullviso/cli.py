@@ -23,6 +23,7 @@ import ast
 from argparse import ArgumentParser, ArgumentTypeError, Namespace
 from typing import Union
 from bullviso.graphs import compose_bullvalene_supergraph_from_smiles
+from bullviso.barcodes import create_barcode
 
 ###############################################################################
 ############################## ARGUMENT PARSING ###############################
@@ -185,10 +186,14 @@ def main():
         sub_smiles = sub_smiles
     )
 
-    attach_map = {
+    connectivity_map = {
         i + 1: f'sub{i + 1}_{sub_attach_idx_}'
             for i, sub_attach_idx_ in enumerate(sub_attach_idx) 
     }
+
+    canonical_barcode = create_barcode(
+        args.n_subs
+    )
 
     # func_group_smile = args.func_group_smile
     # print(f'>> functional group SMILE: {func_group_smile}')
