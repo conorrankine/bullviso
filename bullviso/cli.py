@@ -78,6 +78,8 @@ def parse_args() -> Namespace:
         if len(args.sub_attach_idx) == 1:
             args.sub_attach_idx = args.sub_attach_idx * len(args.sub_smiles)
 
+    _validate_args(args)
+
     return args
 
 def _int_or_list_of_ints(
@@ -118,6 +120,45 @@ def _int_or_list_of_ints(
     except (ValueError, SyntaxError):
         raise ArgumentTypeError(
             f'invalid argument: {input}'
+        )
+    
+def _validate_args(
+    args: Namespace
+):
+    """
+    Validates command line arguments for `bullviso:cli.py`.
+
+    Args:
+        args (Namespace): Parsed command line arguments as an
+        argparse.Namespace object that holds the arguments as attributes.
+
+    Raises:
+        ValueError: If `args.sub_smiles`, `args.n_subs`, and
+            `args.sub_attach_idx` are not of equal length; if the sum of the
+            integer elements in `args.n_subs` is greater than 9; or if either
+            `args.n_subs` or `args.sub_attach_idx` contained null/zero-valued
+            elements.
+    """
+
+    if not (
+        len(args.sub_smiles) == len(args.n_subs) == len(args.sub_attach_idx)
+    ):
+        raise ValueError(
+            '`args.sub_smiles`, `args.n_subs`, and `args.sub_attach_idx` '
+            'should have the same length'
+        )
+    if sum(args.n_subs) > 9:
+        raise ValueError(
+            '`args.n_subs` is too large; support is only available for up '
+            'to (and including) 9 substituents'
+        )
+    if 0 in args.n_subs:
+        raise ValueError(
+            '`args.n_subs` cannot contain null/zero-valued elements'
+        )
+    if 0 in args.sub_attach_idx:
+        raise ValueError(
+            '`args.sub_attach_idx` cannot contain null/zero-valued elements'
         )
 
 ###############################################################################
