@@ -66,7 +66,8 @@ def mol_to_graph(
     return G
 
 def graph_to_mol(
-    G: nx.Graph
+    G: nx.Graph,
+    sanitize: bool = True
 ) -> Chem.Mol:
     """
     Converts a molecular graph (Network-X Graph object) into a molecule (RDKit
@@ -74,6 +75,9 @@ def graph_to_mol(
 
     Args:
         G (nx.Graph): molecular graph (Network-X Graph object).
+        sanitize (bool, optional): If `True`, the molecular structure is
+            sanitized by RDKit using `Chem.SanitizeMol()` before the molecule is
+            returned. Defaults to `True`.
 
     Returns:
         Chem.Mol: molecule (RDKit Mol object).
@@ -100,6 +104,9 @@ def graph_to_mol(
 
     mol = mol.GetMol()
 
+    if sanitize:
+        Chem.SanitizeMol(mol)
+
     return mol
 
 def smiles_to_graph(
@@ -125,7 +132,8 @@ def smiles_to_graph(
     return G
 
 def graph_to_smiles(
-    G: nx.Graph
+    G: nx.Graph,
+    sanitize: bool = True
 ) -> str:
     """
     Converts a molecular graph (Network-X Graph object) into a SMILES string
@@ -133,12 +141,15 @@ def graph_to_smiles(
 
     Args:
         G (nx.Graph): molecular graph (Network-X object).
+        sanitize (bool, optional): If `True`, the molecular structure is
+            sanitized by RDKit using `Chem.SanitizeMol()` before the SMILES
+            string is returned. Defaults to `True`.
 
     Returns:
         str: SMILES string.
     """
 
-    mol = graph_to_mol(G)
+    mol = graph_to_mol(G, sanitize = sanitize)
     smiles = Chem.MolToSmiles(mol)
 
     return smiles
