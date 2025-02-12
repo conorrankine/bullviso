@@ -51,15 +51,15 @@ def mol_to_graph(
     for atom in mol.GetAtoms():
         i = atom.GetIdx()
         G.add_node(
-            node_label_prefix + f'{i}',
+            node_label_prefix + f'{i + 1}',
             element = atom.GetSymbol()
         )
 
     for bond in mol.GetBonds():
         i, j = bond.GetBeginAtomIdx(), bond.GetEndAtomIdx()
         G.add_edge(
-            node_label_prefix + f'{i}',
-            node_label_prefix + f'{j}',
+            node_label_prefix + f'{i + 1}',
+            node_label_prefix + f'{j + 1}',
             bond_type = bond.GetBondType()
         )
 
