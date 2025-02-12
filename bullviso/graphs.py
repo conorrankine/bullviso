@@ -26,7 +26,10 @@ from rdkit import Chem
 ################################## FUNCTIONS ##################################
 ###############################################################################
 
-def mol_to_graph(mol: Chem.Mol, node_label_prefix: str = None) -> nx.Graph:
+def mol_to_graph(
+    mol: Chem.Mol,
+    node_label_prefix: str = None
+) -> nx.Graph:
     """
     Converts a molecule (RDKit Mol object) into a molecular graph (Network-X
     Graph object).
@@ -62,7 +65,9 @@ def mol_to_graph(mol: Chem.Mol, node_label_prefix: str = None) -> nx.Graph:
 
     return G
 
-def graph_to_mol(G: nx.Graph) -> Chem.Mol:
+def graph_to_mol(
+    G: nx.Graph
+) -> Chem.Mol:
     """
     Converts a molecular graph (Network-X Graph object) into a molecule (RDKit
     Mol object).
@@ -97,7 +102,10 @@ def graph_to_mol(G: nx.Graph) -> Chem.Mol:
 
     return mol
 
-def smiles_to_graph(smiles: str, node_label_prefix: str = None) -> nx.Graph:
+def smiles_to_graph(
+    smiles: str,
+    node_label_prefix: str = None
+) -> nx.Graph:
     """
     Converts the SMILES string for a molecule into a molecular graph (Network-X
     Graph object).
@@ -116,7 +124,9 @@ def smiles_to_graph(smiles: str, node_label_prefix: str = None) -> nx.Graph:
     
     return G
 
-def graph_to_smiles(G: nx.Graph) -> str:
+def graph_to_smiles(
+    G: nx.Graph
+) -> str:
     """
     Converts a molecular graph (Network-X Graph object) into a SMILES string
     for the molecule.
