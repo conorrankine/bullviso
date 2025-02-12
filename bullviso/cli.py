@@ -23,6 +23,8 @@ import ast
 from argparse import ArgumentParser, ArgumentTypeError, Namespace
 from typing import Union
 from bullviso.graphs import compose_bullvalene_supergraph_from_smiles
+from bullviso.graphs import graph_to_mol
+from bullviso.graphs import mol_to_graph
 from bullviso.barcodes import create_barcode
 
 ###############################################################################
@@ -198,6 +200,16 @@ def main():
     barcodes = set(
         barcode for barcode in canonical_barcode.permutations()
     )
+
+    for barcode in barcodes:
+        super_G_ = super_G.copy()
+        for i, bit in enumerate(barcode.barcode):
+            if bit != 0:
+                super_G_.add_edge(
+                    f'bullvalene_{i}',
+                    connectivity_map[bit]
+                )
+        mol = graph_to_mol(super_G_)
 
     # func_group_smile = args.func_group_smile
     # print(f'>> functional group SMILE: {func_group_smile}')
