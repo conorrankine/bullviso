@@ -21,12 +21,15 @@ this program.  If not, see <https://www.gnu.org/licenses/>.
 
 import ast
 from argparse import ArgumentParser, ArgumentTypeError, Namespace
+from pathlib import Path
 from typing import Union
 from bullviso.graphs import compose_bullvalene_supergraph_from_smiles
 from bullviso.graphs import graph_to_mol
 from bullviso.graphs import mol_to_graph
 from bullviso.barcodes import create_barcode
 from bullviso.geoms import generate_confs
+from bullviso.utils import tuple_to_str
+from bullviso.io import mol_to_out_f
 
 ###############################################################################
 ############################## ARGUMENT PARSING ###############################
@@ -56,9 +59,9 @@ def parse_args() -> Namespace:
         help =('atomic index of the substituent-bullvalene attachment point '
             'for each unique substituent')
     )
-    # p.add_argument('--m_confs', '-m', type = int, default = 1,
-    #     help = ('number of conformational isomers to generate')
-    # )
+    p.add_argument('--m_confs', '-m', type = int, default = 1,
+        help = ('maximum number of conformational isomers to generate')
+    )
     p.add_argument('--forcefield', '-ff', type = str, default = 'uff',
         choices = ('uff', 'mmff'),
         help = ('forcefield for optimising conformational isomers')
@@ -70,10 +73,10 @@ def parse_args() -> Namespace:
         help = ('number of threads for optimising conformational isomers '
             'in multithreaded/parallel processes')
     )
-    # p.add_argument('--out_f_type', '-o', type = str, default = 'xyz',
-    #     choices = ('xyz', 'gaussian', 'orca'),
-    #     help = ('file type for output geometries')
-    # )
+    p.add_argument('--out_f_type', '-o', type = str, default = 'xyz',
+        choices = ('xyz', 'gaussian', 'orca'),
+        help = ('file type for outputting geometries')
+    )
 
     args = p.parse_args()
 
@@ -220,49 +223,25 @@ def main():
             prune_rms_thresh = args.prune_rms_thresh,
             num_threads = args.num_threads
         )
-
-    # func_group_smile = args.func_group_smile
-    # print(f'>> functional group SMILE: {func_group_smile}')
-    # func_group = Chem.MolFromSmiles(func_group_smile)
-
-    # print(f'>> {args.n_func_groups} functional groups')
-
-    # confcodes = bullviso.confcodes.gen_confcodes(args.n_func_groups)
-    # print(f'>> {len(confcodes)} unique structural isomer(s)\n')
-
-    # print('>> constructing structural isomer(s)...')
-    # for confcode in tqdm.tqdm(confcodes, ncols = 80):       
-    #     func_bullvalene = bullviso.geoms.functionalise(
-    #         bullvalene,
-    #         func_group,
-    #         confcode,
-    #         func_group_attach_idx = args.func_group_attach_idx
-    #     )
-    #     func_bullvalene = bullviso.geoms.generate_confs(
-    #         func_bullvalene,
-    #         forcefield = args.forcefield,
-    #         prune_rms_thresh = args.prune_rms_thresh,
-    #         num_threads = args.num_threads
-    #     )
-    #     m_confs = min(
-    #         func_bullvalene.GetNumConformers(), args.m_confs
-    #     )
-    #     if m_confs > 0:
-    #         confcode_str = bullviso.utils.tuple_to_str(confcode)
-    #         d = Path(f'./{confcode_str}')
-    #         if not d.is_dir():
-    #             d.mkdir()
-    #         for conf_idx in range(m_confs):
-    #             out_d = d / f'./{confcode_str}_{conf_idx+1:03d}'
-    #             if not out_d.is_dir():
-    #                 out_d.mkdir()
-    #             out_f = out_d / f'./{confcode_str}_{conf_idx+1:03d}'
-    #             bullviso.io.mol_to_out_f(
-    #                 out_f,
-    #                 args.out_f_type,
-    #                 func_bullvalene,
-    #                 conf_idx = conf_idx
-    #             )
+        m_confs = min(
+            mol.GetNumConformers(), args.m_confs
+        )
+        if m_confs > 0:
+            confcode_str = tuple_to_str(barcode.grouped_barcode)
+            d = Path(f'./{confcode_str}')
+            if not d.is_dir():
+                d.mkdir()
+            for conf_idx in range(m_confs):
+                out_d = d / f'./{confcode_str}_{conf_idx+1:03d}'
+                if not out_d.is_dir():
+                    out_d.mkdir()
+                out_f = out_d / f'./{confcode_str}_{conf_idx+1:03d}'
+                mol_to_out_f(
+                    out_f,
+                    args.out_f_type,
+                    mol,
+                    conf_idx = conf_idx
+                )
 
 ################################################################################
 ############################## PROGRAM STARTS HERE #############################
