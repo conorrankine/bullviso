@@ -26,6 +26,7 @@ from bullviso.graphs import compose_bullvalene_supergraph_from_smiles
 from bullviso.graphs import graph_to_mol
 from bullviso.graphs import mol_to_graph
 from bullviso.barcodes import create_barcode
+from bullviso.geoms import generate_confs
 
 ###############################################################################
 ############################## ARGUMENT PARSING ###############################
@@ -58,16 +59,17 @@ def parse_args() -> Namespace:
     # p.add_argument('--m_confs', '-m', type = int, default = 1,
     #     help = ('number of conformational isomers to generate')
     # )
-    # p.add_argument('--forcefield', '-ff', type = str, default = 'uff',
-    #     choices = ('uff', 'mmff'),
-    #     help = ('forcefield for optimising conformational isomers')
-    # )
-    # p.add_argument('--prune_rms_thresh', '-rmsd', type = float, default = 0.5,
-    #     help = ('RMSD threshold for pruning conformational isomers')
-    # )
-    # p.add_argument('--num_threads', '-nt', type = int, default = 1,
-    #     help = ('number of threads for generating conformational isomers')
-    # )
+    p.add_argument('--forcefield', '-ff', type = str, default = 'uff',
+        choices = ('uff', 'mmff'),
+        help = ('forcefield for optimising conformational isomers')
+    )
+    p.add_argument('--prune_rms_thresh', '-rmsd', type = float, default = 0.5,
+        help = ('RMSD threshold for pruning conformational isomers')
+    )
+    p.add_argument('--num_threads', '-nt', type = int, default = 1,
+        help = ('number of threads for optimising conformational isomers '
+            'in multithreaded/parallel processes')
+    )
     # p.add_argument('--out_f_type', '-o', type = str, default = 'xyz',
     #     choices = ('xyz', 'gaussian', 'orca'),
     #     help = ('file type for output geometries')
@@ -210,6 +212,12 @@ def main():
                     connectivity_map[bit]
                 )
         mol = graph_to_mol(super_G_)
+        mol = generate_confs(
+            mol,
+            forcefield = args.forcefield,
+            prune_rms_thresh = args.prune_rms_thresh,
+            num_threads = args.num_threads
+        )
 
     # func_group_smile = args.func_group_smile
     # print(f'>> functional group SMILE: {func_group_smile}')
