@@ -19,7 +19,9 @@ this program.  If not, see <https://www.gnu.org/licenses/>.
 ############################### LIBRARY IMPORTS ###############################
 ###############################################################################
 
-from argparse import ArgumentParser, Namespace
+import ast
+from argparse import ArgumentParser, ArgumentTypeError, Namespace
+from typing import Union
 from bullviso.graphs import compose_bullvalene_supergraph_from_smiles
 
 ###############################################################################
@@ -42,11 +44,11 @@ def parse_args() -> Namespace:
         help = 'SMILES string representation for each unique substituent'
     )
     p.add_argument(
-        '--n_sub', '-n', type = int, nargs = '+', default = 1,
+        '--n_subs', '-n', type = _int_or_list_of_ints, default = [1],
         help = ('number of each unique substituent to add')
     )
     p.add_argument(
-        '--sub_attachment_idx', '-a', type = int, nargs = '+', default = 1,
+        '--sub_attach_idx', '-a', type = _int_or_list_of_ints, default = [1],
         help =('atomic index of the substituent-bullvalene attachment point '
             'for each unique substituent')
     )
@@ -71,6 +73,46 @@ def parse_args() -> Namespace:
     args = p.parse_args()
 
     return args
+
+def _int_or_list_of_ints(
+    input: Union[int, list[int]]
+) -> list[int]:
+    """
+    Custom argument type for a command line argument to allow the user to
+    pass an integer or a list of integers as an input value.
+
+    Args:
+        input (Union[int, list[int]]): Input value.
+
+    Raises:
+        ArgumentTypeError: If `input` is not an integer or a list of integers,
+            or if `input` is a list that contains non-integer elements.
+
+    Returns:
+        list[int]: List of integers; a length-1 list if `input` is an
+            integer, else a length-n list (where n = len(`input`)) if `input`
+            is a list of integers.
+    """
+    
+    try:
+        input = ast.literal_eval(input)
+        if isinstance(input, int):
+            return [input]
+        elif isinstance(input, list):
+            if all(isinstance(i, int) for i in input):
+                return input
+            else:
+                raise ArgumentTypeError(
+                    'list should contain only integer elements'
+                )
+        else:
+            raise ArgumentTypeError(
+                'argument should be an integer or a list of integers'
+            )
+    except (ValueError, SyntaxError):
+        raise ArgumentTypeError(
+            f'invalid argument: {input}'
+        )
 
 ###############################################################################
 ################################ MAIN FUNCTION ################################
