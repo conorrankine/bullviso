@@ -195,6 +195,10 @@ def main():
         args.n_subs
     )
 
+    barcodes = set(
+        barcode for barcode in canonical_barcode.permutations()
+    )
+
     # func_group_smile = args.func_group_smile
     # print(f'>> functional group SMILE: {func_group_smile}')
     # func_group = Chem.MolFromSmiles(func_group_smile)
