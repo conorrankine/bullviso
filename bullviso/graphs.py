@@ -89,7 +89,8 @@ def graph_to_mol(G: nx.Graph) -> Chem.Mol:
         mol.AddBond(
             node_to_atom_mapping[node_i],
             node_to_atom_mapping[node_j],
-            bond_type
+            bond_type if bond_type is not None
+                else Chem.rdchem.BondType.SINGLE
         )
 
     mol = mol.GetMol()
