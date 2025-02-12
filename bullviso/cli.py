@@ -169,8 +169,20 @@ def main():
 
     args = parse_args()
 
+    sub_smiles = [
+        smile for smile, n in zip(
+            args.sub_smiles, args.n_subs
+        ) for _ in range(n)
+    ]
+
+    sub_attach_idx = [
+        attach_idx for attach_idx, n in zip(
+            args.sub_attach_idx, args.n_subs
+        ) for _ in range(n)
+    ]
+
     super_G = compose_bullvalene_supergraph_from_smiles(
-        sub_smiles = args.sub_smiles
+        sub_smiles = sub_smiles
     )
 
     # func_group_smile = args.func_group_smile
