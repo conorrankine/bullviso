@@ -64,6 +64,9 @@ def generate_confs(
     n_rotatable_bonds = rdMolDescriptors.CalcNumRotatableBonds(mol)
     n_confs = 30 if n_rotatable_bonds < 8 else 120
 
+    if mol.GetNumAtoms() == mol.GetNumHeavyAtoms():
+        mol.AddHs(mol)
+
     rdDistGeom.EmbedMultipleConfs(
         mol, numConfs = n_confs, params = params
     )
