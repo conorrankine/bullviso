@@ -191,8 +191,8 @@ def main():
     )
 
     connectivity_map = {
-        i + 1: f'sub{i + 1}_{sub_attach_idx_}'
-            for i, sub_attach_idx_ in enumerate(sub_attach_idx) 
+        i: f'sub{i}_{sub_attach_idx_}'
+            for i, sub_attach_idx_ in enumerate(sub_attach_idx, start = 1) 
     }
 
     canonical_barcode = create_barcode(
@@ -205,13 +205,15 @@ def main():
 
     for barcode in barcodes:
         super_G_ = super_G.copy()
-        for i, bit in enumerate(barcode.barcode):
+        for i, bit in enumerate(barcode.barcode, start = 1):
             if bit != 0:
                 super_G_.add_edge(
                     f'bullvalene_{i}',
                     connectivity_map[bit]
                 )
-        mol = graph_to_mol(super_G_)
+        mol = graph_to_mol(
+            super_G_
+        )
         mol = generate_confs(
             mol,
             forcefield = args.forcefield,

@@ -183,8 +183,8 @@ def compose_bullvalene_supergraph_from_smiles(
     if sub_smiles is not None:
         sub_G = [
             smiles_to_graph(
-                sub_smile, node_label_prefix = f'sub{i + 1}_'
-            ) for i, sub_smile in enumerate(sub_smiles)
+                sub_smile, node_label_prefix = f'sub{i}_'
+            ) for i, sub_smile in enumerate(sub_smiles, start = 1)
         ]
     else:
         sub_G = []
