@@ -72,6 +72,12 @@ def parse_args() -> Namespace:
 
     args = p.parse_args()
 
+    if len(args.sub_smiles) > 1:
+        if len(args.n_subs) == 1:
+            args.n_subs = args.n_subs * len(args.sub_smiles)
+        if len(args.sub_attach_idx) == 1:
+            args.sub_attach_idx = args.sub_attach_idx * len(args.sub_smiles)
+
     return args
 
 def _int_or_list_of_ints(
