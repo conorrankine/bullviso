@@ -21,9 +21,8 @@ this program.  If not, see <https://www.gnu.org/licenses/>.
 
 import copy
 from rdkit import Chem
-from rdkit.Chem import rdDistGeom
-from rdkit.Chem import rdForceFieldHelpers
-from rdkit.Chem import rdMolDescriptors
+from rdkit.Chem import AllChem
+from rdkit.Chem import rdDistGeom, rdForceFieldHelpers, rdMolDescriptors
 
 ###############################################################################
 ################################## FUNCTIONS ##################################
