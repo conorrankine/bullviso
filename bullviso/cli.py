@@ -185,6 +185,11 @@ def main():
         sub_smiles = sub_smiles
     )
 
+    attach_map = {
+        i + 1: f'sub{i + 1}_{sub_attach_idx_}'
+            for i, sub_attach_idx_ in enumerate(sub_attach_idx) 
+    }
+
     # func_group_smile = args.func_group_smile
     # print(f'>> functional group SMILE: {func_group_smile}')
     # func_group = Chem.MolFromSmiles(func_group_smile)
