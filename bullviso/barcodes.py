@@ -20,7 +20,7 @@ this program.  If not, see <https://www.gnu.org/licenses/>.
 ###############################################################################
 
 from itertools import permutations
-from utils import rotate_tuple
+from bullviso.utils import rotate_tuple
 from typing import Generator
 
 ###############################################################################
@@ -322,3 +322,58 @@ class BVBarcode:
         raise NotImplementedError(
             '`_get_connected_barcodes()` is currently a placeholder method'
         )
+
+###############################################################################
+################################## FUNCTIONS ##################################
+###############################################################################
+
+def create_barcode(
+    n_subs: list[int],
+    canonicalize: bool = True
+) -> 'BVBarcode':
+    """
+    Creates a bullvalene isomer barcode (`BVBarcode` instance) corresponding to
+    the `n_subs` specification of unique substituents.
+
+    Args:
+        n_subs (list[int]): List of integers corresponding to the number(s) of
+            each unique substituent on the bullvalene.
+        canonicalize (bool, optional): If `True`, the bullvalene isomer barcode
+            is converted to the canonical representation. Defaults to True.
+
+    Raises:
+        ValueError: If the sum of the integer elements in `n_subs` is greater
+            than 9.
+
+    Returns:
+        BVBarcode: `BVBarcode` instance corresponding to the `n_subs`
+            specification of unique substituents.
+    """
+    
+    if sum(n_subs) > 9:
+        raise ValueError(
+            '`n_subs` is too large; support is only available for up to (and '
+            'including) 9 substituents'
+        )
+
+    barcode = []
+    grouped_barcode = []
+    
+    i = 1
+    j = 1
+    for n_sub in n_subs:
+        for _ in range(n_sub):
+            barcode.append(i)
+            grouped_barcode.append(j)
+            i += 1
+        j += 1
+
+    zero_pad = [0] * (10 - len(barcode))
+    barcode = tuple(zero_pad + barcode)
+    grouped_barcode = tuple(zero_pad + grouped_barcode)
+
+    return BVBarcode(
+        barcode,
+        grouped_barcode = grouped_barcode,
+        canonicalize = canonicalize
+    )
