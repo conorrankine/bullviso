@@ -247,15 +247,14 @@ def main():
             mol.GetNumConformers(), args.m_confs
         )
         if m_confs > 0:
-            confcode_str = tuple_to_str(barcode.grouped_barcode)
-            d = Path(f'./{confcode_str}')
+            d = Path(f'./{barcode}')
             if not d.is_dir():
                 d.mkdir()
             for conf_idx in range(m_confs):
-                out_d = d / f'./{confcode_str}_{conf_idx+1:03d}'
+                out_d = d / f'./{barcode}_{conf_idx+1:03d}'
                 if not out_d.is_dir():
                     out_d.mkdir()
-                out_f = out_d / f'./{confcode_str}_{conf_idx+1:03d}'
+                out_f = out_d / f'./{barcode}_{conf_idx+1:03d}'
                 mol_to_out_f(
                     out_f,
                     args.out_f_type,
