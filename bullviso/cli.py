@@ -209,7 +209,7 @@ def main():
         args.n_subs
     )
 
-    print(f'canonical barcode: {canonical_barcode.grouped_barcode}\n')
+    print(f'canonical barcode: {canonical_barcode}\n')
 
     print('identifying inequivalent permutations...')
     barcodes = set(
