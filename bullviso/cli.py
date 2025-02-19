@@ -19,18 +19,13 @@ this program.  If not, see <https://www.gnu.org/licenses/>.
 ############################### LIBRARY IMPORTS ###############################
 ###############################################################################
 
+import bullviso as bv
 import tqdm
 import datetime
 import ast
 from argparse import ArgumentParser, ArgumentTypeError, Namespace
 from pathlib import Path
 from typing import Union
-from bullviso.graphs import compose_bullvalene_supergraph_from_smiles
-from bullviso.graphs import graph_to_mol
-from bullviso.graphs import mol_to_graph
-from bullviso.barcodes import create_barcode
-from bullviso.geoms import generate_confs
-from bullviso.io import mol_to_out_f
 
 ###############################################################################
 ############################## ARGUMENT PARSING ###############################
@@ -201,7 +196,7 @@ def main():
         ) for _ in range(n)
     ]
 
-    super_G = compose_bullvalene_supergraph_from_smiles(
+    super_G = bv.graphs.compose_bullvalene_supergraph_from_smiles(
         sub_smiles = sub_smiles
     )
 
@@ -210,7 +205,7 @@ def main():
             for i, sub_attach_idx_ in enumerate(sub_attach_idx, start = 1) 
     }
 
-    canonical_barcode = create_barcode(
+    canonical_barcode = bv.barcodes.create_barcode(
         args.n_subs
     )
 
@@ -233,10 +228,10 @@ def main():
                     f'bullvalene_{i}',
                     connectivity_map[bit]
                 )
-        mol = graph_to_mol(
+        mol = bv.graphs.graph_to_mol(
             super_G_
         )
-        mol = generate_confs(
+        mol = bv.rdkit.generate_confs(
             mol,
             forcefield = args.forcefield,
             prune_rms_thresh = args.prune_rms_thresh,
@@ -254,7 +249,7 @@ def main():
                 if not out_d.is_dir():
                     out_d.mkdir()
                 out_f = out_d / f'./{barcode}_{conf_idx+1:03d}'
-                mol_to_out_f(
+                bv.io.mol_to_out_f(
                     out_f,
                     args.out_f_type,
                     mol,
