@@ -97,6 +97,28 @@ bullviso CCCC -a 2
 
 generates the four unique constitutional isomers of 2-butylbullvalene.
 
+You can generate heterosubstituted bullvalenes (*i.e.* bullvalenes with more than one kind of substituent) by passing the SMILES strings of multiple different substituents as separate command line arguments, *e.g.*,
+
+```
+bullviso C CC CCC
+```
+
+generates the 240 unique constitutional isomers of (methyl, ethyl, *n*-propyl)bullvalene.
+
+You can use `-n [N_SUBS]` and `-a [SUB_ATTACH_IDX]` flags to modify the number of substituents and/or the attachment points on the SMILES strings of the substituents by passing lists of values as command line arguments where each element of the list corresponds to each of the SMILES strings defining the substituents, *e.g.*,
+
+```
+bullviso C C CCC -n [2,2,1]
+```
+
+generates the 2520 unique constitutional isomers of (dimethyl, diethyl, *n*-propyl)bullvalene, while
+
+```
+bullviso C C CCC -n [2,2,1] -a [1,1,2]
+```
+
+generates the 2520 constitutional isomers of (dimethyl, diethyl, isopropyl)bullvalene.
+
 BULLVISO outputs the structures of the substituted bullvalenes in .xyz format by default, although you can use the `-o [OUT_F_TYPE]` flag to output in an alternative format, *e.g.* a basic (customisable) input file for Gaussian (`-o gaussian`) or Orca (`-o orca`). 
 
 Don't forget that you can always get a reminder of, and help with, the available command line flags by entering:
