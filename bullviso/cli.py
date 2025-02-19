@@ -20,6 +20,7 @@ this program.  If not, see <https://www.gnu.org/licenses/>.
 ###############################################################################
 
 import tqdm
+import datetime
 import ast
 from argparse import ArgumentParser, ArgumentTypeError, Namespace
 from pathlib import Path
@@ -176,6 +177,9 @@ def _validate_args(
 
 def main():
 
+    datetime_ = datetime.datetime.now()
+    print(f'launched @ {datetime_.strftime("%H:%M:%S (%Y-%m-%d)")}\n')
+
     args = parse_args()
 
     print(' ' * 3 + f'{"SMILEs":<30} {"number":>10} {"attached @":>15}')
@@ -259,6 +263,9 @@ def main():
                     conf_idx = conf_idx
                 )
     print('...done!\n')
+
+    datetime_ = datetime.datetime.now()
+    print(f'finished @ {datetime_.strftime("%H:%M:%S (%Y-%m-%d)")}')
 
 ################################################################################
 ############################## PROGRAM STARTS HERE #############################
