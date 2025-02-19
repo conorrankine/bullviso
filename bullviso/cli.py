@@ -30,7 +30,6 @@ from bullviso.graphs import graph_to_mol
 from bullviso.graphs import mol_to_graph
 from bullviso.barcodes import create_barcode
 from bullviso.geoms import generate_confs
-from bullviso.utils import tuple_to_str
 from bullviso.io import mol_to_out_f
 
 ###############################################################################

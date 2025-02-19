@@ -24,17 +24,3 @@ def rotate_tuple(t: tuple, n: int) -> tuple:
     # (1,2,3,4,5,6), 2)` returns the rotated/rolled tuple `(5,6,1,2,3,4)`
     
     return t[-n:] + t[:-n]
-
-def tuple_to_str(t: tuple) -> str:
-    # returns a representation of the tuple `t` as a string
-
-    str_ = ''
-    for t_ in t:
-        str_ += str(t_)
-
-    return str_
-
-def argsort(t: tuple) -> list:
-    # returns the indices that would sort the tuple `t`
-
-    return sorted(range(len(t)), key = t.__getitem__)
