@@ -19,6 +19,7 @@ this program.  If not, see <https://www.gnu.org/licenses/>.
 ############################### LIBRARY IMPORTS ###############################
 ###############################################################################
 
+import tqdm
 import ast
 from argparse import ArgumentParser, ArgumentTypeError, Namespace
 from pathlib import Path
@@ -177,6 +178,14 @@ def main():
 
     args = parse_args()
 
+    print(' ' * 3 + f'{"SMILEs":<30} {"number":>10} {"attached @":>15}')
+    print('-' * 60)
+    for i, (sub_smile, n_sub, attach_idx) in enumerate(
+        zip(args.sub_smiles, args.n_subs, args.sub_attach_idx), start = 1
+    ):
+        print(f'{i}. {sub_smile:<30} {n_sub:>10} {attach_idx:>15}')
+    print('-' * 60 + '\n')
+
     sub_smiles = [
         smile for smile, n in zip(
             args.sub_smiles, args.n_subs
@@ -202,11 +211,18 @@ def main():
         args.n_subs
     )
 
-    barcodes = set(
-        barcode for barcode in canonical_barcode.permutations()
-    )
+    print(f'canonical barcode: {canonical_barcode.grouped_barcode}\n')
 
-    for barcode in barcodes:
+    print('identifying inequivalent permutations...')
+    barcodes = set(
+        barcode for barcode in tqdm.tqdm(
+            canonical_barcode.permutations(), ncols = 60, total = 3628800
+        )
+    )
+    print('...done!\n')
+
+    print('generating geometries and writing output...')
+    for barcode in tqdm.tqdm(barcodes, ncols = 60):
         super_G_ = super_G.copy()
         for i, bit in enumerate(barcode.barcode, start = 1):
             if bit != 0:
@@ -242,6 +258,7 @@ def main():
                     mol,
                     conf_idx = conf_idx
                 )
+    print('...done!\n')
 
 ################################################################################
 ############################## PROGRAM STARTS HERE #############################
