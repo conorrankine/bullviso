@@ -87,6 +87,19 @@ class BVBarcode:
         if canonicalize:
             self.canonicalize()
 
+    def __str__(
+        self
+    ) -> str:
+        """
+        Returns a string representation for the `_grouped_barcode` attribute
+        of the `BVBarcode` instance.
+
+        Returns:
+            str: String representation for the `_grouped_barcode` attribute.
+        """
+        
+        return ''.join(map(str, self._grouped_barcode))
+
     def __hash__(
         self
     ) -> int:
