@@ -34,18 +34,25 @@ def mol_to_file(
     **kwargs
 ):
     
-    mol_to_out_f_ = {
+    filewriter = {
         'xyz': mol_to_xyz,
+        'sdf': mol_to_sdf,
         'gaussian': mol_to_gaussian_input,
         'orca': mol_to_orca_input
     }
 
-    mol_to_out_f_[filetype](
-        filepath = filepath,
-        mol = mol,
-        conf_idx = conf_idx,
-        **kwargs
-    )
+    try:
+        filewriter[filetype](
+            filepath = filepath,
+            mol = mol,
+            conf_idx = conf_idx,
+            **kwargs
+        )
+    except KeyError:
+        raise ValueError(
+            f'{filetype} is not a supported output file type; refer to the '
+            'Bullviso documentation for a list of supported output file types'
+        ) from None
 
 def mol_to_xyz(
     filepath: Path,
