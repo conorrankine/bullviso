@@ -249,7 +249,7 @@ def main():
                 if not out_d.is_dir():
                     out_d.mkdir()
                 out_f = out_d / f'./{barcode}_{conf_idx+1:03d}'
-                bv.io.mol_to_out_f(
+                bv.io.mol_to_file(
                     out_f,
                     args.out_f_type,
                     mol,
