@@ -30,7 +30,7 @@ def mol_to_out_f(
     filepath: Path,
     filetype: str,
     mol: Chem.Mol,
-    conf_idx: int = 0,
+    conf_idx: int = -1,
     **kwargs
 ) -> None:
     
@@ -52,7 +52,7 @@ def mol_to_out_f(
 def mol_to_xyz_f(
     filepath: Path,
     mol: Chem.Mol,
-    conf_idx: int = 0
+    conf_idx: int = -1
 ) -> None:
     
     with open(filepath.with_suffix('.xyz'), 'w') as f:
@@ -70,7 +70,7 @@ def mol_to_xyz_f(
 def mol_to_gaussian_input_f(
     filepath: Path,
     mol: Chem.Mol,
-    conf_idx: int = 0,
+    conf_idx: int = -1,
     method: str = 'PBE1PBE',
     basis: str = 'DEF2SVPP',
     charge: int = 0,
@@ -110,7 +110,7 @@ def mol_to_gaussian_input_f(
 def mol_to_orca_input_f(
     filepath: Path,
     mol: Chem.Mol,
-    conf_idx: int = 0,
+    conf_idx: int = -1,
     method: str = 'PBE0',
     basis: str = 'DEF2-SV(P)',
     charge: int = 0,
@@ -138,7 +138,7 @@ def mol_to_orca_input_f(
 
 def _format_coordinates(
     mol: Chem.Mol,
-    conf_idx: int = 0,
+    conf_idx: int = -1,
     fmt: str = '>14.8f'
 ) -> str:
     """
