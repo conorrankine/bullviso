@@ -21,39 +21,48 @@ this program.  If not, see <https://www.gnu.org/licenses/>.
 
 from pathlib import Path
 from rdkit import Chem
+from rdkit.Chem import (
+    MolFromXYZFile as xyz_to_mol,
+    MolFromMolFile as sdf_to_mol
+)
 
 ###############################################################################
 ################################## FUNCTIONS ##################################
 ###############################################################################
 
-def mol_to_out_f(
+def mol_to_file(
     filepath: Path,
     filetype: str,
     mol: Chem.Mol,
-    conf_idx: int = 0,
+    conf_idx: int = -1,
     **kwargs
-) -> None:
+):
     
-    mol_to_out_f_ = {
-        'xyz': mol_to_xyz_f,
-        'gaussian': mol_to_gaussian_input_f,
-        'orca': mol_to_orca_input_f
+    filewriter = {
+        'xyz': mol_to_xyz,
+        'sdf': mol_to_sdf,
+        'gaussian': mol_to_gaussian_input,
+        'orca': mol_to_orca_input
     }
 
-    mol_to_out_f_[filetype](
-        filepath = filepath,
-        mol = mol,
-        conf_idx = conf_idx,
-        **kwargs
-    )
+    try:
+        filewriter[filetype](
+            filepath = filepath,
+            mol = mol,
+            conf_idx = conf_idx,
+            **kwargs
+        )
+    except KeyError:
+        raise ValueError(
+            f'{filetype} is not a supported output file type; refer to the '
+            'Bullviso documentation for a list of supported output file types'
+        ) from None
 
-    return None
-
-def mol_to_xyz_f(
+def mol_to_xyz(
     filepath: Path,
     mol: Chem.Mol,
-    conf_idx: int = 0
-) -> None:
+    conf_idx: int = -1
+):
     
     with open(filepath.with_suffix('.xyz'), 'w') as f:
         # write number of atoms
@@ -61,28 +70,32 @@ def mol_to_xyz_f(
             f'{mol.GetNumAtoms()}\n\n'
         )
         # write Cartesian coordinate lines
-        for i, atom in enumerate(mol.GetAtoms()):
-            coord = mol.GetConformer(conf_idx).GetAtomPosition(i)
-            coord_line_fmt = '{:<2}{:>14.8f}{:>14.8f}{:>14.8f}\n'
-            f.write(
-                coord_line_fmt.format(
-                    atom.GetSymbol(), coord.x, coord.y, coord.z
-                )
-            )
-    
-    return None
+        f.write(
+            _format_coordinates(mol, conf_idx = conf_idx)
+        )
 
-def mol_to_gaussian_input_f(
+def mol_to_sdf(
     filepath: Path,
     mol: Chem.Mol,
-    conf_idx: int = 0,
+    conf_idx: int = -1
+):
+    
+    raise NotImplementedError(
+        'support for writing molecules (RDKit Mol objects) to .sdf/.mol '
+        'files is coming in a future version of Bullviso'
+    )
+
+def mol_to_gaussian_input(
+    filepath: Path,
+    mol: Chem.Mol,
+    conf_idx: int = -1,
     method: str = 'PBE1PBE',
     basis: str = 'DEF2SVPP',
     charge: int = 0,
     multiplicity: int = 1,
     n_proc: int = 1,
     memory: int = 4000
-) -> None:
+):
     
     with open(filepath.with_suffix('.gjf'), 'w') as f:
         # write .chk filepath and resource specifications
@@ -97,54 +110,75 @@ def mol_to_gaussian_input_f(
         f.write(
             f'CONFIGURATIONAL ISOMER: {filepath.stem}\n\n'
         )
-        # write charge, multiplicity, and Cartesian coordinate lines
+        # write charge and multiplicity
         f.write(
             f'{charge} {multiplicity}\n'
         )
-        for i, atom in enumerate(mol.GetAtoms()):
-            coord = mol.GetConformer(conf_idx).GetAtomPosition(i)
-            coord_line_fmt = '{:<2}{:>14.8f}{:>14.8f}{:>14.8f}\n'
-            f.write(
-                coord_line_fmt.format(
-                    atom.GetSymbol(), coord.x, coord.y, coord.z
-                )
-            )
+        # write Cartesian coordinate lines
+        f.write(
+            _format_coordinates(mol, conf_idx = conf_idx)
+        )
         # write terminating blank line
         f.write(
             '\n'
         )
 
-    return None
-
-def mol_to_orca_input_f(
+def mol_to_orca_input(
     filepath: Path,
     mol: Chem.Mol,
-    conf_idx: int = 0,
+    conf_idx: int = -1,
     method: str = 'PBE0',
     basis: str = 'DEF2-SV(P)',
     charge: int = 0,
     multiplicity: int = 1,
     n_proc: int = 1,
     memory: int = 4000
-) -> None:
+):
     
     with open(filepath.with_suffix('.in'), 'w') as f:
         # write route line
         f.write(
             f'! {method} {basis} OPT FREQ\n\n'
         )
-        # write charge, multiplicity, and Cartesian coordinate lines
+        # write charge and multiplicity
         f.write(
             f'* XYZ {charge} {multiplicity}\n'
         )
-        for i, atom in enumerate(mol.GetAtoms()):
-            coord = mol.GetConformer(conf_idx).GetAtomPosition(i)
-            coord_line_fmt = '{:<2}{:>14.8f}{:>14.8f}{:>14.8f}\n'
-            f.write(
-                coord_line_fmt.format(
-                    atom.GetSymbol(), coord.x, coord.y, coord.z
-                )
-            )
+        # write Cartesian coordinate lines
+        f.write(
+            _format_coordinates(mol, conf_idx = conf_idx)
+        )
         f.write(
             '*'
         )
+
+def _format_coordinates(
+    mol: Chem.Mol,
+    conf_idx: int = -1,
+    fmt: str = '>14.8f'
+) -> str:
+    """
+    Returns the Cartesian coordinates of a molecule (RDKit Mol object) as a
+    formatted string for use, e.g., in file/console printout.
+
+    Args:
+        mol (Chem.Mol): Molecule.
+        conf_idx (int, optional): Index of the conformer to return Cartesian
+            coordinates as a formatted string for. Defaults to 0.
+        fmt (str, optional): Format string for the Cartesian coordinates in
+            Python's string formatting syntax. Defaults to '>14.8f' (i.e. 14
+            characters wide; right-aligned; 8 decimal places).
+
+    Returns:
+        str: Cartesian coordinates of the molecule as a formatted string.
+    """
+    
+    coord_line_fmt = f'{{:<2}}{{:{fmt}}}{{:{fmt}}}{{:{fmt}}}\n'
+
+    coord_lines = ''
+    for i, atom in enumerate(mol.GetAtoms()):
+        coord = mol.GetConformer(conf_idx).GetAtomPosition(i)
+        coord_lines += coord_line_fmt.format(
+            atom.GetSymbol(), coord.x, coord.y, coord.z
+        )
+    return coord_lines

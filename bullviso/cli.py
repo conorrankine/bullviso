@@ -70,7 +70,7 @@ def parse_args() -> Namespace:
             'in multithreaded/parallel processes')
     )
     p.add_argument('--out_f_type', '-o', type = str, default = 'xyz',
-        choices = ('xyz', 'gaussian', 'orca'),
+        choices = ('xyz', 'sdf', 'gaussian', 'orca'),
         help = ('file type for outputting geometries')
     )
 
@@ -249,7 +249,7 @@ def main():
                 if not out_d.is_dir():
                     out_d.mkdir()
                 out_f = out_d / f'./{barcode}_{conf_idx+1:03d}'
-                bv.io.mol_to_out_f(
+                bv.io.mol_to_file(
                     out_f,
                     args.out_f_type,
                     mol,
