@@ -32,7 +32,7 @@ def mol_to_file(
     mol: Chem.Mol,
     conf_idx: int = -1,
     **kwargs
-) -> None:
+):
     
     mol_to_out_f_ = {
         'xyz': mol_to_xyz,
@@ -47,13 +47,11 @@ def mol_to_file(
         **kwargs
     )
 
-    return None
-
 def mol_to_xyz(
     filepath: Path,
     mol: Chem.Mol,
     conf_idx: int = -1
-) -> None:
+):
     
     with open(filepath.with_suffix('.xyz'), 'w') as f:
         # write number of atoms
@@ -64,8 +62,6 @@ def mol_to_xyz(
         f.write(
             _format_coordinates(mol, conf_idx = conf_idx)
         )
-    
-    return None
 
 def mol_to_gaussian_input(
     filepath: Path,
@@ -77,7 +73,7 @@ def mol_to_gaussian_input(
     multiplicity: int = 1,
     n_proc: int = 1,
     memory: int = 4000
-) -> None:
+):
     
     with open(filepath.with_suffix('.gjf'), 'w') as f:
         # write .chk filepath and resource specifications
@@ -105,8 +101,6 @@ def mol_to_gaussian_input(
             '\n'
         )
 
-    return None
-
 def mol_to_orca_input(
     filepath: Path,
     mol: Chem.Mol,
@@ -117,7 +111,7 @@ def mol_to_orca_input(
     multiplicity: int = 1,
     n_proc: int = 1,
     memory: int = 4000
-) -> None:
+):
     
     with open(filepath.with_suffix('.in'), 'w') as f:
         # write route line
