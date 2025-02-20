@@ -141,6 +141,21 @@ def _format_coordinates(
     conf_idx: int = 0,
     fmt: str = '>14.8f'
 ) -> str:
+    """
+    Returns the Cartesian coordinates of a molecule (RDKit Mol object) as a
+    formatted string for use, e.g., in file/console printout.
+
+    Args:
+        mol (Chem.Mol): Molecule.
+        conf_idx (int, optional): Index of the conformer to return Cartesian
+            coordinates as a formatted string for. Defaults to 0.
+        fmt (str, optional): Format string for the Cartesian coordinates in
+            Python's string formatting syntax. Defaults to '>14.8f' (i.e. 14
+            characters wide; right-aligned; 8 decimal places).
+
+    Returns:
+        str: Cartesian coordinates of the molecule as a formatted string.
+    """
     
     coord_line_fmt = f'{{:<2}}{{:{fmt}}}{{:{fmt}}}{{:{fmt}}}\n'
 
