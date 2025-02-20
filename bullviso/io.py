@@ -21,6 +21,10 @@ this program.  If not, see <https://www.gnu.org/licenses/>.
 
 from pathlib import Path
 from rdkit import Chem
+from rdkit.Chem import (
+    MolFromXYZFile as xyz_to_mol,
+    MolFromMolFile as sdf_to_mol
+)
 
 ###############################################################################
 ################################## FUNCTIONS ##################################
