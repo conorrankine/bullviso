@@ -138,14 +138,16 @@ def mol_to_orca_input_f(
 
 def _format_coordinates(
     mol: Chem.Mol,
-    conf_idx: int = 0
+    conf_idx: int = 0,
+    fmt: str = '>14.8f'
 ) -> str:
     
-    coords = ''
+    coord_line_fmt = f'{{:<2}}{{:{fmt}}}{{:{fmt}}}{{:{fmt}}}\n'
+
+    coord_lines = ''
     for i, atom in enumerate(mol.GetAtoms()):
         coord = mol.GetConformer(conf_idx).GetAtomPosition(i)
-        coord_line_fmt = '{:<2}{:>14.8f}{:>14.8f}{:>14.8f}\n'
-        coords += coord_line_fmt.format(
+        coord_lines += coord_line_fmt.format(
             atom.GetSymbol(), coord.x, coord.y, coord.z
         )
-    return coords
+    return coord_lines
