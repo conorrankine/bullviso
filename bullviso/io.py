@@ -63,6 +63,17 @@ def mol_to_xyz(
             _format_coordinates(mol, conf_idx = conf_idx)
         )
 
+def mol_to_sdf(
+    filepath: Path,
+    mol: Chem.Mol,
+    conf_idx: int = -1
+):
+    
+    raise NotImplementedError(
+        'support for writing molecules (RDKit Mol objects) to .sdf/.mol '
+        'files is coming in a future version of Bullviso'
+    )
+
 def mol_to_gaussian_input(
     filepath: Path,
     mol: Chem.Mol,
