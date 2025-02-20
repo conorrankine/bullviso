@@ -61,14 +61,9 @@ def mol_to_xyz_f(
             f'{mol.GetNumAtoms()}\n\n'
         )
         # write Cartesian coordinate lines
-        for i, atom in enumerate(mol.GetAtoms()):
-            coord = mol.GetConformer(conf_idx).GetAtomPosition(i)
-            coord_line_fmt = '{:<2}{:>14.8f}{:>14.8f}{:>14.8f}\n'
-            f.write(
-                coord_line_fmt.format(
-                    atom.GetSymbol(), coord.x, coord.y, coord.z
-                )
-            )
+        f.write(
+            _format_coordinates(mol, conf_idx = conf_idx)
+        )
     
     return None
 
@@ -97,18 +92,14 @@ def mol_to_gaussian_input_f(
         f.write(
             f'CONFIGURATIONAL ISOMER: {filepath.stem}\n\n'
         )
-        # write charge, multiplicity, and Cartesian coordinate lines
+        # write charge and multiplicity
         f.write(
             f'{charge} {multiplicity}\n'
         )
-        for i, atom in enumerate(mol.GetAtoms()):
-            coord = mol.GetConformer(conf_idx).GetAtomPosition(i)
-            coord_line_fmt = '{:<2}{:>14.8f}{:>14.8f}{:>14.8f}\n'
-            f.write(
-                coord_line_fmt.format(
-                    atom.GetSymbol(), coord.x, coord.y, coord.z
-                )
-            )
+        # write Cartesian coordinate lines
+        f.write(
+            _format_coordinates(mol, conf_idx = conf_idx)
+        )
         # write terminating blank line
         f.write(
             '\n'
@@ -133,18 +124,28 @@ def mol_to_orca_input_f(
         f.write(
             f'! {method} {basis} OPT FREQ\n\n'
         )
-        # write charge, multiplicity, and Cartesian coordinate lines
+        # write charge and multiplicity
         f.write(
             f'* XYZ {charge} {multiplicity}\n'
         )
-        for i, atom in enumerate(mol.GetAtoms()):
-            coord = mol.GetConformer(conf_idx).GetAtomPosition(i)
-            coord_line_fmt = '{:<2}{:>14.8f}{:>14.8f}{:>14.8f}\n'
-            f.write(
-                coord_line_fmt.format(
-                    atom.GetSymbol(), coord.x, coord.y, coord.z
-                )
-            )
+        # write Cartesian coordinate lines
+        f.write(
+            _format_coordinates(mol, conf_idx = conf_idx)
+        )
         f.write(
             '*'
         )
+
+def _format_coordinates(
+    mol: Chem.Mol,
+    conf_idx: int = 0
+) -> str:
+    
+    coords = ''
+    for i, atom in enumerate(mol.GetAtoms()):
+        coord = mol.GetConformer(conf_idx).GetAtomPosition(i)
+        coord_line_fmt = '{:<2}{:>14.8f}{:>14.8f}{:>14.8f}\n'
+        coords += coord_line_fmt.format(
+            atom.GetSymbol(), coord.x, coord.y, coord.z
+        )
+    return coords
