@@ -119,7 +119,7 @@ bullviso C C CCC -n [2,2,1] -a [1,1,2]
 
 generates the 2520 constitutional isomers of (dimethyl, diethyl, isopropyl)bullvalene.
 
-BULLVISO outputs the structures of the substituted bullvalenes in .xyz format by default, although you can use the `-o [OUT_F_TYPE]` flag to output in an alternative format, *e.g.* a basic (customisable) input file for Gaussian (`-o gaussian`) or Orca (`-o orca`). 
+BULLVISO outputs the structures of the substituted bullvalenes in .xyz format by default, although you can use the `-o [OUT_F_TYPE]` flag to output in an alternative format, *e.g.* .sdf/.mol (`-o sdf`), or a basic (customisable) input file for Gaussian (`-o gaussian`) or Orca (`-o orca`). 
 
 Don't forget that you can always get a reminder of, and help with, the available command line flags by entering:
 

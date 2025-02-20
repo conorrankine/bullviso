@@ -70,7 +70,7 @@ def parse_args() -> Namespace:
             'in multithreaded/parallel processes')
     )
     p.add_argument('--out_f_type', '-o', type = str, default = 'xyz',
-        choices = ('xyz', 'gaussian', 'orca'),
+        choices = ('xyz', 'sdf', 'gaussian', 'orca'),
         help = ('file type for outputting geometries')
     )
 
