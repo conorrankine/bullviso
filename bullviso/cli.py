@@ -224,17 +224,13 @@ def main():
         print(f'{i}. {sub_smile:<30} {str(n_sub):>10} {str(attach_idx):>15}')
     print('-' * 60 + '\n')
 
-    sub_smiles = [
-        smile for smile, n in zip(
-            args.sub_smiles, args.n_subs
-        ) for _ in range(n)
-    ]
+    sub_smiles = bv.utils.repeat_list_elements(
+        args.sub_smiles, args.n_subs
+    )
 
-    sub_attach_idx = [
-        attach_idx for attach_idx, n in zip(
-            args.sub_attach_idx, args.n_subs
-        ) for _ in range(n)
-    ]
+    sub_attach_idx = bv.utils.repeat_list_elements(
+        args.sub_attach_idx, args.n_subs
+    )
 
     super_G = bv.graphs.compose_bullvalene_supergraph_from_smiles(
         sub_smiles = sub_smiles
