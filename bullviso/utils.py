@@ -24,3 +24,27 @@ def rotate_tuple(t: tuple, n: int) -> tuple:
     # (1,2,3,4,5,6), 2)` returns the rotated/rolled tuple `(5,6,1,2,3,4)`
     
     return t[-n:] + t[:-n]
+
+def count_list_elements(
+    input_list: list
+) -> int:
+    """
+    Counts the number of elements in a list, including the elements of any
+    nested (sub)lists recursively.
+
+    Args:
+        input_list (list): Input list.
+
+    Returns:
+        int: Number of elements in the input list.
+    """
+    
+    count = 0
+
+    for i in input_list:
+        if isinstance(i, list):
+            count += count_list_elements(i)
+        else:
+            count += 1
+
+    return count
