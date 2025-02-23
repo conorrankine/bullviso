@@ -23,6 +23,7 @@ import copy
 from rdkit import Chem
 from rdkit.Chem import AllChem
 from rdkit.Chem import rdDistGeom, rdForceFieldHelpers, rdMolDescriptors
+from rdkit.Geometry import rdGeometry
 
 ###############################################################################
 ################################## FUNCTIONS ##################################
@@ -141,3 +142,34 @@ def order_confs_by_energy(
         mol.AddConformer(conf, assignId = True)
 
     return mol
+
+def get_coord_map(
+    mol: Chem.Mol,
+    conf_idx: int = -1,
+    atom_idx: list[int] = None
+) -> dict[int, rdGeometry.Point3D]:
+    """
+    Returns a coordinate map dictionary for a Chem.Mol molecule `mol` that maps
+    atom indices to their 3D coordinates (represented as rdGeometry.Point3D
+    instances).
+
+    Args:
+        mol (Chem.Mol): Molecule.
+        conf_idx (int, optional): Index of the conformer to return the
+            coordinate map for. Defaults to -1.
+        atom_idx (list[int], optional): List of indices defining the atoms to
+            include in the coordinate map; if `None`, all atoms are included
+            in the coordinate map. Defaults to None.
+
+    Returns:
+        dict[int, rdGeometry.Point3D]: Coordinate map dictionary mapping atom
+            indices to their 3D coordinates (represented as rdGeometry.Point3D
+            instances).
+    """
+    
+    if atom_idx is None:
+        atom_idx = [i for i in range(mol.GetNumAtoms())]
+
+    conf = mol.GetConformer(conf_idx)
+    
+    return {i: conf.GetAtomPosition(i) for i in atom_idx}
