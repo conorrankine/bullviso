@@ -189,6 +189,13 @@ def _validate_args(
             '`args.n_subs` is too large; support is only available for up '
             'to (and including) 9 substituents'
         )
+    if bv.utils.count_list_elements(
+        bv.utils.repeat_list_elements(args.sub_attach_idx, args.n_subs)
+    ) > 9:
+        raise ValueError(
+            'too many attachment indices in `args.sub_attach_idx`; support is '
+            'only available for up to (and including) 9 substituents'
+        )
     if 0 in args.n_subs:
         raise ValueError(
             '`args.n_subs` cannot contain null/zero-valued elements'
