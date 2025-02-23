@@ -16,6 +16,12 @@ this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 
 ###############################################################################
+############################### LIBRARY IMPORTS ###############################
+###############################################################################
+
+from typing import Union
+
+###############################################################################
 ################################## FUNCTIONS ##################################
 ###############################################################################
 
@@ -48,3 +54,43 @@ def count_list_elements(
             count += 1
 
     return count
+
+def repeat_list_elements(
+    input_list: list,
+    repeats: Union[int, list[int]]
+):
+    """
+    Repeats elements in a list.
+
+    Args:
+        input_list (list): Input list.
+        repeats (Union[int, list[int]]): Integer or list of integers indicating
+            the number of times that each (corresponding) element in the input
+            list is to be repeated.
+
+    Raises:
+        ValueError: If `repeats` is a list and is not the same length as
+            `input_list`, or if any of the elements of `repeats` are integers
+            less than or equal to zero.
+
+    Returns:
+        _type_: List containing the elements of the input list repeated.
+    """
+    
+    if isinstance(repeats, int):
+        repeats = [repeats] * len(input_list)
+    elif len(repeats) != len(input_list):
+        raise ValueError(
+            '`repeats` and `input_list` should have the same length'
+        )
+
+    if any(repeat <= 0 for repeat in repeats):
+        raise ValueError(
+            '`repeats` cannot contain integers less than or equal to zero'
+        )
+    
+    input_list_repeated = []
+    for i, repeat in zip(input_list, repeats):
+        input_list_repeated.extend([i] * repeat)
+
+    return input_list_repeated
