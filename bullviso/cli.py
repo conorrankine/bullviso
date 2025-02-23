@@ -214,7 +214,7 @@ def main():
     for i, (sub_smile, n_sub, attach_idx) in enumerate(
         zip(args.sub_smiles, args.n_subs, args.sub_attach_idx), start = 1
     ):
-        print(f'{i}. {sub_smile:<30} {n_sub:>10} {attach_idx:>15}')
+        print(f'{i}. {sub_smile:<30} {str(n_sub):>10} {str(attach_idx):>15}')
     print('-' * 60 + '\n')
 
     sub_smiles = [
