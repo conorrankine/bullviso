@@ -228,8 +228,6 @@ def main():
         model_bullvalene
     )
 
-    print(coord_map)
-
     print('generating geometries and writing output...')
     for barcode in tqdm.tqdm(barcodes, ncols = 60):
         super_G_ = super_G.copy()
