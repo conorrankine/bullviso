@@ -127,6 +127,41 @@ def _int_or_list_of_ints(
             f'invalid argument: {input}'
         )
     
+def _validate_list(
+    input: list
+) -> list[Union[int, list[int]]]:
+    """
+    Validates an input list recursively to ensure that it contains only integer
+    elements or nested (sub)lists of integer elements.
+
+    Args:
+        input (list): Input list.
+
+    Raises:
+        ArgumentTypeError: If `input` contains elements that are not integers
+            or nested (sub)lists, or if any nested sublist contains
+            non-integer elements.
+
+    Returns:
+        list[Union[int, list[int]]]: List of integers and/or nested (sub)lists
+            of integers; maintains the initial structure of `input`.
+    """
+    
+    validated_list = []
+
+    for i in input:
+        if isinstance(i, int):
+            validated_list.append(i)
+        elif isinstance(i, list):
+            validated_list.append(_validate_list(i))
+        else:
+            raise ArgumentTypeError(
+                'list should contain only integer elements or lists of '
+                'integer elements'
+            ) 
+    
+    return validated_list
+    
 def _validate_args(
     args: Namespace
 ):
