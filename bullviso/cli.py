@@ -88,23 +88,24 @@ def parse_args() -> Namespace:
     return args
 
 def _int_or_list_of_ints(
-    input: Union[int, list[int]]
-) -> list[int]:
+    input: Union[int, list[Union[int, list[int]]]]
+) -> list[Union[int, list[int]]]:
     """
     Custom argument type for a command line argument to allow the user to
-    pass an integer or a list of integers as an input value.
+    pass an integer, list of integers, or list of integers with nested
+    (sub)lists of integers as an input value.
 
     Args:
-        input (Union[int, list[int]]): Input value.
+        input (Union[int, list[Union[int, list[int]]]]): Input value.
 
     Raises:
-        ArgumentTypeError: If `input` is not an integer or a list of integers,
-            or if `input` is a list that contains non-integer elements.
+        ArgumentTypeError: If `input` is not an integer, list of integers, or
+            list of integers with nested (sub)lists of integers.
 
     Returns:
-        list[int]: List of integers; a length-1 list if `input` is an
-            integer, else a length-n list (where n = len(`input`)) if `input`
-            is a list of integers.
+        list[Union[int, list[int]]: List of integers with or without nested
+            (sub)lists of integers; a length-1 list if `input` is an integer,
+            else a length-n list (where n = len(`input`)).
     """
     
     try:
@@ -112,15 +113,11 @@ def _int_or_list_of_ints(
         if isinstance(input, int):
             return [input]
         elif isinstance(input, list):
-            if all(isinstance(i, int) for i in input):
-                return input
-            else:
-                raise ArgumentTypeError(
-                    'list should contain only integer elements'
-                )
+            return _validate_list(input)
         else:
             raise ArgumentTypeError(
-                'argument should be an integer or a list of integers'
+                'argument should be an integer, list of integers, or list of '
+                'integers with nested (sub)lists of integers'
             )
     except (ValueError, SyntaxError):
         raise ArgumentTypeError(
