@@ -33,6 +33,7 @@ def generate_confs(
         mol: Chem.Mol,
         forcefield: str = 'uff',
         prune_rms_thresh: float = 0.5,
+        coord_map: dict[int, rdGeometry.Point3D] = None,
         num_threads: int = 1
 ) -> Chem.Mol:
     """
@@ -49,6 +50,10 @@ def generate_confs(
         prune_rms_thresh (float, optional): The RMSD threshold for pruning the
             generated conformers; conformers below the RMSD threshold are
             considered the same and are pruned. Defaults to 0.5 Angstrom.
+        coord_map(dict[int, rdGeometry.Point3D], optional): Coordinate map
+            dictionary mapping atom indices to their 3D coordinates
+            (represented as rdGeometry.Point3D instances); these atoms are
+            fixed/frozen during the embedding procedure. Defaults to None.
         num_threads(int, optional): The number of threads to use for generating
             conformers; `num_threads` threads are used for each of the
             embedding and optimisation procedures. Defaults to 1.
@@ -59,6 +64,7 @@ def generate_confs(
     
     params = getattr(Chem.rdDistGeom, "ETKDGv2")()
     params.pruneRmsThresh = prune_rms_thresh
+    params.coordMap = {} if coord_map is None else coord_map
     params.numThreads = num_threads
 
     n_rotatable_bonds = rdMolDescriptors.CalcNumRotatableBonds(mol)
