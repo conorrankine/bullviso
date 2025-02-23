@@ -21,6 +21,7 @@ this program.  If not, see <https://www.gnu.org/licenses/>.
 
 import bullviso as bv
 import tqdm
+import importlib
 import datetime
 import ast
 from argparse import ArgumentParser, ArgumentTypeError, Namespace
@@ -219,6 +220,16 @@ def main():
     )
     print('...done!\n')
 
+    model_bullvalene = bv.io.sdf_to_mol(
+        importlib.resources.files(bv.structures).joinpath('bv.sdf')
+    )
+
+    coord_map = bv.rdkit.get_coord_map(
+        model_bullvalene
+    )
+
+    print(coord_map)
+
     print('generating geometries and writing output...')
     for barcode in tqdm.tqdm(barcodes, ncols = 60):
         super_G_ = super_G.copy()
@@ -235,6 +246,7 @@ def main():
             mol,
             forcefield = args.forcefield,
             prune_rms_thresh = args.prune_rms_thresh,
+            coord_map = coord_map,
             num_threads = args.num_threads
         )
         m_confs = min(

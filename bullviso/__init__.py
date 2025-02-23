@@ -30,4 +30,5 @@ from . import graphs
 from . import rdkit
 from . import utils
 from . import io
+from . import structures
 from .barcodes import BVBarcode
