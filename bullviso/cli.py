@@ -237,8 +237,10 @@ def main():
     )
 
     connectivity_map = {
-        i: f'sub{i}_{sub_attach_idx_}'
-            for i, sub_attach_idx_ in enumerate(sub_attach_idx, start = 1) 
+        i: f'sub{sub_n+1}_{sub_attach_idx_}'
+            for i, (sub_n, sub_attach_idx_) in enumerate(
+                bv.utils.iterate_and_index(sub_attach_idx), start = 1
+            )
     }
 
     canonical_barcode = bv.barcodes.create_barcode(
