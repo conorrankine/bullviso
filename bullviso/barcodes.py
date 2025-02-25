@@ -20,8 +20,8 @@ this program.  If not, see <https://www.gnu.org/licenses/>.
 ###############################################################################
 
 from itertools import permutations
-from bullviso.utils import rotate_tuple
-from typing import Generator
+from bullviso.utils import rotate_tuple, iterate_and_index
+from typing import Generator, Union
 
 ###############################################################################
 ################################### CLASSES ###################################
@@ -341,7 +341,8 @@ class BVBarcode:
 ###############################################################################
 
 def create_barcode(
-    n_subs: list[int],
+    sub_smiles: list[str],
+    sub_attach_idx: list[Union[int, list[int]]],
     canonicalize: bool = True
 ) -> 'BVBarcode':
     """
@@ -363,23 +364,23 @@ def create_barcode(
             specification of unique substituents.
     """
     
-    if sum(n_subs) > 9:
-        raise ValueError(
-            '`n_subs` is too large; support is only available for up to (and '
-            'including) 9 substituents'
-        )
+    groups = [
+        f'{sub_smiles[i]}_{sub_attach_idx_}' 
+            for (i, sub_attach_idx_) in iterate_and_index(
+                sub_attach_idx
+            )
+    ]
 
-    barcode = []
-    grouped_barcode = []
-    
-    i = 1
-    j = 1
-    for n_sub in n_subs:
-        for _ in range(n_sub):
-            barcode.append(i)
-            grouped_barcode.append(j)
-            i += 1
-        j += 1
+    unique_groups = list(
+        dict.fromkeys(groups)
+    )
+
+    equivalent_group_map = {
+        group: i for i, group in enumerate(unique_groups, start = 1)
+    }
+
+    barcode = [i for i in range(1, len(groups) + 1)]
+    grouped_barcode = [equivalent_group_map[group] for group in groups]
 
     zero_pad = [0] * (10 - len(barcode))
     barcode = tuple(zero_pad + barcode)
