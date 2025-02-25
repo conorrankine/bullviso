@@ -110,6 +110,43 @@ def unique_elements(
     
     return [item for item in dict.fromkeys(input_list)]
 
+def pad_list(
+    input_list: list[Any],
+    length: int,
+    direction: str = 'right'
+) -> list[Any]:
+    """
+    Zero-pads a list up to the specified length.
+
+    Args:
+        input_list (list[Any]): Input list.
+        length (int): Integer specifying the length of the list post-padding;
+            lists longer than this are returned as-is without padding.
+        direction (str, optional): String specifying the direction of the
+            padding; options are `left` or `right`. Defaults to 'right'.
+
+    Raises:
+        ValueError: If `direction` is not valid; i.e. if it is not one of
+            either `left` or `right`.
+
+    Returns:
+        list[Any]: List containing the elements of the input list, padded with
+            zeros up to the specified length.
+    """
+    
+    if len(input_list) < length:
+        padding = [0] * (length - len(input_list))
+        if direction == 'left':
+            return padding + input_list
+        elif direction == 'right':
+            return input_list + padding
+        else:
+            raise ValueError(
+                '`direction` should be either `left` or `right`'
+            )
+    else:
+        return input_list
+
 def iterate_and_index(
     input_list: list[Union[Any, list[Any]]]
 ) -> Generator[tuple[int, Any], None, None]:
