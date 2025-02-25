@@ -172,9 +172,11 @@ def _validate_args(
     Raises:
         ValueError: If `args.sub_smiles`, `args.n_subs`, and
             `args.sub_attach_idx` are not of equal length; if the sum of the
-            integer elements in `args.n_subs` is greater than 9; or if either
-            `args.n_subs` or `args.sub_attach_idx` contained null/zero-valued
-            elements.
+            integer elements in `args.n_subs` is greater than 9; if there are
+            greater than 9 elements in `args.sub_attach_idx` (counting
+            elements in the outer list and any nested (sub)lists); or if
+            either `args.n_subs` or `args.sub_attach_idx` contained
+            null/zero-valued elements.
     """
 
     if not (
