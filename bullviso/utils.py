@@ -95,6 +95,21 @@ def repeat_list_elements(
 
     return input_list_repeated
 
+def unique_elements(
+    input_list: list[Any]
+) -> list[Any]:
+    """
+    Returns the unique elements in a list, preserving their order of occurance.
+
+    Args:
+        input_list (list[Any]): Input list.
+
+    Returns:
+        list[Any]: List containing the unique elements of the input list.
+    """
+    
+    return [item for item in dict.fromkeys(input_list)]
+
 def iterate_and_index(
     input_list: list[Union[Any, list[Any]]]
 ) -> Generator[tuple[int, Any], None, None]:
