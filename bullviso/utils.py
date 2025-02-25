@@ -106,12 +106,22 @@ def iterate_and_index(
     Args:
         input_list (list[Union[Any, list[Any]]]): Input list.
 
+    Raises:
+        ValueError: If `input_list` has a maximum depth greater than 2, i.e.
+            if the items in any nested (sub)list in `input_list` are
+            themselves nested (sub)lists.
+
     Yields:
         Generator[tuple[int, Any], None, None]: Generator that yields tuples
             comprising the index of each item in the outer list and either i)
             the item, or ii) each of the items in the nested (sub)list.
     """
     
+    if maxdepth(input_list) > 2:
+        raise ValueError(
+            '`input_list` cannot have a maximum depth greater than 2'
+        )
+
     for idx, item in enumerate(input_list):
         if isinstance(item, list):
             for item_ in item:
