@@ -77,39 +77,41 @@ def generate_confs(
         mol, numConfs = n_confs, params = params
     )
 
-    _ff_optimise = {
-        'uff': rdForceFieldHelpers.UFFOptimizeMoleculeConfs,
-        'mmff': rdForceFieldHelpers.MMFFOptimizeMoleculeConfs
-    }
-    ff_optimise = _ff_optimise.get(forcefield)
+    if mol.GetNumConformers() > 0:
 
-    ff_optimise(
-        mol, numThreads = num_threads
-    )
+        _ff_optimise = {
+            'uff': rdForceFieldHelpers.UFFOptimizeMoleculeConfs,
+            'mmff': rdForceFieldHelpers.MMFFOptimizeMoleculeConfs
+        }
+        ff_optimise = _ff_optimise.get(forcefield)
 
-    _ff = {
-        'uff': rdForceFieldHelpers.UFFGetMoleculeForceField,
-        'mmff': rdForceFieldHelpers.MMFFGetMoleculeForceField
-    }
-    ff = _ff.get(forcefield)
-
-    if forcefield == 'mmff':
-        mol_props = rdForceFieldHelpers.MMFFGetMoleculeProperties(mol)
-
-    for conf in mol.GetConformers():
-        if forcefield == 'mmff':
-            conf_ff = ff(
-                mol, mol_props, confId = conf.GetId()
-            )
-        else:
-            conf_ff = ff(
-                mol, confId = conf.GetId()
-            )            
-        conf.SetDoubleProp(
-            'energy', conf_ff.CalcEnergy()
+        ff_optimise(
+            mol, numThreads = num_threads
         )
 
-    mol = order_confs_by_energy(mol)
+        _ff = {
+            'uff': rdForceFieldHelpers.UFFGetMoleculeForceField,
+            'mmff': rdForceFieldHelpers.MMFFGetMoleculeForceField
+        }
+        ff = _ff.get(forcefield)
+
+        if forcefield == 'mmff':
+            mol_props = rdForceFieldHelpers.MMFFGetMoleculeProperties(mol)
+
+        for conf in mol.GetConformers():
+            if forcefield == 'mmff':
+                conf_ff = ff(
+                    mol, mol_props, confId = conf.GetId()
+                )
+            else:
+                conf_ff = ff(
+                    mol, confId = conf.GetId()
+                )            
+            conf.SetDoubleProp(
+                'energy', conf_ff.CalcEnergy()
+            )
+
+        mol = order_confs_by_energy(mol)
 
     return mol
 
