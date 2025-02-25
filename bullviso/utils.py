@@ -19,7 +19,7 @@ this program.  If not, see <https://www.gnu.org/licenses/>.
 ############################### LIBRARY IMPORTS ###############################
 ###############################################################################
 
-from typing import Union
+from typing import Union, Generator, Any
 
 ###############################################################################
 ################################## FUNCTIONS ##################################
@@ -94,3 +94,27 @@ def repeat_list_elements(
         input_list_repeated.extend([i] * repeat)
 
     return input_list_repeated
+
+def iterate_and_index(
+    input_list: list[Union[Any, list[Any]]]
+) -> Generator[tuple[int, Any], None, None]:
+    """
+    Iterates through a list that contains items and/or nested (sub)lists of
+    items, yielding tuples comprising the index of each item in the outer list
+    and either i) the item, or ii) each of the items in the nested (sub)list.
+
+    Args:
+        input_list (list[Union[Any, list[Any]]]): Input list.
+
+    Yields:
+        Generator[tuple[int, Any], None, None]: Generator that yields tuples
+            comprising the index of each item in the outer list and either i)
+            the item, or ii) each of the items in the nested (sub)list.
+    """
+    
+    for idx, item in enumerate(input_list):
+        if isinstance(item, list):
+            for item_ in item:
+                yield idx, item_
+        else:
+            yield idx, item
