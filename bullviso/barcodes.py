@@ -20,7 +20,12 @@ this program.  If not, see <https://www.gnu.org/licenses/>.
 ###############################################################################
 
 from itertools import permutations
-from bullviso.utils import rotate_tuple, iterate_and_index
+from bullviso.utils import (
+    rotate_tuple,
+    iterate_and_index,
+    unique_elements,
+    pad_list
+)
 from typing import Generator, Union
 
 ###############################################################################
@@ -371,20 +376,23 @@ def create_barcode(
             )
     ]
 
-    unique_groups = list(
-        dict.fromkeys(groups)
-    )
-
     equivalent_group_map = {
-        group: i for i, group in enumerate(unique_groups, start = 1)
+        group: i for i, group in enumerate(
+            unique_elements(groups), start = 1
+        )
     }
 
-    barcode = [i for i in range(1, len(groups) + 1)]
-    grouped_barcode = [equivalent_group_map[group] for group in groups]
+    barcode = pad_list(
+        [i for i in range(1, len(groups) + 1)],
+        length = 10,
+        direction = 'left'
+    )
 
-    zero_pad = [0] * (10 - len(barcode))
-    barcode = tuple(zero_pad + barcode)
-    grouped_barcode = tuple(zero_pad + grouped_barcode)
+    grouped_barcode = pad_list(
+        [equivalent_group_map[group] for group in groups],
+        length = 10,
+        direction = 'left'
+    )
 
     return BVBarcode(
         barcode,
