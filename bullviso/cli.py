@@ -244,7 +244,8 @@ def main():
     }
 
     canonical_barcode = bv.barcodes.create_barcode(
-        args.n_subs
+        sub_smiles,
+        sub_attach_idx
     )
 
     print(f'canonical barcode: {canonical_barcode}\n')
