@@ -118,3 +118,23 @@ def iterate_and_index(
                 yield idx, item_
         else:
             yield idx, item
+
+def maxdepth(
+    input_list: Any
+) -> int:
+    """
+    Returns the maximum depth of a list that contains nested (sub)lists.
+
+    Args:
+        input_list (list): Input list.
+
+    Returns:
+        int: Maximum depth of the input list.
+    """
+    
+    if not isinstance(input_list, list):
+        return 0
+    else:
+        return 1 + max(
+            (maxdepth(item) for item in input_list), default = 0
+        )
