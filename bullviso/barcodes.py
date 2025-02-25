@@ -351,22 +351,21 @@ def create_barcode(
     canonicalize: bool = True
 ) -> 'BVBarcode':
     """
-    Creates a bullvalene isomer barcode (`BVBarcode` instance) corresponding to
-    the `n_subs` specification of unique substituents.
+    Creates a bullvalene isomer barcode (`BVBarcode` instance) using a list of
+    the substituent smiles and attachment indices.
 
     Args:
-        n_subs (list[int]): List of integers corresponding to the number(s) of
-            each unique substituent on the bullvalene.
+        sub_smiles (list[str]): List of SMILEs strings specifying the
+            substituents attached to the bullvalene.
+        sub_attach_idx (list[Union[int, list[int]]]): List of integers and/or
+            nested (sub)lists of integers specifying the attachment indices of
+            the substituents attached to the bullvalene.
         canonicalize (bool, optional): If `True`, the bullvalene isomer barcode
-            is converted to the canonical representation. Defaults to True.
-
-    Raises:
-        ValueError: If the sum of the integer elements in `n_subs` is greater
-            than 9.
+            is canonicalised.. Defaults to True.
 
     Returns:
-        BVBarcode: `BVBarcode` instance corresponding to the `n_subs`
-            specification of unique substituents.
+        BVBarcode: `BVBarcode` instance corresponding to the substituent and
+            attachment index specification.
     """
     
     groups = [
