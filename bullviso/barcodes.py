@@ -363,17 +363,33 @@ def create_barcode(
         canonicalize (bool, optional): If `True`, the bullvalene isomer barcode
             is canonicalised.. Defaults to True.
 
+    Raises:
+        ValueError: If `sub_smiles` and `sub_attach_idx` are not of equal
+            length, or if there are greater than 9 elements in `sub_attach_idx`
+            (counting elements in the outer list and any nested (sub)lists).
+
     Returns:
         BVBarcode: `BVBarcode` instance corresponding to the substituent and
             attachment index specification.
     """
     
+    if len(sub_smiles) != len(sub_attach_idx):
+        raise ValueError(
+            '`sub_smiles` and `sub_attach_idx` should have the same length'       
+        )
+
     groups = [
         f'{sub_smiles[i]}_{sub_attach_idx_}' 
             for (i, sub_attach_idx_) in iterate_and_index(
                 sub_attach_idx
             )
     ]
+
+    if len(groups) > 9:
+        raise ValueError(
+            'too many attachment indices in `sub_attach_idx`; support is '
+            'only available for up to (and including) 9 substituents'
+        )
 
     equivalent_group_map = {
         group: i for i, group in enumerate(
