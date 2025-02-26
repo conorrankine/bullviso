@@ -19,13 +19,8 @@ this program.  If not, see <https://www.gnu.org/licenses/>.
 ############################### LIBRARY IMPORTS ###############################
 ###############################################################################
 
+from bullviso import utils
 from itertools import permutations
-from bullviso.utils import (
-    rotate_tuple,
-    iterate_and_index,
-    unique_elements,
-    pad_list
-)
 from typing import Generator, Union
 
 ###############################################################################
@@ -324,10 +319,10 @@ class BVBarcode:
         """
         
         return tuple(
-            (rotate_tuple(
+            (utils.roll(
                 self._barcode[:-1], i * 3
             ) + self._barcode[-1:], 
-            rotate_tuple(
+            utils.roll(
                 self._grouped_barcode[:-1], i * 3
             ) + self._grouped_barcode[-1:])
             for i in range(3)
@@ -380,7 +375,7 @@ def create_barcode(
 
     groups = [
         f'{sub_smiles[i]}_{sub_attach_idx_}' 
-            for (i, sub_attach_idx_) in iterate_and_index(
+            for (i, sub_attach_idx_) in utils.iterate_and_index(
                 sub_attach_idx
             )
     ]
@@ -393,17 +388,17 @@ def create_barcode(
 
     equivalent_group_map = {
         group: i for i, group in enumerate(
-            unique_elements(groups), start = 1
+            utils.unique_elements(groups), start = 1
         )
     }
 
-    barcode = pad_list(
+    barcode = utils.pad_list(
         [i for i in range(1, len(groups) + 1)],
         length = 10,
         direction = 'left'
     )
 
-    grouped_barcode = pad_list(
+    grouped_barcode = utils.pad_list(
         [equivalent_group_map[group] for group in groups],
         length = 10,
         direction = 'left'
