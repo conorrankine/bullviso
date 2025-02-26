@@ -26,7 +26,7 @@ from typing import Union, Generator, Any
 ###############################################################################
 
 def count_list_elements(
-    input_list: list
+    input_list: list[Any]
 ) -> int:
     """
     Counts the number of elements in a list, including the elements of any
@@ -50,9 +50,9 @@ def count_list_elements(
     return count
 
 def repeat_list_elements(
-    input_list: list,
+    input_list: list[Any],
     repeats: Union[int, list[int]]
-):
+) -> list[Any]:
     """
     Repeats elements in a list.
 
