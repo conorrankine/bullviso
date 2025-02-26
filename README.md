@@ -8,17 +8,19 @@
 # <strong> B U L L V I S O </strong>
 
 <p>
-    <a href="https://linkedin.com/in/conorrankine"> Dr. Conor D. Rankine </a> and <a href="https://york.ac.uk/chemistry/people/pmcgonigal/"> Dr. Paul McGonigal </a> @ <a href="https://york.ac.uk">The University of York </a>
+    <a href="https://linkedin.com/in/conorrankine"> Dr. Conor D. Rankine </a> and <a href="https://york.ac.uk/chemistry/people/pmcgonigal/"> Prof. Paul McGonigal </a> @ <a href="https://york.ac.uk">The University of York </a>
 </p>
 
 <p>
-    <a href="https://www.mcgonigalgroup.com/"> The McGonigal Group </a>
+    <a href="https://mcgonigalgroup.com/"> The McGonigal Group </a>
     <br>
     with special thanks to
     <br>
-    <a href="https://www.linkedin.com/in/robives5"> Rob Ives </a>
+    <a href="https://linkedin.com/in/mariia-kuznetsova-9870bb217/"> Maria Kuznetsova </a>
     <br>
-    <a href="https://www.linkedin.com/in/will-maturi-930738196"> Will Maturi </a>
+    <a href="https://linkedin.com/in/robives5"> Rob Ives </a>
+    <br>
+    <a href="https://linkedin.com/in/will-maturi-930738196"> Will Maturi </a>
 </p>
 
 </td></tr></table>
