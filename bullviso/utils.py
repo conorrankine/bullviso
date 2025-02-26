@@ -25,12 +25,6 @@ from typing import Union, Generator, Any
 ################################## FUNCTIONS ##################################
 ###############################################################################
 
-def rotate_tuple(t: tuple, n: int) -> tuple:
-    # rotates/rolls the tuple `t` forward by `n` positions, e.g. `rotate_tuple(
-    # (1,2,3,4,5,6), 2)` returns the rotated/rolled tuple `(5,6,1,2,3,4)`
-    
-    return t[-n:] + t[:-n]
-
 def count_list_elements(
     input_list: list
 ) -> int:
@@ -200,3 +194,23 @@ def maxdepth(
         return 1 + max(
             (maxdepth(item) for item in input_list), default = 0
         )
+    
+def roll(
+    input_list: list[Any],
+    n: int
+) -> list[Any]:
+    """
+    Rolls/rotates a list forwards (if `n` is positive) or backwards (if `n` is
+    negative) by `n` places.
+
+    Args:
+        input_list (list[Any]): Input list.
+        n (int): Integer specifying the number of places to roll/rotate the
+            input list forwards or backwards by.
+
+    Returns:
+        list[Any]: List containing the elements of the input list
+            rolled/rotated forwards or backwards by `n` places.
+    """
+    
+    return input_list[-n:] + input_list[:-n]
