@@ -19,7 +19,7 @@ this program.  If not, see <https://www.gnu.org/licenses/>.
 ############################### LIBRARY IMPORTS ###############################
 ###############################################################################
 
-from bullviso import utils
+from . import utils
 from itertools import permutations
 from typing import Generator, Union
 

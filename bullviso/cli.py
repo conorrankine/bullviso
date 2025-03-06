@@ -24,6 +24,7 @@ import tqdm
 import importlib
 import datetime
 import ast
+from . import utils
 from argparse import ArgumentParser, ArgumentTypeError, Namespace
 from pathlib import Path
 from typing import Union
@@ -191,8 +192,8 @@ def _validate_args(
             '`args.n_subs` is too large; support is only available for up '
             'to (and including) 9 substituents'
         )
-    if bv.utils.count_list_elements(
-        bv.utils.repeat_list_elements(args.sub_attach_idx, args.n_subs)
+    if utils.count_list_elements(
+        utils.repeat_list_elements(args.sub_attach_idx, args.n_subs)
     ) > 9:
         raise ValueError(
             'too many attachment indices in `args.sub_attach_idx`; support is '
@@ -226,11 +227,11 @@ def main():
         print(f'{i}. {sub_smile:<30} {str(n_sub):>10} {str(attach_idx):>15}')
     print('-' * 60 + '\n')
 
-    sub_smiles = bv.utils.repeat_list_elements(
+    sub_smiles = utils.repeat_list_elements(
         args.sub_smiles, args.n_subs
     )
 
-    sub_attach_idx = bv.utils.repeat_list_elements(
+    sub_attach_idx = utils.repeat_list_elements(
         args.sub_attach_idx, args.n_subs
     )
 
@@ -241,7 +242,7 @@ def main():
     connectivity_map = {
         i: f'sub{sub_n+1}_{sub_attach_idx_}'
             for i, (sub_n, sub_attach_idx_) in enumerate(
-                bv.utils.iterate_and_index(sub_attach_idx), start = 1
+                utils.iterate_and_index(sub_attach_idx), start = 1
             )
     }
 
@@ -261,7 +262,7 @@ def main():
     print('...done!\n')
 
     model_bullvalene = bv.io.sdf_to_mol(
-        importlib.resources.files(bv.structures).joinpath('bv.sdf')
+        importlib.resources.files('bullviso.structures').joinpath('bv.sdf')
     )
 
     coord_map = bv.rdkit.get_coord_map(

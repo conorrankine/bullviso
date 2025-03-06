@@ -28,7 +28,5 @@ __version__ = '2.1'
 from . import barcodes
 from . import graphs
 from . import rdkit
-from . import utils
 from . import io
-from . import structures
 from .barcodes import BVBarcode
