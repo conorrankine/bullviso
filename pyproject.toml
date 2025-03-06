@@ -14,5 +14,11 @@ dependencies = [
     "tqdm>=4.67.1",
 ]
 
+[tool.setuptools]
+packages = ["bullviso"]
+
+[tool.setuptools.package-data]
+"bullviso" = ["structures/*"]
+
 [project.scripts]
 bullviso = "bullviso:cli.main"

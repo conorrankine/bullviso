@@ -21,7 +21,6 @@ this program.  If not, see <https://www.gnu.org/licenses/>.
 
 import bullviso as bv
 import tqdm
-import importlib
 import datetime
 import ast
 from . import utils
@@ -262,7 +261,7 @@ def main():
     print('...done!\n')
 
     model_bullvalene = bv.io.sdf_to_mol(
-        importlib.resources.files('bullviso.structures').joinpath('bv.sdf')
+        Path(__file__).parent / 'structures' / 'bv.sdf'
     )
 
     coord_map = bv.rdkit.get_coord_map(
