@@ -15,10 +15,15 @@ dependencies = [
 ]
 
 [tool.setuptools]
-packages = ["bullviso"]
+packages = [
+    "bullviso"
+]
 
 [tool.setuptools.package-data]
-"bullviso" = ["structures/*"]
+"bullviso" = [
+    "structures/*.sdf",
+    "assets/banners/*.txt"
+]
 
 [project.scripts]
 bullviso = "bullviso:cli.main"

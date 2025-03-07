@@ -1,0 +1,19 @@
+             _           _ _       _           
+            | |__  _   _| | |_   _(_)___  ___  
+            | '_ \| | | | | \ \ / / / __|/ _ \ 
+            | |_) | |_| | | |\ V /| \__ \ (_) |
+            |_.__/ \__,_|_|_| \_/ |_|___/\___/ 
+
+        Dr. Conor D. Rankine + Prof. Paul McGonigal
+                 @ The University of York
+
+                  with special thanks to
+         Maria Kuznetsova + Rob Ives + Will Maturi
+
+       if you enjoy `bullviso`, don't forget to cite:
+
+            A Guide to Bullvalene Stereodynamics
+              > doi.org/10.1039/D4SC03700F <
+
+ Correlated Shapeshifting and Configurational Isomerization
+              > doi.org/10.1039/D4SC03699A <

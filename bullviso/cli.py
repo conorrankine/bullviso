@@ -222,6 +222,12 @@ def main():
 
     args = parse_args()
 
+    header_f = Path(__file__).parent / 'assets' / 'banners' / 'banner.txt'
+    with open(header_f, 'r') as f:
+        for line in f.readlines():
+            print(line.rstrip())
+    print('\n')
+
     print(' ' * 3 + f'{"SMILEs":<30} {"number":>10} {"attached @":>15}')
     print('-' * 60)
     for i, (sub_smile, n_sub, attach_idx) in enumerate(
