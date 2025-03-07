@@ -180,13 +180,25 @@ def _validate_args(
         argparse.Namespace object that holds the arguments as attributes.
 
     Raises:
-        ValueError: If `args.sub_smiles`, `args.n_subs`, and
-            `args.sub_attach_idx` are not of equal length; if the sum of the
-            integer elements in `args.n_subs` is greater than 9; if there are
-            greater than 9 elements in `args.sub_attach_idx` (counting
-            elements in the outer list and any nested (sub)lists); or if
-            either `args.n_subs` or `args.sub_attach_idx` contained
-            null/zero-valued elements.
+        ValueError: If any of the following conditions are encountered:
+
+            1. `args.sub_smiles`, `args.n_subs`, and `args.sub_attach_idx`
+                are not of equal length;
+
+            2. `args.n_subs` has a maximum depth greater than 1;
+
+            3. `args.sub_attach_idx` has a maximum depth greater than 2;
+
+            4. the sum of the integer elements in `args.n_subs` is greater
+                than 9;
+
+            5. there are greater than 9 elements in `args.sub_attach_idx`
+                (counting elements in the outer list and nested (sub)lists,
+                and accounting via multiplication for the number of each
+                unique substituent given in `args.n_subs`);
+
+            6. `args.n_subs` and/or `args.sub_attach_idx` contain null/zero-
+                valued elements.
     """
 
     if not (
@@ -195,6 +207,16 @@ def _validate_args(
         raise ValueError(
             '`args.sub_smiles`, `args.n_subs`, and `args.sub_attach_idx` '
             'should have the same length'
+        )
+    if utils.maxdepth(args.n_subs) > 1:
+        raise ValueError(
+            '`args.n_subs` should be a list of integers with a maximum depth '
+            'no greater than 1'
+        )
+    if utils.maxdepth(args.sub_attach_idx) > 2:
+        raise ValueError(
+            '`args.sub_attach_idx` should be a list of integers or nested '
+            '(sub)lists of integers with a maximum depth no greater than 2'
         )
     if sum(args.n_subs) > 9:
         raise ValueError(
