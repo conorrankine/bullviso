@@ -8,7 +8,7 @@
 # <strong> B U L L V I S O </strong>
 
 <p>
-    <a href="https://linkedin.com/in/conorrankine"> Dr. Conor D. Rankine </a> and <a href="https://york.ac.uk/chemistry/people/pmcgonigal/"> Prof. Paul McGonigal </a> @ <a href="https://york.ac.uk">The University of York </a>
+    <a href="https://linkedin.com/in/conorrankine"> Dr. Conor D. Rankine </a> + <a href="https://york.ac.uk/chemistry/people/pmcgonigal/"> Prof. Paul McGonigal </a> <br> @ <a href="https://york.ac.uk">The University of York </a>
 </p>
 
 <p>
@@ -21,6 +21,22 @@
     <a href="https://linkedin.com/in/robives5"> Rob Ives </a>
     <br>
     <a href="https://linkedin.com/in/will-maturi-930738196"> Will Maturi </a>
+</p>
+
+<p>
+If you enjoy `bullviso`, don't forget to cite:
+</p>
+
+<p>
+    <a href="https://doi.org/10.1039/D4SC03700F"> A Guide to Bullvalene Stereodynamics </a>
+    <br>
+    <i>Chem. Sci.</i>, 2024, <b>15</b>, 14608-14617 (DOI: 10.1039/D4SC03700F).
+</p>
+
+<p>
+    <a href="https://doi.org/10.1039/D4SC03699A"> Correlated Shapeshifting and Configurational Isomerization </a>
+    <br>
+    <i>Chem. Sci.</i>, 2024, <b>15</b>, 14618-14624 (DOI: 10.1039/D4SC03699A).
 </p>
 
 </td></tr></table>
