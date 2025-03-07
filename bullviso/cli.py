@@ -20,6 +20,7 @@ this program.  If not, see <https://www.gnu.org/licenses/>.
 ###############################################################################
 
 import bullviso as bv
+import networkx as nx
 import tqdm
 import datetime
 import ast
@@ -234,9 +235,21 @@ def main():
         args.sub_attach_idx, args.n_subs
     )
 
-    super_G = bv.graphs.compose_bullvalene_supergraph_from_smiles(
-        sub_smiles = sub_smiles
+    model_bullvalene = bv.io.sdf_to_mol(
+        Path(__file__).parent / 'structures' / 'bv.sdf'
     )
+
+    bullvalene_G = bv.graphs.mol_to_graph(
+        model_bullvalene, node_label_prefix = 'bullvalene_'
+    )
+
+    sub_G = [
+        bv.graphs.smiles_to_graph(
+            sub_smile, node_label_prefix = f'sub{i}_'
+        ) for i, sub_smile in enumerate(sub_smiles, start = 1)
+    ]
+        
+    super_G = nx.compose_all([bullvalene_G, *sub_G])
 
     connectivity_map = {
         i: f'sub{sub_n+1}_{sub_attach_idx_}'
@@ -259,10 +272,6 @@ def main():
         )
     )
     print('...done!\n')
-
-    model_bullvalene = bv.io.sdf_to_mol(
-        Path(__file__).parent / 'structures' / 'bv.sdf'
-    )
 
     coord_map = bv.rdkit.get_coord_map(
         model_bullvalene
