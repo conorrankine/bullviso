@@ -24,7 +24,7 @@
 </p>
 
 <p>
-If you enjoy `bullviso`, don't forget to cite:
+If you enjoy BULLVISO, don't forget to cite:
 </p>
 
 <p>
@@ -45,22 +45,41 @@ If you enjoy `bullviso`, don't forget to cite:
 
 ## ⚙️ SETUP
 
-If you have a working Python installation on your machine, the quickest way to get started with BULLVISO is to pop open a terminal and clone this repository:
+Our favourite way to use BULLVISO is with <a href="https://docs.astral.sh/uv/" > `uv` </a> from <a href="https://astral.sh/" > Astral</a>! It's super-easy to install from your terminal (if you don't have it already) with:
 
 ```
-git clone https://www.gitlab.com/conorrankine/bullviso
+pip install uv
 ```
 
-...change directory:
+You can use `uv` to create and activate a virtual environment:
 
 ```
-cd ./bullviso
+uv venv .venv
+source .venv/bin/activate
 ```
 
-...and install BULLVISO with pip:
+and then install BULLVISO directly into your new virtual environment with:
 
 ```
-pip install .
+uv pip install git+https://www.gitlab.com/conorrankine/bullviso
+```
+
+Don't forget to keep BULLVISO up to date; it's still under development, after all! It's easy to do with:
+
+```
+uv pip install --upgrade git+https://www.gitlab.com/conorrankine/bullviso
+```
+
+When you're done with BULLVISO, you can deactivate your virtual environment with:
+
+```
+deactivate
+```
+
+and reactivate it later with:
+
+```
+source .venv/bin/activate
 ```
 
 Now you're good to go!
