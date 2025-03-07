@@ -50,33 +50,39 @@ def parse_args() -> Namespace:
     )
     p.add_argument(
         '--n_subs', '-n', type = _int_or_list_of_ints, default = [1],
-        help = ('number of each unique substituent to add')
+        help = 'number of each unique substituent to add'
     )
     p.add_argument(
         '--sub_attach_idx', '-a', type = _int_or_list_of_ints, default = [1],
         help =('atomic index of the substituent-bullvalene attachment point '
             'for each unique substituent')
     )
-    p.add_argument('--m_confs', '-m', type = int, default = 1,
-        help = ('maximum number of conformational isomers to generate')
+    p.add_argument(
+        '--m_confs', '-m', type = int, default = 1,
+        help = 'maximum number of conformational isomers to generate'
     )
-    p.add_argument('--forcefield', '-ff', type = str, default = 'uff',
+    p.add_argument(
+        '--forcefield', '-ff', type = str, default = 'uff',
         choices = ('uff', 'mmff'),
-        help = ('forcefield for optimising conformational isomers')
+        help = 'forcefield for optimising conformational isomers'
     )
-    p.add_argument('--prune_rms_thresh', '-rmsd', type = float, default = 0.5,
-        help = ('RMSD threshold for pruning conformational isomers')
+    p.add_argument(
+        '--prune_rms_thresh', '-rmsd', type = float, default = 0.5,
+        help = 'RMSD threshold for pruning conformational isomers'
     )
-    p.add_argument('--num_threads', '-nt', type = int, default = 1,
-        help = ('number of threads for optimising conformational isomers '
-            'in multithreaded/parallel processes')
+    p.add_argument(
+        '--num_threads', '-nt', type = int, default = 1,
+        help = ('number of threads for optimising conformational isomers in '
+            'multithreaded/parallel processes')
     )
-    p.add_argument('--output_dir', '-o', type = Path, default = Path('.'),
+    p.add_argument(
+        '--output_dir', '-o', type = Path, default = Path('.'),
         help = 'destination directory for outputting geometries'
     )
-    p.add_argument('--output_filetype', '-f', type = str, default = 'xyz',
+    p.add_argument(
+        '--output_filetype', '-f', type = str, default = 'xyz',
         choices = ('xyz', 'sdf', 'gaussian', 'orca'),
-        help = ('filetype for outputting geometries')
+        help = 'filetype (e.g., .xyz, .sdf, etc.) for outputting geometries'
     )
 
     args = p.parse_args()
