@@ -8,19 +8,19 @@
 # <strong> B U L L V I S O </strong>
 
 <p>
-    <a href="https://linkedin.com/in/conorrankine"> Dr. Conor D. Rankine </a> + <a href="https://york.ac.uk/chemistry/people/pmcgonigal/"> Prof. Paul McGonigal </a> <br> @ <a href="https://york.ac.uk">The University of York </a>
+    <a href="https://linkedin.com/in/conorrankine" > Dr. Conor D. Rankine </a> + <a href="https://york.ac.uk/chemistry/people/pmcgonigal/" > Prof. Paul McGonigal </a> <br> @ <a href="https://york.ac.uk" >The University of York </a>
 </p>
 
 <p>
-    <a href="https://mcgonigalgroup.com/"> The McGonigal Group </a>
+    <a href="https://mcgonigalgroup.com/" > The McGonigal Group </a>
     <br>
     with special thanks to
     <br>
-    <a href="https://linkedin.com/in/mariia-kuznetsova-9870bb217/"> Maria Kuznetsova </a>
+    <a href="https://linkedin.com/in/mariia-kuznetsova-9870bb217/" > Maria Kuznetsova </a>
     <br>
-    <a href="https://linkedin.com/in/robives5"> Rob Ives </a>
+    <a href="https://linkedin.com/in/robives5" > Rob Ives </a>
     <br>
-    <a href="https://linkedin.com/in/will-maturi-930738196"> Will Maturi </a>
+    <a href="https://linkedin.com/in/will-maturi-930738196" > Will Maturi </a>
 </p>
 
 <p>
@@ -28,13 +28,13 @@ If you enjoy `bullviso`, don't forget to cite:
 </p>
 
 <p>
-    <a href="https://doi.org/10.1039/D4SC03700F"> A Guide to Bullvalene Stereodynamics </a>
+    <a href="https://doi.org/10.1039/D4SC03700F" > A Guide to Bullvalene Stereodynamics </a>
     <br>
     <i>Chem. Sci.</i>, 2024, <b>15</b>, 14608-14617 (DOI: 10.1039/D4SC03700F).
 </p>
 
 <p>
-    <a href="https://doi.org/10.1039/D4SC03699A"> Correlated Shapeshifting and Configurational Isomerization </a>
+    <a href="https://doi.org/10.1039/D4SC03699A" > Correlated Shapeshifting and Configurational Isomerization </a>
     <br>
     <i>Chem. Sci.</i>, 2024, <b>15</b>, 14618-14624 (DOI: 10.1039/D4SC03699A).
 </p>
@@ -203,7 +203,7 @@ generates 30 constitutional isomers for (disulfide)bullvalene, but only 15 of th
 
 BULLVISO organises the outputted structures of the substituted bullvalenes into separate directories labelled using the bullvalene isomer barcode and, inside these, into (sub)directories labelled using the bullvalene isomer barcode and conformational isomer number. By default, these output directories are created in the present working directory (PWD) where `bullviso` is called, although you can use the `-o [OUTPUT_DIR]` flag to create the output directory heirarchy somewhere else on your system by providing an alternative path. If the output directory doesn't exist, BULLVISO will try to create it.
 
-BULLVISO outputs the structures of the substituted bullvalenes in .xyz format by default, although you can use the `-f [OUTPUT_FILETYPE]` flag to output in an alternative format, *e.g.* .sdf/.mol (`-f sdf`), or a basic (customisable) input file for Gaussian (`-f gaussian`) or Orca (`-f orca`).
+BULLVISO outputs the structures of the substituted bullvalenes in .xyz format by default, although you can use the `-f [OUTPUT_FILETYPE]` flag to output in an alternative format, *e.g.* .sdf/.mol (`-f sdf`), or a basic (customisable) input file for <a href="https://gaussian.com/gaussian16/" > Gaussian </a> (`-f gaussian`) or <a href="https://kofo.mpg.de/en/research/services/orca" > Orca </a> (`-f orca`).
 
 ### HELP
 
