@@ -235,6 +235,27 @@ def main():
         args.sub_attach_idx, args.n_subs
     )
 
+    canonical_barcode = bv.barcodes.create_barcode(
+        sub_smiles,
+        sub_attach_idx
+    )
+    print(f'canonical barcode: {canonical_barcode}\n')
+
+    connectivity_map = {
+        i: f'sub{sub_n+1}_{sub_attach_idx_}'
+            for i, (sub_n, sub_attach_idx_) in enumerate(
+                utils.iterate_and_index(sub_attach_idx), start = 1
+            )
+    }
+
+    print('identifying inequivalent permutations...')
+    barcodes = set(
+        barcode for barcode in tqdm.tqdm(
+            canonical_barcode.permutations(), ncols = 60, total = 3628800
+        )
+    )
+    print('...done!\n')
+
     model_bullvalene = bv.io.sdf_to_mol(
         Path(__file__).parent / 'structures' / 'bv.sdf'
     )
@@ -251,28 +272,6 @@ def main():
         
     super_G = nx.compose_all([bullvalene_G, *sub_G])
 
-    connectivity_map = {
-        i: f'sub{sub_n+1}_{sub_attach_idx_}'
-            for i, (sub_n, sub_attach_idx_) in enumerate(
-                utils.iterate_and_index(sub_attach_idx), start = 1
-            )
-    }
-
-    canonical_barcode = bv.barcodes.create_barcode(
-        sub_smiles,
-        sub_attach_idx
-    )
-
-    print(f'canonical barcode: {canonical_barcode}\n')
-
-    print('identifying inequivalent permutations...')
-    barcodes = set(
-        barcode for barcode in tqdm.tqdm(
-            canonical_barcode.permutations(), ncols = 60, total = 3628800
-        )
-    )
-    print('...done!\n')
-
     coord_map = bv.rdkit.get_coord_map(
         model_bullvalene
     )
@@ -283,8 +282,7 @@ def main():
         for i, bit in enumerate(barcode.barcode, start = 1):
             if bit != 0:
                 super_G_.add_edge(
-                    f'bullvalene_{i}',
-                    connectivity_map[bit]
+                    f'bullvalene_{i}', connectivity_map[bit]
                 )
         mol = bv.graphs.graph_to_mol(
             super_G_
