@@ -71,9 +71,9 @@ def parse_args() -> Namespace:
         help = ('number of threads for optimising conformational isomers '
             'in multithreaded/parallel processes')
     )
-    p.add_argument('--out_f_type', '-o', type = str, default = 'xyz',
+    p.add_argument('--filetype', '-o', type = str, default = 'xyz',
         choices = ('xyz', 'sdf', 'gaussian', 'orca'),
-        help = ('file type for outputting geometries')
+        help = ('filetype for outputting geometries')
     )
 
     args = p.parse_args()
@@ -298,18 +298,14 @@ def main():
             mol.GetNumConformers(), args.m_confs
         )
         if m_confs > 0:
-            d = Path(f'./{barcode}')
-            if not d.is_dir():
-                d.mkdir()
             for conf_idx in range(m_confs):
-                out_d = d / f'./{barcode}_{conf_idx+1:03d}'
+                out_d = Path(f'./{barcode}/{barcode}_{conf_idx+1:03d}/')
                 if not out_d.is_dir():
-                    out_d.mkdir()
-                out_f = out_d / f'./{barcode}_{conf_idx+1:03d}'
+                    out_d.mkdir(parents = True)
                 bv.io.mol_to_file(
-                    out_f,
-                    args.out_f_type,
+                    out_d / f'./{barcode}_{conf_idx+1:03d}',
                     mol,
+                    filetype = args.filetype,
                     conf_idx = conf_idx
                 )
     print('...done!\n')

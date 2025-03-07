@@ -32,8 +32,8 @@ from rdkit.Chem import (
 
 def mol_to_file(
     filepath: Path,
-    filetype: str,
     mol: Chem.Mol,
+    filetype: str = 'xyz',
     conf_idx: int = -1,
     **kwargs
 ):
