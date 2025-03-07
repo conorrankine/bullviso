@@ -185,7 +185,9 @@ generates 30 constitutional isomers for (disulfide)bullvalene, but only 15 of th
 
 ### OUTPUT OPTIONS
 
-BULLVISO outputs the structures of the substituted bullvalenes in .xyz format by default, although you can use the `-o [FILETYPE]` flag to output in an alternative format, *e.g.* .sdf/.mol (`-o sdf`), or a basic (customisable) input file for Gaussian (`-o gaussian`) or Orca (`-o orca`).
+BULLVISO organises the outputted structures of the substituted bullvalenes into separate directories labelled using the bullvalene isomer barcode and, inside these, into (sub)directories labelled using the bullvalene isomer barcode and conformational isomer number. By default, these output directories are created in the present working directory (PWD) where `bullviso` is called, although you can use the `-o [OUTPUT_DIR]` flag to create the output directory heirarchy somewhere else on your system by providing an alternative path. If the output directory doesn't exist, BULLVISO will try to create it.
+
+BULLVISO outputs the structures of the substituted bullvalenes in .xyz format by default, although you can use the `-f [OUTPUT_FILETYPE]` flag to output in an alternative format, *e.g.* .sdf/.mol (`-f sdf`), or a basic (customisable) input file for Gaussian (`-f gaussian`) or Orca (`-f orca`).
 
 ### HELP
 
