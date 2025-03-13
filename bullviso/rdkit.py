@@ -22,7 +22,8 @@ this program.  If not, see <https://www.gnu.org/licenses/>.
 import copy
 from rdkit import Chem
 from rdkit.Chem import AllChem
-from rdkit.Chem import rdDistGeom, rdForceFieldHelpers, rdMolDescriptors
+from rdkit.Chem import rdForceFieldHelpers, rdMolDescriptors
+from rdkit.Chem.rdDistGeom import EmbedMultipleConfs, EmbedParameters
 from rdkit.Geometry import rdGeometry
 
 ###############################################################################
@@ -67,14 +68,8 @@ def generate_confs(
     params.coordMap = {} if coord_map is None else coord_map
     params.numThreads = num_threads
 
-    n_rotatable_bonds = rdMolDescriptors.CalcNumRotatableBonds(mol)
-    n_confs = 30 if n_rotatable_bonds < 8 else 120
-
-    if mol.GetNumAtoms() == mol.GetNumHeavyAtoms():
-        mol = Chem.AddHs(mol)
-
-    rdDistGeom.EmbedMultipleConfs(
-        mol, numConfs = n_confs, params = params
+    mol = _embed_confs(
+        mol, params = params
     )
 
     if mol.GetNumConformers() > 0:
@@ -112,6 +107,43 @@ def generate_confs(
             )
 
         mol = order_confs_by_energy(mol)
+
+    return mol
+
+def _embed_confs(
+    mol: Chem.Mol,
+    n_confs: int = None,
+    params: EmbedParameters = None
+) -> Chem.Mol:
+    """
+    Embeds `n_confs` conformers of a molecule `mol`; optional parameters to
+    control conformer embedding can be passed as an RDKit
+    rdDistGeom.EmbedParameter object.
+
+    Args:
+        mol (Chem.Mol): Molecule.
+        n_confs (int, optional): Number of conformers to embed; if `None`,
+            the default is to embed 30 conformers if the number of rotatable
+            bonds is less than 8, else 120 conformers if the number of
+            rotatable bonds is 8 or greater. Defaults to `None`.
+        params (EmbedParameters, optional): RDKit rdDistGeom.EmbedParameters
+            object that holds optional parameters to control conformer
+            embedding as attributes. Defaults to `None`.
+
+    Returns:
+        Chem.Mol: Molecule with embedded conformers.
+    """
+    
+    if n_confs is None:
+        n_rotatable_bonds = rdMolDescriptors.CalcNumRotatableBonds(mol)
+        n_confs = 30 if n_rotatable_bonds < 8 else 120
+
+    if mol.GetNumAtoms() == mol.GetNumHeavyAtoms():
+        mol = Chem.AddHs(mol)
+
+    EmbedMultipleConfs(
+        mol, numConfs = n_confs, params = params
+    )
 
     return mol
 
