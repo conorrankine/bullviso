@@ -22,7 +22,7 @@ this program.  If not, see <https://www.gnu.org/licenses/>.
 import copy
 from rdkit import Chem
 from rdkit.Chem import AllChem
-from rdkit.Chem import rdForceFieldHelpers, rdMolDescriptors
+from rdkit.Chem import rdMolDescriptors
 from rdkit.Chem.rdDistGeom import EmbedMultipleConfs, EmbedParameters
 from rdkit.Geometry import rdGeometry
 
@@ -72,41 +72,11 @@ def generate_confs(
         mol, params = params
     )
 
-    if mol.GetNumConformers() > 0:
+    mol = _optimise_confs(
+        mol, forcefield = forcefield, num_threads = num_threads
+    )
 
-        _ff_optimise = {
-            'uff': rdForceFieldHelpers.UFFOptimizeMoleculeConfs,
-            'mmff': rdForceFieldHelpers.MMFFOptimizeMoleculeConfs
-        }
-        ff_optimise = _ff_optimise.get(forcefield)
-
-        ff_optimise(
-            mol, numThreads = num_threads
-        )
-
-        _ff = {
-            'uff': rdForceFieldHelpers.UFFGetMoleculeForceField,
-            'mmff': rdForceFieldHelpers.MMFFGetMoleculeForceField
-        }
-        ff = _ff.get(forcefield)
-
-        if forcefield == 'mmff':
-            mol_props = rdForceFieldHelpers.MMFFGetMoleculeProperties(mol)
-
-        for conf in mol.GetConformers():
-            if forcefield == 'mmff':
-                conf_ff = ff(
-                    mol, mol_props, confId = conf.GetId()
-                )
-            else:
-                conf_ff = ff(
-                    mol, confId = conf.GetId()
-                )            
-            conf.SetDoubleProp(
-                'energy', conf_ff.CalcEnergy()
-            )
-
-        mol = order_confs_by_energy(mol)
+    mol = order_confs_by_energy(mol)
 
     return mol
 
@@ -144,6 +114,43 @@ def _embed_confs(
     EmbedMultipleConfs(
         mol, numConfs = n_confs, params = params
     )
+
+    return mol
+
+def _optimise_confs(
+    mol: Chem.Mol,
+    forcefield: str = 'uff'
+) -> Chem.Mol:
+    """
+    Optimises conformers of a molecule `mol` using a molecular mechanics / 
+    forcefield method; the Universal Forcefield (UFF) and Merck Molecular
+    Forcefield (MMFF) are available via RDKit.
+
+    Args:
+        mol (Chem.Mol): Molecule.
+        forcefield (str, optional): Forcefield for conformer optimisation;
+            choices are 'uff' and 'mmff'. Defaults to 'uff'.
+
+    Returns:
+        Chem.Mol: Molecule with forcefield-optimised conformers.
+    """
+    
+    if mol.GetNumConformers() > 0:
+        for conf in mol.GetConformers():
+            if forcefield == 'mmff':
+                mmff_properties = AllChem.MMFFGetMoleculeProperties(mol)
+                energy = AllChem.MMFFOptimizeMolecule(
+                    mol, mmff_properties, confId = conf.GetId()
+                )
+            elif forcefield == 'uff':
+                energy = AllChem.UFFOptimizeMolecule(
+                    mol, confId = conf.GetId()
+                )
+            else:
+                raise ValueError(
+                    f'{forcefield} is not a recognised forcefield'
+                )
+            conf.SetDoubleProp('energy', energy)
 
     return mol
 
