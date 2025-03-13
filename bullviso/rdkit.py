@@ -68,11 +68,11 @@ def generate_confs(
     params.coordMap = {} if coord_map is None else coord_map
     params.numThreads = num_threads
 
-    mol = _embed_confs(
+    mol = embed_confs(
         mol, params = params
     )
 
-    mol = _optimise_confs(
+    mol = optimise_confs(
         mol, forcefield = forcefield, num_threads = num_threads
     )
 
@@ -80,7 +80,7 @@ def generate_confs(
 
     return mol
 
-def _embed_confs(
+def embed_confs(
     mol: Chem.Mol,
     n_confs: int = None,
     params: EmbedParameters = None
@@ -117,7 +117,7 @@ def _embed_confs(
 
     return mol
 
-def _optimise_confs(
+def optimise_confs(
     mol: Chem.Mol,
     forcefield: str = 'uff'
 ) -> Chem.Mol:
