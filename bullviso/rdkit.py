@@ -117,7 +117,8 @@ def embed_confs(
 
 def optimise_confs(
     mol: Chem.Mol,
-    forcefield: str = 'uff'
+    forcefield: str = 'uff',
+    fixed_atom_idx: list[int] = None
 ) -> Chem.Mol:
     """
     Optimises conformers of a molecule `mol` using a molecular mechanics / 
@@ -128,25 +129,37 @@ def optimise_confs(
         mol (Chem.Mol): Molecule.
         forcefield (str, optional): Forcefield for conformer optimisation;
             choices are 'uff' and 'mmff'. Defaults to 'uff'.
+        fixed_atom_idx (list[int], optional): List of atom indices for atoms
+            to fix/freeze during conformer optimisation. Defaults to `None`.
 
     Returns:
         Chem.Mol: Molecule with forcefield-optimised conformers.
     """
     
     if mol.GetNumConformers() > 0:
+        
         for conf in mol.GetConformers():
+            
             if forcefield == 'mmff':
-                energy = AllChem.MMFFOptimizeMolecule(
-                    mol, confId = conf.GetId()
+                mmff_props = AllChem.MMFFGetMoleculeProperties(mol)
+                ff = AllChem.MMFFGetMoleculeForceField(
+                    mol, mmff_props, confId = conf.GetId()
                 )
             elif forcefield == 'uff':
-                energy = AllChem.UFFOptimizeMolecule(
+                ff = AllChem.UFFGetMoleculeForceField(
                     mol, confId = conf.GetId()
                 )
             else:
                 raise ValueError(
                     f'{forcefield} is not a recognised forcefield'
                 )
+            
+            if fixed_atom_idx:
+                for i in fixed_atom_idx:
+                    ff.AddFixedPoint(i)
+            
+            energy = ff.Minimize()
+            
             conf.SetDoubleProp('energy', energy)
 
     return mol
