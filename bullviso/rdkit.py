@@ -155,19 +155,21 @@ def optimise_confs(
                 ff = AllChem.MMFFGetMoleculeForceField(
                     mol, mmff_props, confId = conf.GetId()
                 )
+                if fixed_atom_idx:
+                    for i in fixed_atom_idx:
+                        ff.MMFFAddPositionConstraint(i, 0.0, 1.0E5)
             elif forcefield == 'uff':
                 ff = AllChem.UFFGetMoleculeForceField(
                     mol, confId = conf.GetId()
                 )
+                if fixed_atom_idx:
+                    for i in fixed_atom_idx:
+                        ff.UFFAddPositionConstraint(i, 0.0, 1.0E5)
             else:
                 raise ValueError(
                     f'{forcefield} is not a recognised forcefield'
                 )
-            
-            if fixed_atom_idx:
-                for i in fixed_atom_idx:
-                    ff.AddFixedPoint(i)
-            
+                        
             ff.Minimize()
 
             conf.SetDoubleProp('energy', ff.CalcEnergy())
