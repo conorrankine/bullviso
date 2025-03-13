@@ -32,32 +32,30 @@ from rdkit.Geometry import rdGeometry
 
 def generate_confs(
         mol: Chem.Mol,
-        forcefield: str = 'uff',
         prune_rms_thresh: float = 0.5,
         coord_map: dict[int, rdGeometry.Point3D] = None,
+        forcefield: str = 'uff',
         num_threads: int = 1
 ) -> Chem.Mol:
     """
-    Embeds `k` conformers of a Chem.Mol molecule `mol` and optimises the
-    conformers using a forcefield `forcefield`. For molecules with less
-    than eight rotatable bonds, `k` = 30; for molecules with more than eight
-    rotatable bonds, `k` = 120.
+    Embeds (using the ETKDGv2 distance geometry approach) and optimises (using
+    a molecular mechanics / forcefield method) conformers of a molecule `mol`;
+    the Universal Forcefield (UFF) and Merck Molecular Forcefield (MMFF) are
+    available via RDKit.
 
     Args:
-        mol (Chem.Mol): A molecule to embed conformers for.
-        forcefield (str, optional): The forcefield to use for optimising the
-            generated conformers; options are the Universal Forcefield ('uff')
-            or the Merck Molecular Forcefield ('mmff'). Defaults to 'uff'.
-        prune_rms_thresh (float, optional): The RMSD threshold for pruning the
-            generated conformers; conformers below the RMSD threshold are
-            considered the same and are pruned. Defaults to 0.5 Angstrom.
-        coord_map(dict[int, rdGeometry.Point3D], optional): Coordinate map
+        mol (Chem.Mol): Molecule.
+        prune_rms_thresh (float, optional): RMSD threshold for pruning
+            conformers; conformers with RMSDs below the RMSD threshold are
+            considered equivalent and are pruned. Defaults to 0.5 (Angstroem).
+        coord_map (dict[int, rdGeometry.Point3D], optional): Coordinate map
             dictionary mapping atom indices to their 3D coordinates
             (represented as rdGeometry.Point3D instances); these atoms are
-            fixed/frozen during the embedding procedure. Defaults to None.
-        num_threads(int, optional): The number of threads to use for generating
-            conformers; `num_threads` threads are used for each of the
-            embedding and optimisation procedures. Defaults to 1.
+            fixed/frozen during the embedding procedure. Defaults to `None`.
+        forcefield (str, optional): Forcefield for conformer optimisation;
+            choices are 'uff' and 'mmff'. Defaults to 'uff'.
+        num_threads(int, optional): Number of threads to use in parallel
+            processing operations. Defaults to 1.
 
     Returns:
         Chem.Mol: A molecule with embedded conformers.
