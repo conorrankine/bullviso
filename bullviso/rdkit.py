@@ -73,7 +73,7 @@ def generate_confs(
     )
 
     mol = optimise_confs(
-        mol, forcefield = forcefield, num_threads = num_threads
+        mol, forcefield = forcefield
     )
 
     mol = order_confs_by_energy(mol)
@@ -138,9 +138,8 @@ def optimise_confs(
     if mol.GetNumConformers() > 0:
         for conf in mol.GetConformers():
             if forcefield == 'mmff':
-                mmff_properties = AllChem.MMFFGetMoleculeProperties(mol)
                 energy = AllChem.MMFFOptimizeMolecule(
-                    mol, mmff_properties, confId = conf.GetId()
+                    mol, confId = conf.GetId()
                 )
             elif forcefield == 'uff':
                 energy = AllChem.UFFOptimizeMolecule(
