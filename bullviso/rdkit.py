@@ -157,17 +157,17 @@ def order_confs_by_energy(
         mol: Chem.Mol,
 ) -> Chem.Mol:
     """
-    Orders the conformers of a Chem.Mol molecule `mol` from lowest to highest
-    energy; requires the 'energy' property to be set for each conformer, i.e.
-    accessible via `conf.GetProp('energy')` for each instance of `conf`
-    returned via `mol.GetConformers()`.
+    Orders the forcefield-optimised conformers of a molecule `mol` in
+    ascending order by energy; requires the `energy` property to be set for
+    each conformer, i.e., accessible via `conf.GetProp('energy')` for each
+    instance of `conf` returned via, e.g., `mol.GetConformers()`.
 
     Args:
-        mol (Chem.Mol): A molecule with embedded conformers.
+        mol (Chem.Mol): Molecule.
 
     Returns:
-        Chem.Mol: A molecule with embedded conformers ordered from lowest to
-            highest energy.
+        Chem.Mol: Molecule with forcefield-optimised conformers in ascending
+            order by energy.
     """
        
     conf_energies = [
@@ -195,7 +195,7 @@ def get_coord_map(
     atom_idx: list[int] = None
 ) -> dict[int, rdGeometry.Point3D]:
     """
-    Returns a coordinate map dictionary for a Chem.Mol molecule `mol` that maps
+    Returns a coordinate map dictionary for a molecule `mol` that maps the
     atom indices to their 3D coordinates (represented as rdGeometry.Point3D
     instances).
 
@@ -205,7 +205,7 @@ def get_coord_map(
             coordinate map for. Defaults to -1.
         atom_idx (list[int], optional): List of indices defining the atoms to
             include in the coordinate map; if `None`, all atoms are included
-            in the coordinate map. Defaults to None.
+            in the coordinate map. Defaults to `None`.
 
     Returns:
         dict[int, rdGeometry.Point3D]: Coordinate map dictionary mapping atom
