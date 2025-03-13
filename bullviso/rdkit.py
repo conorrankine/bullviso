@@ -168,9 +168,9 @@ def optimise_confs(
                 for i in fixed_atom_idx:
                     ff.AddFixedPoint(i)
             
-            energy = ff.Minimize()
-            
-            conf.SetDoubleProp('energy', energy)
+            ff.Minimize()
+
+            conf.SetDoubleProp('energy', ff.CalcEnergy())
 
     return mol
 
