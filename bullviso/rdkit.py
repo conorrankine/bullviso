@@ -35,6 +35,7 @@ def generate_confs(
         prune_rms_thresh: float = 0.5,
         coord_map: dict[int, rdGeometry.Point3D] = None,
         forcefield: str = 'uff',
+        constrained_opt: bool = True,
         num_threads: int = 1
 ) -> Chem.Mol:
     """
@@ -54,6 +55,10 @@ def generate_confs(
             fixed/frozen during the embedding procedure. Defaults to `None`.
         forcefield (str, optional): Forcefield for conformer optimisation;
             choices are 'uff' and 'mmff'. Defaults to 'uff'.
+        constrained_opt (bool, optional): Toggles constrained conformer
+            optimisation; if `True`, and if `coord_map` is not `None`, the
+            atoms that are fixed/frozen during the embedding procedure are
+            also fixed/frozen during conformer optimisation.
         num_threads(int, optional): Number of threads to use in parallel
             processing operations. Defaults to 1.
 
@@ -70,8 +75,13 @@ def generate_confs(
         mol, params = params
     )
 
+    if constrained_opt and coord_map:
+        fixed_atom_idx = [i for i in coord_map.keys()]
+    else:
+        fixed_atom_idx = None
+
     mol = optimise_confs(
-        mol, forcefield = forcefield
+        mol, forcefield = forcefield, fixed_atom_idx = fixed_atom_idx
     )
 
     mol = order_confs_by_energy(mol)
