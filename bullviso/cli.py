@@ -62,13 +62,13 @@ def parse_args() -> Namespace:
         help = 'maximum number of conformational isomers to generate'
     )
     p.add_argument(
-        '--forcefield', '-ff', type = str, default = 'uff',
-        choices = ('uff', 'mmff'),
-        help = 'forcefield for optimising conformational isomers'
-    )
-    p.add_argument(
         '--prune_rms_thresh', '-rmsd', type = float, default = 0.5,
         help = 'RMSD threshold for pruning conformational isomers'
+    )
+    p.add_argument(
+        '--ff_type', '-ff', type = str, default = 'uff',
+        choices = ('uff', 'mmff'),
+        help = 'forcefield type to use for optimising conformational isomers'
     )
     p.add_argument(
         '--num_threads', '-nt', type = int, default = 1,
@@ -326,9 +326,9 @@ def main():
         )
         mol = bv.rdkit.generate_confs(
             mol,
-            forcefield = args.forcefield,
             prune_rms_thresh = args.prune_rms_thresh,
             coord_map = coord_map,
+            ff_type = args.ff_type,
             num_threads = args.num_threads
         )
         m_confs = min(

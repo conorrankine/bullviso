@@ -35,7 +35,7 @@ def generate_confs(
         mol: Chem.Mol,
         prune_rms_thresh: float = 0.5,
         coord_map: dict[int, rdGeometry.Point3D] = None,
-        forcefield: str = 'uff',
+        ff_type: str = 'uff',
         constrained_opt: bool = True,
         num_threads: int = 1
 ) -> Chem.Mol:
@@ -54,8 +54,8 @@ def generate_confs(
             dictionary mapping atom indices to their 3D coordinates
             (represented as rdGeometry.Point3D instances); these atoms are
             fixed/frozen during the embedding procedure. Defaults to `None`.
-        forcefield (str, optional): Forcefield for conformer optimisation;
-            choices are 'uff' and 'mmff'. Defaults to 'uff'.
+        ff_type (str, optional): Forcefield type; choices are 'uff' and 
+            'mmff'. Defaults to 'uff'.
         constrained_opt (bool, optional): Toggles constrained conformer
             optimisation; if `True`, and if `coord_map` is not `None`, the
             atoms that are fixed/frozen during the embedding procedure are
@@ -82,7 +82,7 @@ def generate_confs(
         fixed_atom_idx = None
 
     mol = optimise_confs(
-        mol, forcefield = forcefield, fixed_atom_idx = fixed_atom_idx
+        mol, ff_type = ff_type, fixed_atom_idx = fixed_atom_idx
     )
 
     mol = order_confs_by_energy(mol)
@@ -128,7 +128,7 @@ def embed_confs(
 
 def optimise_confs(
     mol: Chem.Mol,
-    forcefield: str = 'uff',
+    ff_type: str = 'uff',
     fixed_atom_idx: list[int] = None
 ) -> Chem.Mol:
     """
@@ -138,13 +138,13 @@ def optimise_confs(
 
     Args:
         mol (Chem.Mol): Molecule.
-        forcefield (str, optional): Forcefield for conformer optimisation;
-            choices are 'uff' and 'mmff'. Defaults to 'uff'.
+        ff_type (str, optional): Forcefield type; choices are 'uff' and 
+            'mmff'. Defaults to 'uff'.
         fixed_atom_idx (list[int], optional): List of atom indices for atoms
             to fix/freeze during conformer optimisation. Defaults to `None`.
 
     Raises:
-        ValueError: If `forcefield` is not either 'uff' or 'mmff'.
+        ValueError: If `ff_type` is not either 'uff' or 'mmff'.
 
     Returns:
         Chem.Mol: Molecule with forcefield-optimised conformers.
@@ -154,18 +154,18 @@ def optimise_confs(
         
         for conf in mol.GetConformers():
             
-            if forcefield == 'mmff':
+            if ff_type == 'mmff':
                 ff = _get_mmff_forcefield(mol, conf.GetId())
-            elif forcefield == 'uff':
+            elif ff_type == 'uff':
                 ff = _get_uff_forcefield(mol, conf.GetId())
             else:
                 raise ValueError(
-                    f'{forcefield} is not a recognised forcefield'
+                    f'{ff_type} is not a recognised forcefield'
                 )
             
             if fixed_atom_idx:
                 ff = _add_atomic_position_constraints(
-                    ff, forcefield, fixed_atom_idx = fixed_atom_idx
+                    ff, ff_type, fixed_atom_idx
                 )
                         
             ff.Minimize()
