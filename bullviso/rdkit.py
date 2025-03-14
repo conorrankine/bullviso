@@ -143,6 +143,9 @@ def optimise_confs(
         fixed_atom_idx (list[int], optional): List of atom indices for atoms
             to fix/freeze during conformer optimisation. Defaults to `None`.
 
+    Raises:
+        ValueError: If `forcefield` is not either 'uff' or 'mmff'.
+
     Returns:
         Chem.Mol: Molecule with forcefield-optimised conformers.
     """
