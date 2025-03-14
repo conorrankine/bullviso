@@ -66,8 +66,8 @@ def parse_args() -> Namespace:
         help = 'RMSD threshold for pruning conformational isomers'
     )
     p.add_argument(
-        '--ff_type', '-ff', type = str, default = 'uff',
-        choices = ('uff', 'mmff'),
+        '--ff_type', '-ff', type = str, default = 'mmff',
+        choices = ('mmff', 'uff'),
         help = 'forcefield type for optimising conformational isomers'
     )
     p.add_argument(

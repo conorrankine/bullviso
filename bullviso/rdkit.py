@@ -35,7 +35,7 @@ def generate_confs(
         mol: Chem.Mol,
         prune_rms_thresh: float = 0.5,
         coord_map: dict[int, rdGeometry.Point3D] = None,
-        ff_type: str = 'uff',
+        ff_type: str = 'mmff',
         constrained_ff_opt: bool = True,
         random_seed: int = -1,
         num_threads: int = 1
@@ -43,7 +43,7 @@ def generate_confs(
     """
     Embeds (using the ETKDGv2 distance geometry approach) and optimises (using
     a molecular mechanics / forcefield method) conformers of a molecule `mol`;
-    the Universal Forcefield (UFF) and Merck Molecular Forcefield (MMFF) are
+    the Merck Molecular Forcefield (MMFF) and Universal Forcefield (UFF) are
     available via RDKit.
 
     Args:
@@ -55,8 +55,8 @@ def generate_confs(
             dictionary mapping atom indices to their 3D coordinates
             (represented as rdGeometry.Point3D instances); these atoms are
             fixed/frozen during the embedding procedure. Defaults to `None`.
-        ff_type (str, optional): Forcefield type; choices are 'uff' and 
-            'mmff'. Defaults to 'uff'.
+        ff_type (str, optional): Forcefield type; choices are 'mmff' and 
+            'uff'. Defaults to 'mmff'.
         constrained_ff_opt (bool, optional): Toggles constrained conformer
             optimisation; if `True`, and if `coord_map` is not `None`, the
             atoms that are fixed/frozen during the embedding procedure are
@@ -135,18 +135,18 @@ def embed_confs(
 
 def optimise_confs(
     mol: Chem.Mol,
-    ff_type: str = 'uff',
+    ff_type: str = 'mmff',
     fixed_atom_idx: list[int] = None
 ) -> Chem.Mol:
     """
     Optimises conformers of a molecule `mol` using a molecular mechanics / 
-    forcefield method; the Universal Forcefield (UFF) and Merck Molecular
-    Forcefield (MMFF) are available via RDKit.
+    forcefield method; the Merck Molecular Forcefield (MMFF) and Universal
+    Forcefield (UFF) are available via RDKit.
 
     Args:
         mol (Chem.Mol): Molecule.
-        ff_type (str, optional): Forcefield type; choices are 'uff' and 
-            'mmff'. Defaults to 'uff'.
+        ff_type (str, optional): Forcefield type; choices are 'mmff' and 
+            'uff'. Defaults to 'mmff'.
         fixed_atom_idx (list[int], optional): List of atom indices for atoms
             to fix/freeze during conformer optimisation. Defaults to `None`.
 
@@ -177,13 +177,13 @@ def _get_forcefield(
     rdForceField.ForceField instance.
 
     Args:
-        ff_type (str): Forcefield type; choices are 'uff' and 'mmff'.
+        ff_type (str): Forcefield type; choices are 'mmff' and 'uff'.
         mol (Chem.Mol): Molecule.
         conf_idx (int, optional): Index of the conformer to return the
             specified type of forcefield for. Defaults to -1.
 
     Raises:
-        ValueError: If `ff_type` is not either 'uff' or 'mmff'.
+        ValueError: If `ff_type` is not either 'mmff' or 'uff'.
 
     Returns:
         rdForceField.ForceField: Forcefield.
@@ -257,17 +257,17 @@ def _add_atomic_position_constraints(
 ) -> rdForceField.ForceField:
     """
     Adds atomic position constraints to a forcefield, e.g., to keep atoms
-    fixed/frozen during conformer optimisation; the Universal Forcefield (UFF)
-    and Merck Molecular Forcefield (MMFF) are supported.
+    fixed/frozen during conformer optimisation; the Merck Molecular Forcefield
+    (MMFF) and Universal Forcefield (UFF) are supported.
 
     Args:
         ff (rdForceField.ForceField): Forcefield.
-        ff_type (str): Forcefield type; choices are 'uff' and 'mmff'.
+        ff_type (str): Forcefield type; choices are 'mmff' and 'uff'.
         fixed_atom_idx (list[int]): List of atom indices for atoms to apply
             atomic position constraints to.
 
     Raises:
-        ValueError: If `ff_type` is not either 'uff' or 'mmff'.
+        ValueError: If `ff_type` is not either 'mmff' or 'uff'.
 
     Returns:
         rdForceField.ForceField: Forcefield with atomic position constraints.
