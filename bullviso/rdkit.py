@@ -143,43 +143,62 @@ def optimise_confs(
         fixed_atom_idx (list[int], optional): List of atom indices for atoms
             to fix/freeze during conformer optimisation. Defaults to `None`.
 
-    Raises:
-        ValueError: If `ff_type` is not either 'uff' or 'mmff'.
-
     Returns:
         Chem.Mol: Molecule with forcefield-optimised conformers.
     """
     
     if mol.GetNumConformers() > 0:
 
-        forcefield_getter_functions = {
-            'mmff': _get_mmff_forcefield,
-            'uff': _get_uff_forcefield
-        }
-
-        try:
-            forcefield_getter_function = (
-                forcefield_getter_functions[ff_type]
-            )
-        except KeyError:
-            raise ValueError(
-                f'{ff_type} is not a recognised forcefield'
-            ) from None  
-
-        for conf in mol.GetConformers():
-            
-            ff = forcefield_getter_function(mol, conf.GetId())
-            
+        for conf in mol.GetConformers():            
+            ff = _get_forcefield(ff_type, mol, conf_idx = conf.GetId())
             if fixed_atom_idx:
                 ff = _add_atomic_position_constraints(
                     ff, ff_type, fixed_atom_idx
-                )
-                        
+                )                      
             ff.Minimize()
-
             conf.SetDoubleProp('energy', ff.CalcEnergy())
 
     return mol
+
+def _get_forcefield(
+    ff_type: str,
+    mol: Chem.Mol,
+    conf_idx: int = -1
+) -> rdForceField.ForceField:
+    """
+    Returns the specified type of forcefield for a molecule `mol` as an
+    rdForceField.ForceField instance.
+
+    Args:
+        ff_type (str): Forcefield type; choices are 'uff' and 'mmff'.
+        mol (Chem.Mol): Molecule.
+        conf_idx (int, optional): Index of the conformer to return the
+            specified type of forcefield for. Defaults to -1.
+
+    Raises:
+        ValueError: If `ff_type` is not either 'uff' or 'mmff'.
+
+    Returns:
+        rdForceField.ForceField: Forcefield.
+    """
+    
+    forcefield_getter_functions = {
+        'mmff': _get_mmff_forcefield,
+        'uff': _get_uff_forcefield
+    }
+
+    try:
+        forcefield_getter_function = (
+            forcefield_getter_functions[ff_type]
+        )
+    except KeyError:
+        raise ValueError(
+            f'{ff_type} is not a recognised forcefield'
+        ) from None
+    
+    return forcefield_getter_function(
+        mol, conf_idx = conf_idx
+    )
 
 def _get_mmff_forcefield(
     mol: Chem.Mol,
