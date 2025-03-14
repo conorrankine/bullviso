@@ -68,11 +68,16 @@ def parse_args() -> Namespace:
     p.add_argument(
         '--ff_type', '-ff', type = str, default = 'uff',
         choices = ('uff', 'mmff'),
-        help = 'forcefield type to use for optimising conformational isomers'
+        help = 'forcefield type for optimising conformational isomers'
+    )
+    p.add_argument(
+        '--random_seed', '-rs', type = int, default = -1,
+        help = ('random seed for embedding conformational isomers; if -1, '
+            'the random seed is obtained via random number generation')
     )
     p.add_argument(
         '--num_threads', '-nt', type = int, default = 1,
-        help = ('number of threads for optimising conformational isomers in '
+        help = ('number of threads for embedding conformational isomers in '
             'multithreaded/parallel processes')
     )
     p.add_argument(
@@ -329,6 +334,7 @@ def main():
             prune_rms_thresh = args.prune_rms_thresh,
             coord_map = coord_map,
             ff_type = args.ff_type,
+            random_seed = args.random_seed,
             num_threads = args.num_threads
         )
         m_confs = min(

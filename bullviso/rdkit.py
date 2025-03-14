@@ -36,7 +36,8 @@ def generate_confs(
         prune_rms_thresh: float = 0.5,
         coord_map: dict[int, rdGeometry.Point3D] = None,
         ff_type: str = 'uff',
-        constrained_opt: bool = True,
+        constrained_ff_opt: bool = True,
+        random_seed: int = -1,
         num_threads: int = 1
 ) -> Chem.Mol:
     """
@@ -56,11 +57,14 @@ def generate_confs(
             fixed/frozen during the embedding procedure. Defaults to `None`.
         ff_type (str, optional): Forcefield type; choices are 'uff' and 
             'mmff'. Defaults to 'uff'.
-        constrained_opt (bool, optional): Toggles constrained conformer
+        constrained_ff_opt (bool, optional): Toggles constrained conformer
             optimisation; if `True`, and if `coord_map` is not `None`, the
             atoms that are fixed/frozen during the embedding procedure are
             also fixed/frozen during conformer optimisation.
-        num_threads(int, optional): Number of threads to use in parallel
+        random_seed (int, optional): Number to use as the random seed for the
+            embedding procedure; if -1, the random seed is obtained via
+            random number generation. Defaults to -1.
+        num_threads (int, optional): Number of threads to use in parallel
             processing operations. Defaults to 1.
 
     Returns:
@@ -69,14 +73,17 @@ def generate_confs(
     
     params = getattr(Chem.rdDistGeom, "ETKDGv2")()
     params.pruneRmsThresh = prune_rms_thresh
+    params.onlyHeavyAtomsForRms = True
+    params.useSymmetryForPruning = True
     params.coordMap = {} if coord_map is None else coord_map
+    params.randomSeed = random_seed
     params.numThreads = num_threads
 
     mol = embed_confs(
         mol, params = params
     )
 
-    if constrained_opt and coord_map:
+    if constrained_ff_opt and coord_map:
         fixed_atom_idx = [i for i in coord_map.keys()]
     else:
         fixed_atom_idx = None
