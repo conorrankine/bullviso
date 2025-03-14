@@ -72,10 +72,10 @@ def generate_confs(
     """
     
     params = getattr(Chem.rdDistGeom, "ETKDGv2")()
+    
+    params.SetCoordMap({} if coord_map is None else coord_map)
+    
     params.pruneRmsThresh = prune_rms_thresh
-    params.onlyHeavyAtomsForRms = True
-    params.useSymmetryForPruning = True
-    params.coordMap = {} if coord_map is None else coord_map
     params.randomSeed = random_seed
     params.numThreads = num_threads
 
