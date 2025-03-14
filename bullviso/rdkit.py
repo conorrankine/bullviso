@@ -25,6 +25,7 @@ from rdkit.Chem import AllChem
 from rdkit.Chem import rdMolDescriptors
 from rdkit.Chem.rdDistGeom import EmbedMultipleConfs, EmbedParameters
 from rdkit.Geometry import rdGeometry
+from rdkit.ForceField import rdForceField
 
 ###############################################################################
 ################################## FUNCTIONS ##################################
@@ -151,17 +152,12 @@ def optimise_confs(
         for conf in mol.GetConformers():
             
             if forcefield == 'mmff':
-                mmff_props = AllChem.MMFFGetMoleculeProperties(mol)
-                ff = AllChem.MMFFGetMoleculeForceField(
-                    mol, mmff_props, confId = conf.GetId()
-                )
+                ff = _get_mmff_forcefield(mol, conf.GetId())
                 if fixed_atom_idx:
                     for i in fixed_atom_idx:
                         ff.MMFFAddPositionConstraint(i, 0.0, 1.0E5)
             elif forcefield == 'uff':
-                ff = AllChem.UFFGetMoleculeForceField(
-                    mol, confId = conf.GetId()
-                )
+                ff = _get_uff_forcefield(mol, conf.GetId())
                 if fixed_atom_idx:
                     for i in fixed_atom_idx:
                         ff.UFFAddPositionConstraint(i, 0.0, 1.0E5)
@@ -176,6 +172,49 @@ def optimise_confs(
 
     return mol
 
+def _get_mmff_forcefield(
+    mol: Chem.Mol,
+    conf_idx: int = -1
+) -> rdForceField.ForceField:
+    """
+    Returns a Merck Molecular Forcefield (MMFF) forcefield for a molecule
+    `mol` as an rdForceField.ForceField instance.
+
+    Args:
+        mol (Chem.Mol): Molecule.
+        conf_idx (int, optional): Index of the conformer to return the
+            MMFF forcefield for. Defaults to -1.
+
+    Returns:
+        rdForceField.ForceField: MMFF forcefield.
+    """
+    
+    mmff_props = AllChem.MMFFGetMoleculeProperties(mol)
+    return AllChem.MMFFGetMoleculeForceField(
+        mol, mmff_props, confId = conf_idx
+    )
+                
+def _get_uff_forcefield(
+    mol: Chem.Mol,
+    conf_idx: int = -1
+) -> rdForceField.ForceField:
+    """
+    Returns a Universal Forcefield (UFF) forcefield for a molecule `mol` as
+    an rdForceField.ForceField instance.
+
+    Args:
+        mol (Chem.Mol): Molecule.
+        conf_idx (int, optional): Index of the conformer to return the
+            UFF forcefield for. Defaults to -1.
+
+    Returns:
+        rdForceField.ForceField: UFF forcefield.
+    """
+    
+    return AllChem.UFFGetMoleculeForceField(
+        mol, confId = conf_idx
+    )
+    
 def order_confs_by_energy(
         mol: Chem.Mol,
 ) -> Chem.Mol:
