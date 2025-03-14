@@ -151,17 +151,24 @@ def optimise_confs(
     """
     
     if mol.GetNumConformers() > 0:
-        
+
+        forcefield_getter_functions = {
+            'mmff': _get_mmff_forcefield,
+            'uff': _get_uff_forcefield
+        }
+
+        try:
+            forcefield_getter_function = (
+                forcefield_getter_functions[ff_type]
+            )
+        except KeyError:
+            raise ValueError(
+                f'{ff_type} is not a recognised forcefield'
+            ) from None  
+
         for conf in mol.GetConformers():
             
-            if ff_type == 'mmff':
-                ff = _get_mmff_forcefield(mol, conf.GetId())
-            elif ff_type == 'uff':
-                ff = _get_uff_forcefield(mol, conf.GetId())
-            else:
-                raise ValueError(
-                    f'{ff_type} is not a recognised forcefield'
-                )
+            ff = forcefield_getter_function(mol, conf.GetId())
             
             if fixed_atom_idx:
                 ff = _add_atomic_position_constraints(
@@ -252,7 +259,7 @@ def _add_atomic_position_constraints(
     except KeyError:
         raise ValueError(
             f'{ff_type} is not a recognised forcefield'
-        )    
+        ) from None    
 
     for atom_idx in fixed_atom_idx:
         position_constraint_function(atom_idx, 0.0, 1.0E5)
