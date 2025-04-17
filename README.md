@@ -136,9 +136,11 @@ bullviso "CCCC" -n 2 -m 6
 
 generates (up to a maximum of) the six lowest-energy conformational isomers of each of the 15 unique constitutional isomers of dibutylbullvalene.
 
-The energy minimisation (or '*geometry optimisation*') can be carried out using either the Universal Forcefield (UFF) or Merck Molecular Forcefield (MMFF), and this can be toggled using the `-ff [FORCEFIELD]` flag. BULLVISO uses the UFF by default.
+The energy minimisation (or '*geometry optimisation*') can be carried out using either the Merck Molecular Forcefield (MMFF) or Universal Forcefield (UFF), and this can be toggled using the `-ff [FF_TYPE]` flag. BULLVISO uses MMFF by default.
 
 BULLVISO prunes similar conformational isomers by root-mean-square deviation (RMSD) thresholding; the default RMSD threshold is 0.5 Angstroem, although this can be set to an alternative (*e.g.* a tighter or looser) threshold using the `-rmsd [PRUNE_RMS_THRESH]` flag. Any conformational isomers that have an RMSD lower than the RMSD threshold when evaluated against any of the conformational isomers already generated are pruned (*i.e.* discarded).
+
+The generation of the conformational isomers is randomly seeded. You can use the `-rs [RANDOM_SEED]` flag to choose an (integer) random seed to guarentee reproducibility, *i.e.*, to ensure that you always generate the same conformational isomers each time you run the code -- even if you run it again and again! BULLVISO generates the random seed on the fly *via* random number generation by default, so you might get a different set of conformational isomers each time you run the code -- especially if you're working with large or floppy/flexible substituents and sample only a small number of conformers with the `-m [M_CONFS]` flag.
 
 The generation of the conformational isomers is the most time- and compute-intensive part of the BULLVISO workflow. Fortunately, you can accelerate the generation of the conformational isomers using multithreading. BULLVISO uses only one thread by default, although you can use the `-nt [NUM_THREADS]` flag to request additional threads (up to as many as your machine supports!) for faster conformational isomer generation.
 
