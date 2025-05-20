@@ -53,7 +53,8 @@ def mol_to_graph(
         G.add_node(
             node_label_prefix + f'{i + 1}',
             element = atom.GetSymbol(),
-            charge = atom.GetFormalCharge()
+            charge = atom.GetFormalCharge(),
+            unpaired_electrons = atom.GetNumRadicalElectrons()
         )
 
     for bond in mol.GetBonds():
@@ -98,6 +99,9 @@ def graph_to_mol(
         )
         atom.SetFormalCharge(
             data.get('charge')
+        )
+        atom.SetNumRadicalElectrons(
+            data.get('unpaired_electrons')
         )
 
     for node_i, node_j, data in G.edges(data = True):
