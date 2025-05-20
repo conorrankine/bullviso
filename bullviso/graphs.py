@@ -52,7 +52,8 @@ def mol_to_graph(
         i = atom.GetIdx()
         G.add_node(
             node_label_prefix + f'{i + 1}',
-            element = atom.GetSymbol()
+            element = atom.GetSymbol(),
+            charge = atom.GetFormalCharge()
         )
 
     for bond in mol.GetBonds():
@@ -91,6 +92,12 @@ def graph_to_mol(
         element = data.get('element')
         node_to_atom_mapping[node_i] = mol.AddAtom(
             Chem.Atom(element)
+        )
+        atom = mol.GetAtomWithIdx(
+            node_to_atom_mapping[node_i]
+        )
+        atom.SetFormalCharge(
+            data.get('charge')
         )
 
     for node_i, node_j, data in G.edges(data = True):
