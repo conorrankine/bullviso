@@ -21,7 +21,13 @@ this program.  If not, see <https://www.gnu.org/licenses/>.
 
 from . import utils
 from itertools import permutations
-from typing import Generator, Union
+from typing import Generator, Union, TypeVar
+
+# =============================================================================
+#                                   GLOBALS
+# =============================================================================
+
+T = TypeVar('T', bound = 'BVBarcode')
 
 # =============================================================================
 #                                   CLASSES
@@ -86,6 +92,78 @@ class BVBarcode:
 
         if canonicalize:
             self.canonicalize()
+
+    @classmethod
+    def from_substituents(
+        cls: type[T],
+        sub_smiles: list[str],
+        sub_attach_idx: list[Union[int, list[int]]],
+        canonicalize: bool = True
+    ) -> T:
+        """
+        Creates a bullvalene isomer barcode (`BVBarcode` instance) using a list of
+        the substituent smiles and attachment indices.
+
+        Args:
+            sub_smiles (list[str]): List of SMILEs strings specifying the
+                substituents attached to the bullvalene.
+            sub_attach_idx (list[Union[int, list[int]]]): List of integers and/or
+                nested (sub)lists of integers specifying the attachment indices of
+                the substituents attached to the bullvalene.
+            canonicalize (bool, optional): If `True`, the bullvalene isomer barcode
+                is canonicalised.. Defaults to True.
+
+        Raises:
+            ValueError: If `sub_smiles` and `sub_attach_idx` are not of equal
+                length, or if there are greater than 9 elements in `sub_attach_idx`
+                (counting elements in the outer list and any nested (sub)lists).
+
+        Returns:
+            BVBarcode: `BVBarcode` instance corresponding to the substituent and
+                attachment index specification.
+        """
+        
+        if len(sub_smiles) != len(sub_attach_idx):
+            raise ValueError(
+                '`sub_smiles` and `sub_attach_idx` should have the same length'       
+            )
+
+        groups = [
+            f'{sub_smiles[i]}_{sub_attach_idx_}' 
+                for (i, sub_attach_idx_) in utils.iterate_and_index(
+                    sub_attach_idx
+                )
+        ]
+
+        if len(groups) > 9:
+            raise ValueError(
+                'too many attachment indices in `sub_attach_idx`; support is '
+                'only available for up to (and including) 9 substituents'
+            )
+
+        equivalent_group_map = {
+            group: i for i, group in enumerate(
+                utils.unique_elements(groups), start = 1
+            )
+        }
+
+        barcode = utils.pad_list(
+            [i for i in range(1, len(groups) + 1)],
+            length = 10,
+            direction = 'left'
+        )
+
+        grouped_barcode = utils.pad_list(
+            [equivalent_group_map[group] for group in groups],
+            length = 10,
+            direction = 'left'
+        )
+
+        return cls(
+            barcode,
+            grouped_barcode = grouped_barcode,
+            canonicalize = canonicalize
+        )
 
     def __str__(
         self
@@ -333,80 +411,6 @@ class BVBarcode:
         raise NotImplementedError(
             '`_get_connected_barcodes()` is currently a placeholder method'
         )
-
-# =============================================================================
-#                                  FUNCTIONS
-# =============================================================================
-
-def create_barcode(
-    sub_smiles: list[str],
-    sub_attach_idx: list[Union[int, list[int]]],
-    canonicalize: bool = True
-) -> 'BVBarcode':
-    """
-    Creates a bullvalene isomer barcode (`BVBarcode` instance) using a list of
-    the substituent smiles and attachment indices.
-
-    Args:
-        sub_smiles (list[str]): List of SMILEs strings specifying the
-            substituents attached to the bullvalene.
-        sub_attach_idx (list[Union[int, list[int]]]): List of integers and/or
-            nested (sub)lists of integers specifying the attachment indices of
-            the substituents attached to the bullvalene.
-        canonicalize (bool, optional): If `True`, the bullvalene isomer barcode
-            is canonicalised.. Defaults to True.
-
-    Raises:
-        ValueError: If `sub_smiles` and `sub_attach_idx` are not of equal
-            length, or if there are greater than 9 elements in `sub_attach_idx`
-            (counting elements in the outer list and any nested (sub)lists).
-
-    Returns:
-        BVBarcode: `BVBarcode` instance corresponding to the substituent and
-            attachment index specification.
-    """
-    
-    if len(sub_smiles) != len(sub_attach_idx):
-        raise ValueError(
-            '`sub_smiles` and `sub_attach_idx` should have the same length'       
-        )
-
-    groups = [
-        f'{sub_smiles[i]}_{sub_attach_idx_}' 
-            for (i, sub_attach_idx_) in utils.iterate_and_index(
-                sub_attach_idx
-            )
-    ]
-
-    if len(groups) > 9:
-        raise ValueError(
-            'too many attachment indices in `sub_attach_idx`; support is '
-            'only available for up to (and including) 9 substituents'
-        )
-
-    equivalent_group_map = {
-        group: i for i, group in enumerate(
-            utils.unique_elements(groups), start = 1
-        )
-    }
-
-    barcode = utils.pad_list(
-        [i for i in range(1, len(groups) + 1)],
-        length = 10,
-        direction = 'left'
-    )
-
-    grouped_barcode = utils.pad_list(
-        [equivalent_group_map[group] for group in groups],
-        length = 10,
-        direction = 'left'
-    )
-
-    return BVBarcode(
-        barcode,
-        grouped_barcode = grouped_barcode,
-        canonicalize = canonicalize
-    )
 
 # =============================================================================
 #                                     EOF
