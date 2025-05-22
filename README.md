@@ -124,6 +124,20 @@ bullviso "CCCC" -a 2
 
 generates the four unique constitutional isomers of 2-butylbullvalene.
 
+BULLVISO also accepts SMILES strings for charged and radical substituents, *e.g.*,
+
+```
+bullviso "[O-]"
+```
+
+generates the four unique constitutional isomers of the bullvalene alcoholate anion (the deprotonated form of hydroxybullvalene), while
+
+```
+bullviso "[NH3+]
+```
+
+generates the four unique constitutional isomers of the bullvalene ammonium cation (the protonated form of aminobullvalene).
+
 #### CONTROLLING CONFORMER GENERATION
 
 If you're working with large or floppy/flexible substituents, you might want to generate the conformational isomers of each unique constitutional isomer too. BULLVISO generates only the lowest-energy conformational isomer of each unique constitutional isomer by default.
