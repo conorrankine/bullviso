@@ -134,7 +134,7 @@ class BVBarcode:
             canonicalized grouped barcode representation, else False.
         """
 
-        if isinstance(barcode, BVBarcode):
+        if isinstance(barcode, type(self)):
             return (
                 self._canonicalized_grouped_barcode
                 == barcode._canonicalized_grouped_barcode
@@ -182,16 +182,14 @@ class BVBarcode:
             permutation.
         """
 
-        for permutation_idx in permutations(
-            tuple(i for i in range(len(self._barcode)))
-        ):
+        for permutation_idx in permutations(range(len(self._barcode))):
             barcode = tuple(
                 self._barcode[i] for i in permutation_idx
             )
             grouped_barcode = tuple(
                 self._grouped_barcode[i] for i in permutation_idx
             )
-            yield BVBarcode(
+            yield type(self)(
                 barcode,
                 grouped_barcode = grouped_barcode
             )
@@ -211,8 +209,8 @@ class BVBarcode:
         """
 
         return tuple(
-            BVBarcode(barcode, grouped_barcode = grouped_barcode)
-                for barcode, grouped_barcode in self._get_equivalent_barcodes()
+            type(self)(barcode, grouped_barcode = grouped_barcode)
+            for barcode, grouped_barcode in self._get_equivalent_barcodes()
         )
     
     def connections(
@@ -251,7 +249,7 @@ class BVBarcode:
             self._barcode = self._canonicalized_barcode
             self._grouped_barcode = self._canonicalized_grouped_barcode
         else:
-            return BVBarcode(
+            return type(self)(
                 self._canonicalized_barcode,
                 grouped_barcode = self._canonicalized_grouped_barcode
             )
