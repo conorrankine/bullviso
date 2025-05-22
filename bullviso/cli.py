@@ -277,7 +277,7 @@ def main():
         args.sub_attach_idx, args.n_subs
     )
 
-    canonical_barcode = bv.barcodes.create_barcode(
+    canonical_barcode = bv.barcodes.BVBarcode.from_substituents(
         sub_smiles,
         sub_attach_idx
     )
