@@ -122,7 +122,7 @@ def embed_confs(
     
     if n_confs is None:
         n_rotatable_bonds = rdMolDescriptors.CalcNumRotatableBonds(mol)
-        n_confs = 30 if n_rotatable_bonds < 8 else 120
+        n_confs = 60 if n_rotatable_bonds < 8 else 300
 
     if mol.GetNumAtoms() == mol.GetNumHeavyAtoms():
         mol = Chem.AddHs(mol)
