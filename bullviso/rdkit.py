@@ -38,6 +38,7 @@ def generate_confs(
         ff_type: str = 'mmff',
         constrained_ff_opt: bool = True,
         max_iter: int = 600,
+        energy_threshold: float = 10.0,
         random_seed: int = -1,
         num_threads: int = 1
 ) -> Chem.Mol:
@@ -64,6 +65,9 @@ def generate_confs(
             also fixed/frozen during conformer optimisation.
         max_iter (int, optional): Maximum number of iterations for conformer
             optimisation. Defaults to 600.
+        energy_threshold (float, optional): Maximum allowed energy difference
+            (in kcal/mol) relative to the lowest-energy conformation.
+            Defaults to 10.0 (kcal/mol).
         random_seed (int, optional): Number to use as the random seed for the
             embedding procedure; if -1, the random seed is obtained via
             random number generation. Defaults to -1.
@@ -96,6 +100,11 @@ def generate_confs(
         ff_type = ff_type,
         fixed_atom_idx = fixed_atom_idx,
         max_iter = max_iter
+    )
+
+    mol = filter_low_energy_confs(
+        mol,
+        energy_threshold = energy_threshold
     )
 
     mol = order_confs_by_energy(mol)
@@ -181,6 +190,45 @@ def optimise_confs(
         for conf_idx in reversed(range(mol.GetNumConformers())):
             if conf_idx not in keep_conf_idxs:
                 mol.RemoveConformer(conf_idx)
+
+    return mol
+
+def filter_low_energy_confs(
+    mol: Chem.Mol,
+    energy_threshold: float = 10.0
+) -> Chem.Mol:
+    """
+    Removes conformers of a molecule `mol` with energies greater than the
+    specified threshold `energy_threshold` (in kcal/mol) relative to the
+    lowest-energy conformation.
+
+    Absolute conformer energies (in kcal/mol) are expected to be stored as
+    properties under the key 'energy' and, consequently, accessible via
+    `conf.GetDoubleProp('energy')` for each conformer `conf`.
+
+    Args:
+        mol (Chem.Mol): Molecule.
+        energy_threshold (float, optional): Maximum allowed energy difference
+            (in kcal/mol) relative to the lowest-energy conformation.
+            Defaults to 10.0 (kcal/mol).
+
+    Returns:
+        Chem.Mol: Molecule with only low-energy conformers retained.
+    """
+    
+    keep_conf_idxs = []
+
+    min_energy = min(
+        conf.GetDoubleProp('energy') for conf in mol.GetConformers()
+    )
+
+    for conf in mol.GetConformers():
+        if (conf.GetDoubleProp('energy') - min_energy) <= energy_threshold:
+            keep_conf_idxs.append(conf.GetId())
+
+    for conf_idx in reversed(range(mol.GetNumConformers())):
+        if conf_idx not in keep_conf_idxs:
+            mol.RemoveConformer(conf_idx)
 
     return mol
 
