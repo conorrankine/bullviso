@@ -71,7 +71,7 @@ def generate_confs(
         Chem.Mol: A molecule with embedded conformers.
     """
     
-    params = getattr(Chem.rdDistGeom, "ETKDGv2")()
+    params = getattr(Chem.rdDistGeom, "ETKDGv3")()
     
     params.SetCoordMap({} if coord_map is None else coord_map)
     
