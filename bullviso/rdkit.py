@@ -37,6 +37,7 @@ def generate_confs(
         coord_map: dict[int, rdGeometry.Point3D] = None,
         ff_type: str = 'mmff',
         constrained_ff_opt: bool = True,
+        max_iter: int = 300,
         random_seed: int = -1,
         num_threads: int = 1
 ) -> Chem.Mol:
@@ -61,6 +62,8 @@ def generate_confs(
             optimisation; if `True`, and if `coord_map` is not `None`, the
             atoms that are fixed/frozen during the embedding procedure are
             also fixed/frozen during conformer optimisation.
+        max_iter (int, optional): Maximum number of iterations for conformer
+            optimisation. Defaults to 300.
         random_seed (int, optional): Number to use as the random seed for the
             embedding procedure; if -1, the random seed is obtained via
             random number generation. Defaults to -1.
@@ -89,7 +92,10 @@ def generate_confs(
         fixed_atom_idx = None
 
     mol = optimise_confs(
-        mol, ff_type = ff_type, fixed_atom_idx = fixed_atom_idx
+        mol,
+        ff_type = ff_type,
+        fixed_atom_idx = fixed_atom_idx,
+        max_iter = max_iter
     )
 
     mol = order_confs_by_energy(mol)
@@ -136,7 +142,8 @@ def embed_confs(
 def optimise_confs(
     mol: Chem.Mol,
     ff_type: str = 'mmff',
-    fixed_atom_idx: list[int] = None
+    fixed_atom_idx: list[int] = None,
+    max_iter: int = 300
 ) -> Chem.Mol:
     """
     Optimises conformers of a molecule `mol` using a molecular mechanics / 
@@ -149,6 +156,8 @@ def optimise_confs(
             'uff'. Defaults to 'mmff'.
         fixed_atom_idx (list[int], optional): List of atom indices for atoms
             to fix/freeze during conformer optimisation. Defaults to `None`.
+        max_iter (int, optional): Maximum number of iterations for conformer
+            optimisation. Defaults to 300.
 
     Returns:
         Chem.Mol: Molecule with forcefield-optimised conformers.
@@ -164,7 +173,7 @@ def optimise_confs(
                 ff = _add_atomic_position_constraints(
                     ff, ff_type, fixed_atom_idx
                 )                      
-            opt_result = ff.Minimize()
+            opt_result = ff.Minimize(maxIts = max_iter)
             if opt_result == 0:
                 conf.SetDoubleProp('energy', ff.CalcEnergy())
                 keep_conf_idxs.append(conf.GetId())
