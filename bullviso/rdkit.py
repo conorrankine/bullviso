@@ -156,14 +156,22 @@ def optimise_confs(
     
     if mol.GetNumConformers() > 0:
 
+        keep_conf_idxs = []
+
         for conf in mol.GetConformers():            
             ff = _get_forcefield(ff_type, mol, conf_idx = conf.GetId())
             if fixed_atom_idx:
                 ff = _add_atomic_position_constraints(
                     ff, ff_type, fixed_atom_idx
                 )                      
-            ff.Minimize()
-            conf.SetDoubleProp('energy', ff.CalcEnergy())
+            opt_result = ff.Minimize()
+            if opt_result == 0:
+                conf.SetDoubleProp('energy', ff.CalcEnergy())
+                keep_conf_idxs.append(conf.GetId())
+
+        for conf_idx in reversed(range(mol.GetNumConformers())):
+            if conf_idx not in keep_conf_idxs:
+                mol.RemoveConformer(conf_idx)
 
     return mol
 
