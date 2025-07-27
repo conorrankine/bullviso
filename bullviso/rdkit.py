@@ -46,7 +46,7 @@ def generate_confs(
         num_threads: int = 1
 ) -> Chem.Mol:
     """
-    Embeds (using the ETKDGv2 distance geometry approach) and optimises (using
+    Embeds (using the ETKDGv3 distance geometry approach) and optimises (using
     a molecular mechanics / forcefield method) conformers of a molecule `mol`;
     the Merck Molecular Forcefield (MMFF) and Universal Forcefield (UFF) are
     available via RDKit.
@@ -75,8 +75,8 @@ def generate_confs(
             conformers with RMSDs below the RMSD threshold are considered to
             belong to the same Butina cluster. Defaults to 0.5 (Angstroem).
         rmsd_atom_idxs (list[int], optional): List of atom indices defining the
-            atoms to align pre-calculation of the pairwise RMSDs; if None, all
-            atoms are used to align. Defaults to None.
+            atoms to align pre-calculation of the pairwise RMSDs; if `None`,
+            all atoms are used to align. Defaults to `None`.
         random_seed (int, optional): Number to use as the random seed for the
             embedding procedure; if -1, the random seed is obtained via
             random number generation. Defaults to -1.
@@ -88,9 +88,7 @@ def generate_confs(
     """
     
     params = getattr(Chem.rdDistGeom, "ETKDGv3")()
-    
     params.SetCoordMap({} if coord_map is None else coord_map)
-    
     params.pruneRmsThresh = prune_rms_thresh
     params.randomSeed = random_seed
     params.numThreads = num_threads
@@ -116,15 +114,12 @@ def generate_confs(
         energy_threshold = energy_threshold
     )
 
-    mol, clusters = cluster_confs(
-        mol,
-        rmsd_threshold = rmsd_threshold,
-        rmsd_atom_idxs = rmsd_atom_idxs
-    )
-
     mol = select_cluster_representatives(
-        mol,
-        clusters
+        *cluster_confs(
+            mol,
+            rmsd_threshold = rmsd_threshold,
+            rmsd_atom_idxs = rmsd_atom_idxs
+        )
     )
 
     mol = order_confs_by_energy(mol)
@@ -264,8 +259,8 @@ def cluster_confs(
             conformers with RMSDs below the RMSD threshold are considered to
             belong to the same Butina cluster. Defaults to 0.5 (Angstroem).
         rmsd_atom_idxs (list[int], optional): List of atom indices defining the
-            atoms to align pre-calculation of the pairwise RMSDs; if None, all
-            atoms are used to align. Defaults to None.
+            atoms to align pre-calculation of the pairwise RMSDs; if `None`,
+            all atoms are used to align. Defaults to `None`.
 
     Returns:
         tuple[Chem.Mol, tuple[tuple[int]]]: Molecule with aligned conformers,
@@ -328,28 +323,28 @@ def order_confs_by_energy(
         mol: Chem.Mol,
 ) -> Chem.Mol:
     """
-    Orders the forcefield-optimised conformers of a molecule `mol` in
-    ascending order by energy; requires the `energy` property to be set for
-    each conformer, i.e., accessible via `conf.GetProp('energy')` for each
-    instance of `conf` returned via, e.g., `mol.GetConformers()`.
+    (Re)orders conformers of a molecule `mol` in ascending order by energy.
+
+    Absolute conformer energies (in kcal/mol) are expected to be stored as
+    properties under the key 'energy' and, consequently, accessible via
+    `conf.GetDoubleProp('energy')` for each conformer `conf`.
 
     Args:
         mol (Chem.Mol): Molecule.
 
     Returns:
-        Chem.Mol: Molecule with forcefield-optimised conformers in ascending
-            order by energy.
+        Chem.Mol: Molecule with conformers in ascending order by energy.
     """
        
-    conf_energies = [
-        conf.GetProp('energy') for conf in mol.GetConformers()
+    energies = [
+        conf.GetDoubleProp('energy') for conf in mol.GetConformers()
     ]
 
     mol_ = copy.deepcopy(mol)
     
     ordered_confs = [
         conf for _, conf in sorted(
-            zip(conf_energies, mol_.GetConformers()),
+            zip(energies, mol_.GetConformers()),
             key = lambda x: x[0]
         )
     ]
