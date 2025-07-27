@@ -122,6 +122,11 @@ def generate_confs(
         rmsd_atom_idxs = rmsd_atom_idxs
     )
 
+    mol = select_cluster_representatives(
+        mol,
+        clusters
+    )
+
     mol = order_confs_by_energy(mol)
 
     return mol
@@ -285,6 +290,45 @@ def cluster_confs(
     )
 
     return mol, clusters
+
+def select_cluster_representatives(
+    mol: Chem.Mol,
+    clusters: tuple[tuple[int]]
+) -> Chem.Mol:
+    """
+    Removes conformers of a molecule `mol` such that only the lowest-energy
+    conformation belonging to each Butina cluster in `clusters` is retained.
+
+    Absolute conformer energies (in kcal/mol) are expected to be stored as
+    properties under the key 'energy' and, consequently, accessible via
+    `conf.GetDoubleProp('energy')` for each conformer `conf`.
+
+    Args:
+        mol (Chem.Mol): Molecule.
+        clusters (tuple[tuple[int]]): Tuple of Butina clusters where each
+            Butina cluster is a tuple of conformer indices.
+
+    Returns:
+        Chem.Mol: Molecule with only the lowest-energy conformation belonging
+            to each Butina cluster retained.
+    """
+    
+    keep_conf_idxs = []
+
+    energies = [
+        conf.GetDoubleProp('energy') for conf in mol.GetConformers()
+    ]
+
+    for cluster in clusters:
+        keep_conf_idxs.append(
+            min(cluster, key = lambda i: energies[i])
+        )
+        
+    for conf_idx in reversed(range(mol.GetNumConformers())):
+        if conf_idx not in keep_conf_idxs:
+            mol.RemoveConformer(conf_idx)
+
+    return mol
 
 def _get_forcefield(
     ff_type: str,
