@@ -207,9 +207,7 @@ def optimise_confs(
                 conf.SetDoubleProp('energy', ff.CalcEnergy())
                 keep_conf_idxs.append(conf.GetId())
 
-        for conf_idx in reversed(range(mol.GetNumConformers())):
-            if conf_idx not in keep_conf_idxs:
-                mol.RemoveConformer(conf_idx)
+        _prune_confs(mol, keep_conf_idxs)
 
     return mol
 
@@ -246,9 +244,7 @@ def filter_low_energy_confs(
         if (conf.GetDoubleProp('energy') - min_energy) <= energy_threshold:
             keep_conf_idxs.append(conf.GetId())
 
-    for conf_idx in reversed(range(mol.GetNumConformers())):
-        if conf_idx not in keep_conf_idxs:
-            mol.RemoveConformer(conf_idx)
+    _prune_confs(mol, keep_conf_idxs)
 
     return mol
 
@@ -324,6 +320,28 @@ def select_cluster_representatives(
             min(cluster, key = lambda i: energies[i])
         )
         
+    _prune_confs(mol, keep_conf_idxs)
+
+    return mol
+
+def _prune_confs(
+    mol: Chem.Mol,
+    keep_conf_idxs: list[int]
+) -> Chem.Mol:
+    """
+    Removes conformers of a molecule `mol` by index such that only conformers
+    corresponding to indices in `keep_conf_idxs` are retained.
+
+    Args:
+        mol (Chem.Mol): Molecule.
+        keep_conf_idxs (list[int]): List of conformer indices defining the set
+            of conformers to retain.
+
+    Returns:
+        Chem.Mol: Molecule with only the conformers corresponding to indices in
+            `keep_conf_idxs` retained.
+    """
+    
     for conf_idx in reversed(range(mol.GetNumConformers())):
         if conf_idx not in keep_conf_idxs:
             mol.RemoveConformer(conf_idx)
