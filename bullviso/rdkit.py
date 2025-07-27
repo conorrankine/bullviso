@@ -196,7 +196,7 @@ def optimise_confs(
 
         keep_conf_idxs = []
 
-        for conf in mol.GetConformers():            
+        for i, conf in enumerate(mol.GetConformers()):            
             ff = _get_forcefield(ff_type, mol, conf_idx = conf.GetId())
             if fixed_atom_idx:
                 ff = _add_atomic_position_constraints(
@@ -205,7 +205,7 @@ def optimise_confs(
             opt_result = ff.Minimize(maxIts = max_iter)
             if opt_result == 0:
                 conf.SetDoubleProp('energy', ff.CalcEnergy())
-                keep_conf_idxs.append(conf.GetId())
+                keep_conf_idxs.append(i)
 
         _prune_confs(mol, keep_conf_idxs)
 
@@ -240,9 +240,9 @@ def filter_low_energy_confs(
         conf.GetDoubleProp('energy') for conf in mol.GetConformers()
     )
 
-    for conf in mol.GetConformers():
+    for i, conf in enumerate(mol.GetConformers()):
         if (conf.GetDoubleProp('energy') - min_energy) <= energy_threshold:
-            keep_conf_idxs.append(conf.GetId())
+            keep_conf_idxs.append(i)
 
     _prune_confs(mol, keep_conf_idxs)
 
