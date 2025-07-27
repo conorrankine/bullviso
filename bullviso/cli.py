@@ -334,6 +334,7 @@ def main():
             prune_rms_thresh = args.prune_rms_thresh,
             coord_map = coord_map,
             ff_type = args.ff_type,
+            rmsd_atom_idxs = [i for i in range(10)],
             random_seed = args.random_seed,
             num_threads = args.num_threads
         )

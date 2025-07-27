@@ -26,6 +26,7 @@ from rdkit.Chem import rdMolDescriptors
 from rdkit.Chem.rdDistGeom import EmbedMultipleConfs, EmbedParameters
 from rdkit.Geometry import rdGeometry
 from rdkit.ForceField import rdForceField
+from rdkit.ML.Cluster import Butina
 
 ###############################################################################
 ################################## FUNCTIONS ##################################
@@ -39,6 +40,8 @@ def generate_confs(
         constrained_ff_opt: bool = True,
         max_iter: int = 600,
         energy_threshold: float = 10.0,
+        rmsd_threshold: float = 0.5,
+        rmsd_atom_idxs: list[int] = None,
         random_seed: int = -1,
         num_threads: int = 1
 ) -> Chem.Mol:
@@ -68,6 +71,12 @@ def generate_confs(
         energy_threshold (float, optional): Maximum allowed energy difference
             (in kcal/mol) relative to the lowest-energy conformation.
             Defaults to 10.0 (kcal/mol).
+        rmsd_threshold (float, optional): RMSD threshold for Butina clustering;
+            conformers with RMSDs below the RMSD threshold are considered to
+            belong to the same Butina cluster. Defaults to 0.5 (Angstroem).
+        rmsd_atom_idxs (list[int], optional): List of atom indices defining the
+            atoms to align pre-calculation of the pairwise RMSDs; if None, all
+            atoms are used to align. Defaults to None.
         random_seed (int, optional): Number to use as the random seed for the
             embedding procedure; if -1, the random seed is obtained via
             random number generation. Defaults to -1.
@@ -105,6 +114,12 @@ def generate_confs(
     mol = filter_low_energy_confs(
         mol,
         energy_threshold = energy_threshold
+    )
+
+    mol, clusters = cluster_confs(
+        mol,
+        rmsd_threshold = rmsd_threshold,
+        rmsd_atom_idxs = rmsd_atom_idxs
     )
 
     mol = order_confs_by_energy(mol)
@@ -231,6 +246,45 @@ def filter_low_energy_confs(
             mol.RemoveConformer(conf_idx)
 
     return mol
+
+def cluster_confs(
+    mol: Chem.Mol,
+    rmsd_threshold: float = 0.5,
+    rmsd_atom_idxs: list[int] = None
+) -> tuple[Chem.Mol, tuple[tuple[int]]]:
+    """
+    Clusters conformers of a molecule `mol` based on their pairwise RMSDs
+    using the Butina algorithm; as a side effect, the conformers of the
+    molecule are left in an aligned state.
+
+    Args:
+        mol (Chem.Mol): Molecule.
+        rmsd_threshold (float, optional): RMSD threshold for Butina clustering;
+            conformers with RMSDs below the RMSD threshold are considered to
+            belong to the same Butina cluster. Defaults to 0.5 (Angstroem).
+        rmsd_atom_idxs (list[int], optional): List of atom indices defining the
+            atoms to align pre-calculation of the pairwise RMSDs; if None, all
+            atoms are used to align. Defaults to None.
+
+    Returns:
+        tuple[Chem.Mol, tuple[tuple[int]]]: Molecule with aligned conformers,
+            and tuple of Butina clusters where each Butina cluster is a tuple
+            of conformer indices.
+    """    
+    
+    rms_matrix = AllChem.GetConformerRMSMatrix(
+        mol,
+        atomIds = rmsd_atom_idxs
+    )
+
+    clusters = Butina.ClusterData(
+        rms_matrix,
+        mol.GetNumConformers(),
+        rmsd_threshold,
+        isDistData = True
+    )
+
+    return mol, clusters
 
 def _get_forcefield(
     ff_type: str,
