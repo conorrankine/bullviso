@@ -338,22 +338,20 @@ def main():
             random_seed = args.random_seed,
             num_threads = args.num_threads
         )
-        m_confs = min(
-            mol.GetNumConformers(), args.m_confs
-        )
-        if m_confs > 0:
-            for conf_idx in range(m_confs):
-                output_dir = args.output_dir / (
-                    f'./{barcode}/{barcode}_{conf_idx+1:03d}/'
-                )
-                if not output_dir.is_dir():
-                    output_dir.mkdir(parents = True)
-                bv.io.mol_to_file(
-                    output_dir / f'./{barcode}_{conf_idx+1:03d}',
-                    mol,
-                    filetype = args.output_filetype,
-                    conf_idx = conf_idx
-                )
+        confs = list(mol.GetConformers())
+        for conf_idx in range(min(args.m_confs, mol.GetNumConformers())):
+            conf = confs[conf_idx]
+            output_dir = args.output_dir / (
+                f'./{barcode}/{barcode}_{conf_idx+1:03d}/'
+            )
+            if not output_dir.is_dir():
+                output_dir.mkdir(parents = True)
+            bv.io.mol_to_file(
+                output_dir / f'./{barcode}_{conf_idx+1:03d}',
+                mol,
+                filetype = args.output_filetype,
+                conf_id = conf.GetId()
+            )
     print('...done!\n')
 
     datetime_ = datetime.datetime.now()

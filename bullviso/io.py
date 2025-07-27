@@ -34,7 +34,7 @@ def mol_to_file(
     filepath: Path,
     mol: Chem.Mol,
     filetype: str = 'xyz',
-    conf_idx: int = -1,
+    conf_id: int = -1,
     **kwargs
 ):
     
@@ -49,7 +49,7 @@ def mol_to_file(
         filewriter[filetype](
             filepath = filepath,
             mol = mol,
-            conf_idx = conf_idx,
+            conf_id = conf_id,
             **kwargs
         )
     except KeyError:
@@ -61,7 +61,7 @@ def mol_to_file(
 def mol_to_xyz(
     filepath: Path,
     mol: Chem.Mol,
-    conf_idx: int = -1
+    conf_id: int = -1
 ):
     
     with open(filepath.with_suffix('.xyz'), 'w') as f:
@@ -71,13 +71,13 @@ def mol_to_xyz(
         )
         # write Cartesian coordinate lines
         f.write(
-            _format_coordinates(mol, conf_idx = conf_idx)
+            _format_coordinates(mol, conf_id = conf_id)
         )
 
 def mol_to_sdf(
     filepath: Path,
     mol: Chem.Mol,
-    conf_idx: int = -1
+    conf_id: int = -1
 ):
     
     raise NotImplementedError(
@@ -88,7 +88,7 @@ def mol_to_sdf(
 def mol_to_gaussian_input(
     filepath: Path,
     mol: Chem.Mol,
-    conf_idx: int = -1,
+    conf_id: int = -1,
     method: str = 'PBE1PBE',
     basis: str = 'DEF2SVPP',
     charge: int = 0,
@@ -116,7 +116,7 @@ def mol_to_gaussian_input(
         )
         # write Cartesian coordinate lines
         f.write(
-            _format_coordinates(mol, conf_idx = conf_idx)
+            _format_coordinates(mol, conf_id = conf_id)
         )
         # write terminating blank line
         f.write(
@@ -126,7 +126,7 @@ def mol_to_gaussian_input(
 def mol_to_orca_input(
     filepath: Path,
     mol: Chem.Mol,
-    conf_idx: int = -1,
+    conf_id: int = -1,
     method: str = 'PBE0',
     basis: str = 'DEF2-SV(P)',
     charge: int = 0,
@@ -146,7 +146,7 @@ def mol_to_orca_input(
         )
         # write Cartesian coordinate lines
         f.write(
-            _format_coordinates(mol, conf_idx = conf_idx)
+            _format_coordinates(mol, conf_id = conf_id)
         )
         f.write(
             '*'
@@ -154,7 +154,7 @@ def mol_to_orca_input(
 
 def _format_coordinates(
     mol: Chem.Mol,
-    conf_idx: int = -1,
+    conf_id: int = -1,
     fmt: str = '>14.8f'
 ) -> str:
     """
@@ -163,8 +163,8 @@ def _format_coordinates(
 
     Args:
         mol (Chem.Mol): Molecule.
-        conf_idx (int, optional): Index of the conformer to return Cartesian
-            coordinates as a formatted string for. Defaults to 0.
+        conf_id (int, optional): Conformer ID to return Cartesian coordinates
+            as a formatted string for. Defaults to -1.
         fmt (str, optional): Format string for the Cartesian coordinates in
             Python's string formatting syntax. Defaults to '>14.8f' (i.e. 14
             characters wide; right-aligned; 8 decimal places).
@@ -177,7 +177,7 @@ def _format_coordinates(
 
     coord_lines = ''
     for i, atom in enumerate(mol.GetAtoms()):
-        coord = mol.GetConformer(conf_idx).GetAtomPosition(i)
+        coord = mol.GetConformer(conf_id).GetAtomPosition(i)
         coord_lines += coord_line_fmt.format(
             atom.GetSymbol(), coord.x, coord.y, coord.z
         )

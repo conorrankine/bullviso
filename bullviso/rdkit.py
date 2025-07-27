@@ -196,8 +196,8 @@ def optimise_confs(
 
         keep_conf_idxs = []
 
-        for i, conf in enumerate(mol.GetConformers()):            
-            ff = _get_forcefield(ff_type, mol, conf_idx = conf.GetId())
+        for conf_idx, conf in enumerate(mol.GetConformers()):            
+            ff = _get_forcefield(ff_type, mol, conf_id = conf.GetId())
             if fixed_atom_idx:
                 ff = _add_atomic_position_constraints(
                     ff, ff_type, fixed_atom_idx
@@ -205,7 +205,7 @@ def optimise_confs(
             opt_result = ff.Minimize(maxIts = max_iter)
             if opt_result == 0:
                 conf.SetDoubleProp('energy', ff.CalcEnergy())
-                keep_conf_idxs.append(i)
+                keep_conf_idxs.append(conf_idx)
 
         _prune_confs(mol, keep_conf_idxs)
 
@@ -240,9 +240,9 @@ def filter_low_energy_confs(
         conf.GetDoubleProp('energy') for conf in mol.GetConformers()
     )
 
-    for i, conf in enumerate(mol.GetConformers()):
+    for conf_idx, conf in enumerate(mol.GetConformers()):
         if (conf.GetDoubleProp('energy') - min_energy) <= energy_threshold:
-            keep_conf_idxs.append(i)
+            keep_conf_idxs.append(conf_idx)
 
     _prune_confs(mol, keep_conf_idxs)
 
@@ -351,7 +351,7 @@ def _prune_confs(
 def _get_forcefield(
     ff_type: str,
     mol: Chem.Mol,
-    conf_idx: int = -1
+    conf_id: int = -1
 ) -> rdForceField.ForceField:
     """
     Returns the specified type of forcefield for a molecule `mol` as an
@@ -360,8 +360,8 @@ def _get_forcefield(
     Args:
         ff_type (str): Forcefield type; choices are 'mmff' and 'uff'.
         mol (Chem.Mol): Molecule.
-        conf_idx (int, optional): Index of the conformer to return the
-            specified type of forcefield for. Defaults to -1.
+        conf_id (int, optional): Conformer ID to return the specified type of
+            forcefield for. Defaults to -1.
 
     Raises:
         ValueError: If `ff_type` is not either 'mmff' or 'uff'.
@@ -385,12 +385,12 @@ def _get_forcefield(
         ) from None
     
     return forcefield_getter_function(
-        mol, conf_idx = conf_idx
+        mol, conf_id = conf_id
     )
 
 def _get_mmff_forcefield(
     mol: Chem.Mol,
-    conf_idx: int = -1
+    conf_id: int = -1
 ) -> rdForceField.ForceField:
     """
     Returns a Merck Molecular Forcefield (MMFF) forcefield for a molecule
@@ -398,8 +398,8 @@ def _get_mmff_forcefield(
 
     Args:
         mol (Chem.Mol): Molecule.
-        conf_idx (int, optional): Index of the conformer to return the
-            MMFF forcefield for. Defaults to -1.
+        conf_id (int, optional): Conformer ID to return the MMFF forcefield
+            for. Defaults to -1.
 
     Returns:
         rdForceField.ForceField: MMFF forcefield.
@@ -407,12 +407,12 @@ def _get_mmff_forcefield(
     
     mmff_props = AllChem.MMFFGetMoleculeProperties(mol)
     return AllChem.MMFFGetMoleculeForceField(
-        mol, mmff_props, confId = conf_idx
+        mol, mmff_props, confId = conf_id
     )
                 
 def _get_uff_forcefield(
     mol: Chem.Mol,
-    conf_idx: int = -1
+    conf_id: int = -1
 ) -> rdForceField.ForceField:
     """
     Returns a Universal Forcefield (UFF) forcefield for a molecule `mol` as
@@ -420,15 +420,15 @@ def _get_uff_forcefield(
 
     Args:
         mol (Chem.Mol): Molecule.
-        conf_idx (int, optional): Index of the conformer to return the
-            UFF forcefield for. Defaults to -1.
+        conf_id (int, optional): Conformer ID to return the UFF forcefield
+            for. Defaults to -1.
 
     Returns:
         rdForceField.ForceField: UFF forcefield.
     """
     
     return AllChem.UFFGetMoleculeForceField(
-        mol, confId = conf_idx
+        mol, confId = conf_id
     )
 
 def _add_atomic_position_constraints(
@@ -511,7 +511,7 @@ def order_confs_by_energy(
 
 def get_coord_map(
     mol: Chem.Mol,
-    conf_idx: int = -1,
+    conf_id: int = -1,
     atom_idx: list[int] = None
 ) -> dict[int, rdGeometry.Point3D]:
     """
@@ -521,8 +521,8 @@ def get_coord_map(
 
     Args:
         mol (Chem.Mol): Molecule.
-        conf_idx (int, optional): Index of the conformer to return the
-            coordinate map for. Defaults to -1.
+        conf_id (int, optional): Conformer ID to return the coordinate map
+            for. Defaults to -1.
         atom_idx (list[int], optional): List of indices defining the atoms to
             include in the coordinate map; if `None`, all atoms are included
             in the coordinate map. Defaults to `None`.
@@ -536,6 +536,6 @@ def get_coord_map(
     if atom_idx is None:
         atom_idx = [i for i in range(mol.GetNumAtoms())]
 
-    conf = mol.GetConformer(conf_idx)
+    conf = mol.GetConformer(conf_id)
     
     return {i: conf.GetAtomPosition(i) for i in atom_idx}
