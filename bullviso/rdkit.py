@@ -255,17 +255,19 @@ def filter_low_energy_confs(
             Defaults to 10.0 (kcal/mol).
     """
     
-    keep_conf_ids = []
+    if mol.GetNumConformers() > 0:
 
-    min_energy = min(
-        conf.GetDoubleProp('energy') for conf in mol.GetConformers()
-    )
+        keep_conf_ids = []
 
-    for conf in mol.GetConformers():
-        if (conf.GetDoubleProp('energy') - min_energy) <= energy_threshold:
-            keep_conf_ids.append(conf.GetId())
+        min_energy = min(
+            conf.GetDoubleProp('energy') for conf in mol.GetConformers()
+        )
 
-    _prune_confs(mol, keep_conf_ids)
+        for conf in mol.GetConformers():
+            if (conf.GetDoubleProp('energy') - min_energy) < energy_threshold:
+                keep_conf_ids.append(conf.GetId())
+
+        _prune_confs(mol, keep_conf_ids)
 
 def align_confs(
     mol: Chem.Mol,
