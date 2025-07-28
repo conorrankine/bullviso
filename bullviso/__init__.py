@@ -27,6 +27,6 @@ __version__ = '2.1'
 
 from . import barcodes
 from . import graphs
-from . import rdkit
+from . import conformers
 from . import io
 from .barcodes import BVBarcode

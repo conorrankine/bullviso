@@ -322,7 +322,7 @@ def main():
         
     super_G = nx.compose_all([bullvalene_G, *sub_G])
 
-    coord_map = bv.rdkit.get_coord_map(
+    coord_map = bv.conformers.get_coord_map(
         model_bullvalene
     )
 
@@ -337,7 +337,7 @@ def main():
         mol = bv.graphs.graph_to_mol(
             super_G_
         )
-        mol = bv.rdkit.generate_confs(
+        mol = bv.conformers.generate_confs(
             mol,
             ff_type = args.ff_type,
             max_iter = args.max_iter,
