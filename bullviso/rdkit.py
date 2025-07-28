@@ -124,29 +124,32 @@ def generate_confs(
     else:
         fixed_atom_idx = None
 
-    mol = optimise_confs(
+    optimise_confs(
         mol,
         ff_type = ff_type,
         fixed_atom_idx = fixed_atom_idx,
         max_iter = max_iter
     )
 
-    mol = filter_low_energy_confs(
+    filter_low_energy_confs(
         mol,
         energy_threshold = energy_threshold
     )
 
-    mol = select_cluster_representatives(
-        *cluster_confs(
+    select_cluster_representatives(
+        mol,
+        clusters = cluster_confs(
             mol,
             rmsd_threshold = rmsd_threshold,
             rmsd_atom_idxs = rmsd_atom_idxs
         )
     )
 
-    mol = order_confs_by_energy(mol)
+    order_confs_by_energy(
+        mol
+    )
 
-    mol = align_confs(
+    align_confs(
         mol,
         rmsd_atom_idxs = rmsd_atom_idxs
     )
@@ -176,7 +179,7 @@ def embed_confs(
     Returns:
         Chem.Mol: Molecule with embedded conformers.
     """
-    
+
     if n_confs is None:
         n_rotatable_bonds = rdMolDescriptors.CalcNumRotatableBonds(mol)
         n_confs = (
@@ -184,6 +187,7 @@ def embed_confs(
             else MAX_CONFS
         )
 
+    mol = copy.deepcopy(mol)
     if mol.GetNumAtoms() == mol.GetNumHeavyAtoms():
         mol = Chem.AddHs(mol)
 
@@ -198,7 +202,7 @@ def optimise_confs(
     ff_type: str = 'mmff',
     fixed_atom_idx: list[int] = None,
     max_iter: int = 600
-) -> Chem.Mol:
+) -> None:
     """
     Optimises conformers of a molecule `mol` using a molecular mechanics / 
     forcefield method; the Merck Molecular Forcefield (MMFF) and Universal
@@ -212,9 +216,6 @@ def optimise_confs(
             to fix/freeze during conformer optimisation. Defaults to `None`.
         max_iter (int, optional): Maximum number of iterations for conformer
             optimisation. Defaults to 600.
-
-    Returns:
-        Chem.Mol: Molecule with forcefield-optimised conformers.
     """
     
     if mol.GetNumConformers() > 0:
@@ -234,12 +235,10 @@ def optimise_confs(
 
         _prune_confs(mol, keep_conf_ids)
 
-    return mol
-
 def filter_low_energy_confs(
     mol: Chem.Mol,
     energy_threshold: float = 10.0
-) -> Chem.Mol:
+) -> None:
     """
     Removes conformers of a molecule `mol` with energies greater than the
     specified threshold `energy_threshold` (in kcal/mol) relative to the
@@ -254,9 +253,6 @@ def filter_low_energy_confs(
         energy_threshold (float, optional): Maximum allowed energy difference
             (in kcal/mol) relative to the lowest-energy conformation.
             Defaults to 10.0 (kcal/mol).
-
-    Returns:
-        Chem.Mol: Molecule with only low-energy conformers retained.
     """
     
     keep_conf_ids = []
@@ -271,12 +267,10 @@ def filter_low_energy_confs(
 
     _prune_confs(mol, keep_conf_ids)
 
-    return mol
-
 def align_confs(
     mol: Chem.Mol,
     rmsd_atom_idxs: list[int] = None
-) -> Chem.Mol:
+) -> None:
     """
     Aligns conformers of a molecule `mol` using the first conformer (i.e., the
     conformer at index zero) as the reference conformation.
@@ -286,9 +280,6 @@ def align_confs(
         rmsd_atom_idxs (list[int], optional): List of atom indices defining the
             atoms to use as alignment points; if `None`, all atoms are used as
             alignment points. Defaults to `None`.
-
-    Returns:
-        Chem.Mol: Molecule with conformers aligned.
     """
     
     AlignMolConformers(
@@ -297,13 +288,11 @@ def align_confs(
         reflect = True
     )
 
-    return mol
-
 def cluster_confs(
     mol: Chem.Mol,
     rmsd_threshold: float = 0.5,
     rmsd_atom_idxs: list[int] = None
-) -> tuple[Chem.Mol, tuple[tuple[int]]]:
+) -> tuple[tuple[int]]:
     """
     Clusters conformers of a molecule `mol` based on their pairwise RMSDs
     using the Butina algorithm; as a side effect, the conformers of the
@@ -319,9 +308,8 @@ def cluster_confs(
             all atoms are used to align. Defaults to `None`.
 
     Returns:
-        tuple[Chem.Mol, tuple[tuple[int]]]: Molecule with aligned conformers,
-            and tuple of Butina clusters where each Butina cluster is a tuple
-            of conformer IDs.
+        tuple[tuple[int]]: Tuple of Butina clusters where each Butina cluster
+            is represented as a tuple of conformer IDs.
     """    
 
     rms_matrix = AllChem.GetConformerRMSMatrix(
@@ -342,12 +330,12 @@ def cluster_confs(
         tuple(tuple(conf_ids[i] for i in cluster) for cluster in clusters)
     )
 
-    return mol, conf_id_clusters
+    return conf_id_clusters
 
 def select_cluster_representatives(
     mol: Chem.Mol,
     clusters: tuple[tuple[int]]
-) -> Chem.Mol:
+) -> None:
     """
     Removes conformers of a molecule `mol` such that only the lowest-energy
     conformation belonging to each Butina cluster in `clusters` is retained.
@@ -360,10 +348,6 @@ def select_cluster_representatives(
         mol (Chem.Mol): Molecule.
         clusters (tuple[tuple[int]]): Tuple of Butina clusters where each
             Butina cluster is a tuple of conformer IDs.
-
-    Returns:
-        Chem.Mol: Molecule with only the lowest-energy conformation belonging
-            to each Butina cluster retained.
     """
     
     keep_conf_ids = []
@@ -380,11 +364,9 @@ def select_cluster_representatives(
         
     _prune_confs(mol, keep_conf_ids)
 
-    return mol
-
 def order_confs_by_energy(
         mol: Chem.Mol,
-) -> Chem.Mol:
+) -> None:
     """
     (Re)orders conformers of a molecule `mol` in ascending order by energy.
 
@@ -394,9 +376,6 @@ def order_confs_by_energy(
 
     Args:
         mol (Chem.Mol): Molecule.
-
-    Returns:
-        Chem.Mol: Molecule with conformers in ascending order by energy.
     """
        
     energies = [
@@ -415,8 +394,6 @@ def order_confs_by_energy(
     mol.RemoveAllConformers()
     for conf in ordered_confs:
         mol.AddConformer(conf, assignId = True)
-
-    return mol
 
 def get_coord_map(
     mol: Chem.Mol,
@@ -452,7 +429,7 @@ def get_coord_map(
 def _prune_confs(
     mol: Chem.Mol,
     keep_conf_ids: list[int]
-) -> Chem.Mol:
+) -> None:
     """
     Removes conformers of a molecule `mol` by ID such that only conformers with
     IDs listed in `keep_conf_ids` are retained.
@@ -461,17 +438,11 @@ def _prune_confs(
         mol (Chem.Mol): Molecule.
         keep_conf_ids (list[int]): List of conformer IDs defining the set of
             conformers to retain.
-
-    Returns:
-        Chem.Mol: Molecule with only the conformers corresponding to indices in
-            `keep_conf_ids` retained.
     """
     
     for conf in list(mol.GetConformers()):
         if conf.GetId() not in keep_conf_ids:
             mol.RemoveConformer(conf.GetId())
-
-    return mol
 
 def _get_forcefield(
     ff_type: str,
