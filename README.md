@@ -140,23 +140,43 @@ generates the four unique constitutional isomers of the bullvalene ammonium cati
 
 #### CONTROLLING CONFORMER GENERATION
 
-If you're working with large or floppy/flexible substituents, you might want to generate the conformational isomers of each unique constitutional isomer too. BULLVISO generates only the lowest-energy conformational isomer of each unique constitutional isomer by default.
+BULLVISO has an embedded multi-step sequential workflow for the generation, optimisation, and selection of a diverse set of low-energy molecular conformations.
 
-You can use the `-m [M_CONFS]` flag to generate the *m* lowest-energy conformational isomers of each unique constitutional isomer instead, *e.g.*,
+Conformers are:
+
+1. **embedded** using the ETKDGv3 distance geometry algorithm;
+
+2. **optimised** using either the Merck Molecular Forcefield (MMFF) or Universal Forcefield (UFF);
+
+3. **filtered** to remove high-energy instances that exceed a cutoff energy threshold relative to the lowest-energy conformer;
+
+4. **clustered** using the Butina algorithm to group structurally similar instances based on pairwise root-mean-squared distance (RMSD);
+
+5. **selected** from the Butina clusters, retaining only the lowest-energy instance belonging to each;
+
+6. **sorted** in ascending order by energy.
+
+This workflow runs '*under the hood*', and BULLVISO outputs only the lowest-energy conformational isomer for each unique constitutional isomer by default but, if you're working with large or floppy/flexible substituents, you might want to output many conformational isomers for each unique constitutional isomer (ahead of, *e.g.*, population analysis).
+
+You can use the `-m [M_CONFS]` flag to output the *m* lowest-energy conformational isomers of each unique constitutional isomer instead, *e.g.*,
 
 ```
 bullviso "CCCC" -n 2 -m 6
 ```
 
-generates (up to a maximum of) the six lowest-energy conformational isomers of each of the 15 unique constitutional isomers of dibutylbullvalene.
+outputs (up to a maximum of) the six lowest-energy conformational isomers of each of the 15 unique constitutional isomers of dibutylbullvalene.
 
-The energy minimisation (or '*geometry optimisation*') can be carried out using either the Merck Molecular Forcefield (MMFF) or Universal Forcefield (UFF), and this can be toggled using the `-ff [FF_TYPE]` flag. BULLVISO uses MMFF by default.
+The workflow is '*black-box*' and you don't *have* to alter the presets, although it's easy to do this from the command line if you need to configure/customise it! The relevant command line arguments are summarised below:
 
-BULLVISO prunes similar conformational isomers by root-mean-square deviation (RMSD) thresholding; the default RMSD threshold is 0.5 Angstroem, although this can be set to an alternative (*e.g.* a tighter or looser) threshold using the `-rmsd [PRUNE_RMS_THRESH]` flag. Any conformational isomers that have an RMSD lower than the RMSD threshold when evaluated against any of the conformational isomers already generated are pruned (*i.e.* discarded).
+| Argument             | Flag  | Description                                                           | Default |
+|:---------------------|:------|:----------------------------------------------------------------------|--------:|
+| `--ff_type`          | `-ff` | forcefield type for conformer optimisation                            | 'MMFF'  |
+| `--max_iter`         | `-it` | maximum number of iterations for conformer optimisation               | 600     |
+| `--energy_threshold` | `-e`  | energy threshold (kcal/mol) for energy-based conformer filtration     | 10.0    |
+| `--rmsd_threshold`   | `-r`  | RMSD threshold (Angstroem) for distance-based conformer clustering    | 0.5     |
+| `--seed`             | `-s`  | seed for conformer embedding                                          | −1      |
+| `--n_proc`           | `-np` | number of parallel processes for conformer embedding and optimisation | 1       |
 
-The generation of the conformational isomers is randomly seeded. You can use the `-rs [RANDOM_SEED]` flag to choose an (integer) random seed to guarentee reproducibility, *i.e.*, to ensure that you always generate the same conformational isomers each time you run the code -- even if you run it again and again! BULLVISO generates the random seed on the fly *via* random number generation by default, so you might get a different set of conformational isomers each time you run the code -- especially if you're working with large or floppy/flexible substituents and sample only a small number of conformers with the `-m [M_CONFS]` flag.
-
-The generation of the conformational isomers is the most time- and compute-intensive part of the BULLVISO workflow. Fortunately, you can accelerate the generation of the conformational isomers using multithreading. BULLVISO uses only one thread by default, although you can use the `-nt [NUM_THREADS]` flag to request additional threads (up to as many as your machine supports!) for faster conformational isomer generation.
 
 ### HETEROSUBSTITUTED BULLVALENES
 

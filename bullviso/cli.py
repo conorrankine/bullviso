@@ -62,23 +62,31 @@ def parse_args() -> Namespace:
         help = 'maximum number of conformational isomers to generate'
     )
     p.add_argument(
-        '--prune_rms_thresh', '-rmsd', type = float, default = 0.5,
-        help = 'RMSD threshold for pruning conformational isomers'
-    )
-    p.add_argument(
         '--ff_type', '-ff', type = str, default = 'mmff',
         choices = ('mmff', 'uff'),
-        help = 'forcefield type for optimising conformational isomers'
+        help = 'forcefield type for conformer optimisation'
     )
     p.add_argument(
-        '--random_seed', '-rs', type = int, default = -1,
-        help = ('random seed for embedding conformational isomers; if -1, '
-            'the random seed is obtained via random number generation')
+        '--max_iter', '-it', type = int, default = '600',
+        help = 'maximum number of iterations for conformer optimisation'
     )
     p.add_argument(
-        '--num_threads', '-nt', type = int, default = 1,
-        help = ('number of threads for embedding conformational isomers in '
-            'multithreaded/parallel processes')
+        '--energy_threshold', '-e', type = float, default = 10.0,
+        help = 'energy threshold (kcal/mol); '
+    )
+    p.add_argument(
+        '--rmsd_threshold', '-r', type = float, default = 0.5,
+        help = 'RMSD threshold (Angstroem); '
+    )
+    p.add_argument(
+        '--seed', '-s', type = int, default = -1,
+        help = ('seed for conformer embedding; if -1, the seed is obtained '
+            'via pseudo-random number generation')
+    )
+    p.add_argument(
+        '--n_proc', '-np', type = int, default = 1,
+        help = ('number of parallel processes for conformer embedding and '
+            'optimisation')
     )
     p.add_argument(
         '--output_dir', '-o', type = Path, default = Path('.'),
@@ -331,12 +339,14 @@ def main():
         )
         mol = bv.rdkit.generate_confs(
             mol,
-            prune_rms_thresh = args.prune_rms_thresh,
-            coord_map = coord_map,
             ff_type = args.ff_type,
+            max_iter = args.max_iter,
+            coord_map = coord_map,
+            energy_threshold = args.energy_threshold,
+            rmsd_threshold = args.rmsd_threshold,
             rmsd_atom_idxs = [i for i in range(10)],
-            random_seed = args.random_seed,
-            num_threads = args.num_threads
+            seed = args.seed,
+            n_proc = args.n_proc
         )
         confs = list(mol.GetConformers())
         for conf_idx in range(min(args.m_confs, mol.GetNumConformers())):

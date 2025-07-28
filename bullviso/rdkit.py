@@ -29,45 +29,64 @@ from rdkit.ForceField import rdForceField
 from rdkit.ML.Cluster import Butina
 
 ###############################################################################
+################################## CONSTANTS ##################################
+###############################################################################
+
+EMBED_METHOD = 'ETKDGv3'
+EMBED_MAXATTEMPTS = 1000
+EMBED_PRUNERMSTHRESH = 0.5
+
+ROTATABLE_BOND_THRESHOLD = 8
+MIN_CONFS = 60
+MAX_CONFS = 300
+
+###############################################################################
 ################################## FUNCTIONS ##################################
 ###############################################################################
 
 def generate_confs(
-        mol: Chem.Mol,
-        prune_rms_thresh: float = 0.5,
-        coord_map: dict[int, rdGeometry.Point3D] = None,
-        ff_type: str = 'mmff',
-        constrained_ff_opt: bool = True,
-        max_iter: int = 600,
-        energy_threshold: float = 10.0,
-        rmsd_threshold: float = 0.5,
-        rmsd_atom_idxs: list[int] = None,
-        random_seed: int = -1,
-        num_threads: int = 1
+    mol: Chem.Mol,
+    ff_type: str = 'mmff',
+    max_iter: int = 600,
+    coord_map: dict[int, rdGeometry.Point3D] = None,
+    energy_threshold: float = 10.0,
+    rmsd_threshold: float = 0.5,
+    rmsd_atom_idxs: list[int] = None,
+    seed: int = -1,
+    n_proc: int = 1
 ) -> Chem.Mol:
     """
-    Embeds (using the ETKDGv3 distance geometry approach) and optimises (using
-    a molecular mechanics / forcefield method) conformers of a molecule `mol`;
-    the Merck Molecular Forcefield (MMFF) and Universal Forcefield (UFF) are
-    available via RDKit.
+    Orchestrates a multi-step conformer generation, optimisation, and selection
+    workflow to produce a diverse set of low-energy molecular conformations.
+
+    The conformers of the input molecule `mol` are:
+
+        1. embedded using the ETKDGv3 distance geometry algorithm;
+
+        2. optimised using either the Merck Molecular Forcefield (MMFF) or
+           Universal Forcefield (UFF);
+
+        3. filtered to remove high-energy instances that exceed a cutoff energy
+           threshold relative to the lowest-energy conformer;
+
+        4. clustered using the Butina algorithm to group structurally similar
+           instances based on pairwise RMSD;
+
+        5. selected from the Butina clusters, retaining only the lowest-energy
+           instance belonging to each;
+
+        6. sorted in ascending order by energy.
 
     Args:
         mol (Chem.Mol): Molecule.
-        prune_rms_thresh (float, optional): RMSD threshold for pruning
-            conformers; conformers with RMSDs below the RMSD threshold are
-            considered equivalent and are pruned. Defaults to 0.5 (Angstroem).
+        ff_type (str, optional): Forcefield type for conformer optimisation;
+            choices are 'mmff' and 'uff'. Defaults to 'mmff'.
+        max_iter (int, optional): Maximum number of iterations for conformer
+            optimisation. Defaults to 600.
         coord_map (dict[int, rdGeometry.Point3D], optional): Coordinate map
             dictionary mapping atom indices to their 3D coordinates
             (represented as rdGeometry.Point3D instances); these atoms are
-            fixed/frozen during the embedding procedure. Defaults to `None`.
-        ff_type (str, optional): Forcefield type; choices are 'mmff' and 
-            'uff'. Defaults to 'mmff'.
-        constrained_ff_opt (bool, optional): Toggles constrained conformer
-            optimisation; if `True`, and if `coord_map` is not `None`, the
-            atoms that are fixed/frozen during the embedding procedure are
-            also fixed/frozen during conformer optimisation.
-        max_iter (int, optional): Maximum number of iterations for conformer
-            optimisation. Defaults to 600.
+            fixed/frozen during conformer optimisation. Defaults to `None`.
         energy_threshold (float, optional): Maximum allowed energy difference
             (in kcal/mol) relative to the lowest-energy conformation.
             Defaults to 10.0 (kcal/mol).
@@ -77,27 +96,29 @@ def generate_confs(
         rmsd_atom_idxs (list[int], optional): List of atom indices defining the
             atoms to align pre-calculation of the pairwise RMSDs; if `None`,
             all atoms are used to align. Defaults to `None`.
-        random_seed (int, optional): Number to use as the random seed for the
-            embedding procedure; if -1, the random seed is obtained via
-            random number generation. Defaults to -1.
-        num_threads (int, optional): Number of threads to use in parallel
-            processing operations. Defaults to 1.
+        seed (int, optional): Seed for conformer embedding; if -1, the seed is
+            obtained via pseudo-random number generation. Defaults to -1.
+        n_proc (int, optional): Number of parallel processes for conformer
+            embedding and optimisation; if 1, conformer embedding and
+            optimisation is serial. Defaults to 1.
 
     Returns:
-        Chem.Mol: A molecule with embedded conformers.
+        Chem.Mol: Molecule with a diverse set of low-energy molecular
+            conformations sorted in ascending order by energy.
     """
     
-    params = getattr(Chem.rdDistGeom, "ETKDGv3")()
-    params.SetCoordMap({} if coord_map is None else coord_map)
-    params.pruneRmsThresh = prune_rms_thresh
-    params.randomSeed = random_seed
-    params.numThreads = num_threads
+    params = getattr(Chem.rdDistGeom, EMBED_METHOD)()
+    params.maxAttempts = EMBED_MAXATTEMPTS
+    params.pruneRmsThresh = EMBED_PRUNERMSTHRESH
+    params.coordMap = {} if coord_map is None else coord_map
+    params.randomSeed = seed
+    params.numThreads = n_proc
 
     mol = embed_confs(
         mol, params = params
     )
 
-    if constrained_ff_opt and coord_map:
+    if coord_map:
         fixed_atom_idx = [i for i in coord_map.keys()]
     else:
         fixed_atom_idx = None
@@ -152,7 +173,10 @@ def embed_confs(
     
     if n_confs is None:
         n_rotatable_bonds = rdMolDescriptors.CalcNumRotatableBonds(mol)
-        n_confs = 60 if n_rotatable_bonds < 8 else 300
+        n_confs = (
+            MIN_CONFS if n_rotatable_bonds < ROTATABLE_BOND_THRESHOLD
+            else MAX_CONFS
+        )
 
     if mol.GetNumAtoms() == mol.GetNumHeavyAtoms():
         mol = Chem.AddHs(mol)
