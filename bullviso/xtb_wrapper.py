@@ -23,6 +23,7 @@ import subprocess
 import tempfile
 from pathlib import Path
 from rdkit import Chem
+from rdkit.Geometry import rdGeometry
 
 ###############################################################################
 ################################### CLASSES ###################################
@@ -65,21 +66,47 @@ class XTBOptimiser:
     ) -> float:
         
         try:
-            energy = self._run_xtb_calculation()
+            energy, _ = self._run_xtb_calculation()
             return energy
         except Exception as e:
             print(f'XTB energy calculation failed: {e}')
             return float('inf')
+        
+    def Minimize(
+        self,
+        maxIts: int = 600
+    ) -> int:
+        
+        try:
+            energy, coords = self._run_xtb_calculation(
+                minimize = True,
+                max_iter = maxIts
+            )
+            for i, atom_coords in enumerate(coords):
+                self.conf.SetAtomPosition(i, atom_coords)
+            return 0
+        except Exception as e:
+            print(f'XTB geometry optimisation failed: {e}')
+            return 1
 
     def _run_xtb_calculation(
-        self
+        self,
+        minimize: bool = False,
+        max_iter: int = 600
     ) -> float:
         
         with tempfile.TemporaryDirectory() as tmpdir:
-            xyz_file = Path(f'{tmpdir}/mol.xyz')
-            Chem.MolToXYZFile(self.mol, xyz_file, confId = self.conf_id)
+            Chem.MolToXYZFile(
+                self.mol,
+                f'{tmpdir}/mol.xyz',
+                confId = self.conf_id
+            )
 
-            cmd = [self.xtb_path, xyz_file]
+            cmd = [self.xtb_path, f'{tmpdir}/mol.xyz']
+
+            if minimize:
+                cmd.extend(['--opt'])
+                cmd.extend(['--cycles', str(max_iter)])
 
             if self.method == 'GFN1-xTB':
                 cmd.extend(['--gfn', '1'])
@@ -106,7 +133,12 @@ class XTBOptimiser:
             
             energy = _get_xtb_energy_au(result.stdout)
 
-            return energy
+            if minimize:
+                coords = _get_coords_from_xyz_file(f'{tmpdir}/xtbopt.xyz')
+            else:
+                coords = None
+
+            return energy, coords
 
 ###############################################################################
 ################################## FUNCTIONS ##################################
@@ -127,3 +159,13 @@ def _get_xtb_energy_au(
     raise RuntimeError(
         'couldn\'t read the energy from the XTB output'
     )
+
+def _get_coords_from_xyz_file(
+    xyz_file: str
+) -> list[rdGeometry.Point3D]:
+    
+    mol = Chem.MolFromXYZFile(xyz_file)
+    
+    conf = mol.GetConformer()
+    
+    return [conf.GetAtomPosition(i) for i in range(mol.GetNumAtoms())]
