@@ -46,6 +46,13 @@ class XTBOptimiser:
         self.conf_id = conf_id
         self.conf = mol.GetConformer(conf_id)
 
+        self.charge = sum(
+            atom.GetFormalCharge() for atom in mol.GetAtoms()
+        )
+        self.uhf = sum(
+            atom.GetNumRadicalElectrons() for atom in mol.GetAtoms()
+        )
+
         self.method = method
 
         self.xtb_path = xtb_path
@@ -70,6 +77,11 @@ class XTBOptimiser:
             Chem.MolToXYZFile(self.mol, xyz_file, confId = self.conf_id)
 
             cmd = [self.xtb_path, xyz_file]
+
+            if self.charge != 0:
+                cmd.extend(['--chrg', str(self.charge)])
+            if self.uhf != 0:
+                cmd.extend(['--uhf', str(self.uhf)])
 
             result = subprocess.run(
                 cmd,
