@@ -81,6 +81,9 @@ class XTBOptimiser:
 
             cmd = [self.xtb_path, xyz_file]
 
+            if self.method == 'GFN1-xTB':
+                cmd.extend(['--gfn', '1'])
+
             if self.charge != 0:
                 cmd.extend(['--chrg', str(self.charge)])
             if self.uhf != 0:
