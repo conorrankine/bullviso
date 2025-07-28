@@ -213,9 +213,9 @@ def optimise_confs(
     
     if mol.GetNumConformers() > 0:
 
-        keep_conf_idxs = []
+        keep_conf_ids = []
 
-        for conf_idx, conf in enumerate(mol.GetConformers()):            
+        for conf in mol.GetConformers():            
             ff = _get_forcefield(ff_type, mol, conf_id = conf.GetId())
             if fixed_atom_idx:
                 ff = _add_atomic_position_constraints(
@@ -224,9 +224,9 @@ def optimise_confs(
             opt_result = ff.Minimize(maxIts = max_iter)
             if opt_result == 0:
                 conf.SetDoubleProp('energy', ff.CalcEnergy())
-                keep_conf_idxs.append(conf_idx)
+                keep_conf_ids.append(conf.GetId())
 
-        _prune_confs(mol, keep_conf_idxs)
+        _prune_confs(mol, keep_conf_ids)
 
     return mol
 
@@ -253,17 +253,17 @@ def filter_low_energy_confs(
         Chem.Mol: Molecule with only low-energy conformers retained.
     """
     
-    keep_conf_idxs = []
+    keep_conf_ids = []
 
     min_energy = min(
         conf.GetDoubleProp('energy') for conf in mol.GetConformers()
     )
 
-    for conf_idx, conf in enumerate(mol.GetConformers()):
+    for conf in mol.GetConformers():
         if (conf.GetDoubleProp('energy') - min_energy) <= energy_threshold:
-            keep_conf_idxs.append(conf_idx)
+            keep_conf_ids.append(conf.GetId())
 
-    _prune_confs(mol, keep_conf_idxs)
+    _prune_confs(mol, keep_conf_ids)
 
     return mol
 
@@ -289,9 +289,9 @@ def cluster_confs(
     Returns:
         tuple[Chem.Mol, tuple[tuple[int]]]: Molecule with aligned conformers,
             and tuple of Butina clusters where each Butina cluster is a tuple
-            of conformer indices.
+            of conformer IDs.
     """    
-    
+
     rms_matrix = AllChem.GetConformerRMSMatrix(
         mol,
         atomIds = rmsd_atom_idxs
@@ -304,7 +304,13 @@ def cluster_confs(
         isDistData = True
     )
 
-    return mol, clusters
+    conf_ids = [conf.GetId() for conf in mol.GetConformers()]
+
+    conf_id_clusters = (
+        tuple(tuple(conf_ids[i] for i in cluster) for cluster in clusters)
+    )
+
+    return mol, conf_id_clusters
 
 def select_cluster_representatives(
     mol: Chem.Mol,
@@ -321,25 +327,26 @@ def select_cluster_representatives(
     Args:
         mol (Chem.Mol): Molecule.
         clusters (tuple[tuple[int]]): Tuple of Butina clusters where each
-            Butina cluster is a tuple of conformer indices.
+            Butina cluster is a tuple of conformer IDs.
 
     Returns:
         Chem.Mol: Molecule with only the lowest-energy conformation belonging
             to each Butina cluster retained.
     """
     
-    keep_conf_idxs = []
+    keep_conf_ids = []
 
-    energies = [
-        conf.GetDoubleProp('energy') for conf in mol.GetConformers()
-    ]
+    energies = {
+        conf.GetId(): conf.GetDoubleProp('energy')
+        for conf in mol.GetConformers()
+    }
 
     for cluster in clusters:
-        keep_conf_idxs.append(
-            min(cluster, key = lambda i: energies[i])
+        keep_conf_ids.append(
+            min(cluster, key = lambda conf_id: energies[conf_id])
         )
         
-    _prune_confs(mol, keep_conf_idxs)
+    _prune_confs(mol, keep_conf_ids)
 
     return mol
 
@@ -412,25 +419,25 @@ def get_coord_map(
 
 def _prune_confs(
     mol: Chem.Mol,
-    keep_conf_idxs: list[int]
+    keep_conf_ids: list[int]
 ) -> Chem.Mol:
     """
-    Removes conformers of a molecule `mol` by index such that only conformers
-    corresponding to indices in `keep_conf_idxs` are retained.
+    Removes conformers of a molecule `mol` by ID such that only conformers with
+    IDs listed in `keep_conf_ids` are retained.
 
     Args:
         mol (Chem.Mol): Molecule.
-        keep_conf_idxs (list[int]): List of conformer indices defining the set
-            of conformers to retain.
+        keep_conf_ids (list[int]): List of conformer IDs defining the set of
+            conformers to retain.
 
     Returns:
         Chem.Mol: Molecule with only the conformers corresponding to indices in
-            `keep_conf_idxs` retained.
+            `keep_conf_ids` retained.
     """
     
-    for conf_idx in reversed(range(mol.GetNumConformers())):
-        if conf_idx not in keep_conf_idxs:
-            mol.RemoveConformer(conf_idx)
+    for conf in list(mol.GetConformers()):
+        if conf.GetId() not in keep_conf_ids:
+            mol.RemoveConformer(conf.GetId())
 
     return mol
 
