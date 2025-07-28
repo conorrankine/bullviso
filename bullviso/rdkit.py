@@ -24,6 +24,7 @@ from rdkit import Chem
 from rdkit.Chem import AllChem
 from rdkit.Chem import rdMolDescriptors
 from rdkit.Chem.rdDistGeom import EmbedMultipleConfs, EmbedParameters
+from rdkit.Chem.rdMolAlign import AlignMolConformers
 from rdkit.Geometry import rdGeometry
 from rdkit.ForceField import rdForceField
 from rdkit.ML.Cluster import Butina
@@ -144,6 +145,11 @@ def generate_confs(
     )
 
     mol = order_confs_by_energy(mol)
+
+    mol = align_confs(
+        mol,
+        rmsd_atom_idxs = rmsd_atom_idxs
+    )
 
     return mol
 
@@ -267,6 +273,32 @@ def filter_low_energy_confs(
 
     return mol
 
+def align_confs(
+    mol: Chem.Mol,
+    rmsd_atom_idxs: list[int] = None
+) -> Chem.Mol:
+    """
+    Aligns conformers of a molecule `mol` using the first conformer (i.e., the
+    conformer at index zero) as the reference conformation.
+
+    Args:
+        mol (Chem.Mol): Molecule.
+        rmsd_atom_idxs (list[int], optional): List of atom indices defining the
+            atoms to use as alignment points; if `None`, all atoms are used as
+            alignment points. Defaults to `None`.
+
+    Returns:
+        Chem.Mol: Molecule with conformers aligned.
+    """
+    
+    AlignMolConformers(
+        mol,
+        atomIds = rmsd_atom_idxs,
+        reflect = True
+    )
+
+    return mol
+
 def cluster_confs(
     mol: Chem.Mol,
     rmsd_threshold: float = 0.5,
@@ -294,7 +326,7 @@ def cluster_confs(
 
     rms_matrix = AllChem.GetConformerRMSMatrix(
         mol,
-        atomIds = rmsd_atom_idxs
+        atomIds = rmsd_atom_idxs,
     )
 
     clusters = Butina.ClusterData(
