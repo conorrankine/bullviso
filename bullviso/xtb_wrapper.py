@@ -39,7 +39,8 @@ class XTBOptimiser:
         mol: Chem.Mol,
         conf_id: int = -1,
         method: str = 'GFN2-xTB',
-        xtb_path: str = 'xtb'
+        xtb_path: str = 'xtb',
+        n_proc: int = 1
     ):
         
         self.mol = mol
@@ -56,6 +57,8 @@ class XTBOptimiser:
         self.method = method
 
         self.xtb_path = xtb_path
+
+        self.n_proc = n_proc
 
     def CalcEnergy(
         self
@@ -82,6 +85,8 @@ class XTBOptimiser:
                 cmd.extend(['--chrg', str(self.charge)])
             if self.uhf != 0:
                 cmd.extend(['--uhf', str(self.uhf)])
+
+            cmd.extend(['--parallel', str(self.n_proc)])
 
             result = subprocess.run(
                 cmd,
