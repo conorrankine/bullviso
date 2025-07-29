@@ -72,6 +72,14 @@ class XTBOptimiser:
             print(f'XTB energy calculation failed: {e}')
             return float('inf')
         
+    def CalcGradient(
+        self
+    ) -> None:
+        
+        raise NotImplementedError(
+            'support for XTB gradients coming in a future version of BULLVISO'
+        )
+        
     def Minimize(
         self,
         maxIts: int = 600
@@ -158,6 +166,14 @@ def _get_xtb_energy_au(
 
     raise RuntimeError(
         'couldn\'t read the energy from the XTB output'
+    )
+
+def _get_gradient_from_grad_file(
+    grad_file: str
+) -> None:
+
+    raise NotImplementedError(
+        'support for XTB gradients coming in a future version of BULLVISO'
     )
 
 def _get_coords_from_xyz_file(
