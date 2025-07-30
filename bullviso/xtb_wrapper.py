@@ -220,6 +220,21 @@ def _get_gradient_from_grad_file(
 def _get_coords_from_xyz_file(
     xyz_file: str
 ) -> tuple[rdGeometry.Point3D]:
+    """
+    Returns the coordinates from an XTB .xyz file.
+
+    Args:
+        xyz_file (str): Path to an XTB .xyz file.
+
+    Raises:
+        RuntimeError: If RDKit can't read a molecule from the .xyz file, i.e.
+            if Chem.MolFromXYZFile() returns `None`;
+        RuntimeError: If any other exception is encountered.
+
+    Returns:
+        tuple[rdGeometry.Point3D]: Tuple of Point3D instances corresponding
+            to the Cartesian atomic coordinates contained in the XTB .xyz file.
+    """
     
     try:
         mol = Chem.MolFromXYZFile(xyz_file)
