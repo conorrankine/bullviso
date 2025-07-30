@@ -200,7 +200,19 @@ def _get_xtb_energy_au(
 def _get_gradient_from_grad_file(
     grad_file: str
 ) -> None:
+    """
+    Returns the gradient from an XTB gradient file.
 
+    Args:
+        grad_file (str): Path to an XTB gradient file.
+
+    Raises:
+        NotImplementedError: If the function is called.
+
+    Returns:
+        None (temporary/placeholder return type).
+    """
+    # TODO: implement `_get_gradient_from_grad_file()`
     raise NotImplementedError(
         'support for XTB gradients coming in a future version of BULLVISO'
     )
