@@ -155,7 +155,11 @@ class XTBOptimiser:
 def _get_xtb_energy_au(
     xtb_output: str
 ) -> float:
-        
+    
+    if not xtb_output.strip():
+        raise RuntimeError(
+            'XTB output is empty'
+        )
     for line in reversed(xtb_output.split('\n')):
         if 'TOTAL ENERGY' in line:
             for item in line.split():
@@ -163,10 +167,20 @@ def _get_xtb_energy_au(
                     return float(item)
                 except ValueError:
                     continue
-
-    raise RuntimeError(
-        'couldn\'t read the energy from the XTB output'
-    )
+    energy_lines = [
+        line.strip() for line in xtb_output.split('\n')
+        if 'TOTAL ENERGY' in line
+    ]
+    if energy_lines:
+        raise RuntimeError(
+            'couldn\'t read energy from XTB output: \'TOTAL ENERGY\' is in '
+            'the output, but the energy value couldn\'t be parsed'
+        )
+    else:
+        raise RuntimeError(
+            'couldn\'t read energy from XTB output: \'TOTAL ENERGY\' is not '
+            'in the output'
+        )
 
 def _get_gradient_from_grad_file(
     grad_file: str
