@@ -26,6 +26,12 @@ from rdkit import Chem
 from rdkit.Geometry import rdGeometry
 
 ###############################################################################
+################################## CONSTANTS ##################################
+###############################################################################
+
+HARTREE_TO_KCALMOL = 627.5094740
+
+###############################################################################
 ################################### CLASSES ###################################
 ###############################################################################
 
@@ -67,7 +73,7 @@ class XTBOptimiser:
         
         try:
             energy, _ = self._run_xtb_calculation()
-            return energy
+            return energy * HARTREE_TO_KCALMOL
         except Exception as e:
             print(f'XTB energy calculation failed: {e}')
             return float('inf')
