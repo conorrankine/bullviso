@@ -155,6 +155,21 @@ class XTBOptimiser:
 def _get_xtb_energy_au(
     xtb_output: str
 ) -> float:
+    """
+    Returns the energy (in Hartree) from the output of an XTB calculation.
+
+    Args:
+        xtb_output (str): Spool of the `stdout` feed from an XTB calculation.
+
+    Raises:
+        RuntimeError: If `xtb_output` is empty;
+        RuntimeError: If `xtb_output` doesn't contain 'TOTAL ENERGY';
+        RuntimeError: If `xtb_output` does contain 'TOTAL ENERGY' but the
+            line can't be parsed to extract the energy.
+
+    Returns:
+        float: Energy (in Hartree).
+    """
     
     if not xtb_output.strip():
         raise RuntimeError(
