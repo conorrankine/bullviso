@@ -178,10 +178,18 @@ def _get_gradient_from_grad_file(
 
 def _get_coords_from_xyz_file(
     xyz_file: str
-) -> list[rdGeometry.Point3D]:
+) -> tuple[rdGeometry.Point3D]:
     
-    mol = Chem.MolFromXYZFile(xyz_file)
-    
-    conf = mol.GetConformer()
-    
-    return [conf.GetAtomPosition(i) for i in range(mol.GetNumAtoms())]
+    try:
+        mol = Chem.MolFromXYZFile(xyz_file)
+        if mol is None:
+            raise RuntimeError(
+                f'couldn\'t read a molecule from {xyz_file} '
+                f'[Chem.MolFromXYZFile({xyz_file}) returned `None`]'
+            )
+        conf = mol.GetConformer()
+        return [conf.GetAtomPosition(i) for i in range(mol.GetNumAtoms())]
+    except Exception as e:
+        raise RuntimeError(
+            f'couldn\'t read coordinates from {xyz_file}: {e}'
+        )
