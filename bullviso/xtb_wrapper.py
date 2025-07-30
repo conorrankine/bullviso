@@ -39,6 +39,26 @@ class XTBOptimiser:
     """_
     XTB wrapper that implements and exposes the same interface as RDKit
     forcefield (rdForceField.ForceField) objects.
+
+    `XTBOptimiser` exposes a convenient interface for carrying out XTB
+    calculations on RDKit molecule (Mol) objects, supporting single-point
+    energy, gradient, and geometry optimisation calculations, and allowing
+    seamless integration into existing RDKit forcefield-based workflows.
+
+    Example:
+        A single-point energy and geometry optimisation calculation on the
+        methylammonium cation:
+
+        >>> mol = Chem.MolFromSmiles('C[NH3+]')
+        >>> mol = Chem.AddHs(mol)
+        >>> AllChem.EmbedMolecule(mol)
+        >>> optimiser = XTBOptimiser(mol)
+        >>> energy = optimiser.CalcEnergy()  # single-point energy (kcal/mol)
+        >>> _ = optimiser.Minimize()         # geometry optimisation
+
+    Note:
+        Requires a working installation of XTB accessible via the system PATH
+        or pointed to via the `xtb_path` argument passed to the constructor.
     """
 
     def __init__(
@@ -49,6 +69,19 @@ class XTBOptimiser:
         xtb_path: str = 'xtb',
         n_proc: int = 1
     ):
+        """
+        Initialises an `XTBOptimiser` instance.
+
+        Args:
+            mol (Chem.Mol): Molecule.
+            conf_id (int, optional): Conformer ID to initialise the
+                `XTBOptimiser` instance for. Defaults to -1.
+            method (str, optional): XTB method. Defaults to 'GFN2-xTB'.
+            xtb_path (str, optional): Path to the XTB executable. Defaults to
+                'xtb'.
+            n_proc (int, optional): Number of parallel processes; if 1, XTB
+                calculations are carried out in serial. Defaults to 1.
+        """
         
         self.mol = mol
         self.conf_id = conf_id
