@@ -138,6 +138,17 @@ class XTBOptimiser:
         self,
         maxIts: int = 600
     ) -> int:
+        """
+        Carries out a geometry optimisation using XTB.
+
+        Args:
+            maxIts (int, optional): Maximum number of iterations for geometry
+                optimisation. Defaults to 600.
+
+        Returns:
+            int: 0 if the geometry optimisation is successful, else 1 if the
+                geometry optimisation is unsucessful.
+        """
         
         try:
             energy, coords = self._run_xtb_calculation(
