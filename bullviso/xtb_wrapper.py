@@ -21,6 +21,7 @@ this program.  If not, see <https://www.gnu.org/licenses/>.
 
 import subprocess
 import tempfile
+from typing import Optional
 from pathlib import Path
 from rdkit import Chem
 from rdkit.Geometry import rdGeometry
@@ -166,7 +167,26 @@ class XTBOptimiser:
         self,
         minimize: bool = False,
         max_iter: int = 600
-    ) -> float:
+    ) -> tuple[float, Optional[tuple[rdGeometry.Point3D]]]:
+        """
+        Carries out an XTB calculation via subprocess execution in a temporary
+        directory and returns the results.
+
+        Args:
+            minimize (bool, optional): If True, carry out a geometry
+                optimisation. Defaults to False.
+            max_iter (int, optional): Maximum number of iterations for geometry
+                optimisation. Defaults to 600.
+
+        Raises:
+            RuntimeError: If the XTB calculation does not finish successfully.
+
+        Returns:
+            tuple[float, Optional[tuple[rdGeometry.Point3D]]]: Tuple of the XTB
+                calculation results: contains the energy (in kcal/mol) and the
+                optimised Cartesian atomic coordinates as a tuple of Point3D
+                instances if `minimize` is True, else None.
+        """
         
         with tempfile.TemporaryDirectory() as tmpdir:
             Chem.MolToXYZFile(
