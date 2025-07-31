@@ -120,6 +120,15 @@ class XTBOptimiser:
     def CalcGradient(
         self
     ) -> None:
+        """
+        Carries out a single-point gradient calculation using XTB.
+
+        Raises:
+            NotImplementedError: If the function is called.
+
+        Returns:
+            None (temporary/placeholder return type).
+        """
         
         raise NotImplementedError(
             'support for XTB gradients coming in a future version of BULLVISO'
