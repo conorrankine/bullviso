@@ -103,6 +103,12 @@ class XTBOptimiser:
     def CalcEnergy(
         self
     ) -> float:
+        """
+        Carries out a single-point energy calculation using XTB.
+
+        Returns:
+            float: Energy (in kcal/mol).
+        """
         
         try:
             energy, _ = self._run_xtb_calculation()
