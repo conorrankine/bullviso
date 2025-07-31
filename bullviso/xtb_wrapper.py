@@ -62,6 +62,12 @@ class XTBOptimiser:
         or pointed to via the `xtb_path` argument passed to the constructor.
     """
 
+    XTB_METHODS = {
+        'GFN0-xTB': '0',
+        'GFN1-xTB': '1',
+        'GFN2-xTB': '2'
+    }
+
     def __init__(
         self,
         mol: Chem.Mol,
@@ -82,6 +88,9 @@ class XTBOptimiser:
                 'xtb'.
             n_proc (int, optional): Number of parallel processes; if 1, XTB
                 calculations are carried out in serial. Defaults to 1.
+
+        Raises:
+            ValueError: If the XTB method is not supported.
         """
         
         self.mol = mol
@@ -95,7 +104,13 @@ class XTBOptimiser:
             atom.GetNumRadicalElectrons() for atom in mol.GetAtoms()
         )
 
-        self.method = method
+        if method not in self.XTB_METHODS:
+            raise ValueError(
+                f'{method} is not a supported XTB method: supported XTB '
+                f'methods include {{{", ".join(self.XTB_METHODS)}}}'
+            )
+        else:
+            self.method = method
 
         self.xtb_path = xtb_path
 
@@ -201,8 +216,7 @@ class XTBOptimiser:
                 cmd.extend(['--opt'])
                 cmd.extend(['--cycles', str(max_iter)])
 
-            if self.method == 'GFN1-xTB':
-                cmd.extend(['--gfn', '1'])
+            cmd.extend(['--gfn', self.XTB_METHODS[self.method]])
 
             if self.charge != 0:
                 cmd.extend(['--chrg', str(self.charge)])
