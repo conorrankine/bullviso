@@ -112,6 +112,8 @@ class XTBOptimiser:
         else:
             self.method = method
 
+        self.fixed_atoms = set()
+
         self.xtb_path = xtb_path
 
         self.n_proc = n_proc
@@ -177,6 +179,37 @@ class XTBOptimiser:
         except Exception as e:
             print(f'XTB geometry optimisation failed: {e}')
             return 1
+        
+    def AddFixedPoint(
+        self,
+        fixed_point_idx: int
+    ) -> None:
+        """
+        Adds an atom to the list of fixed atoms for geometry optimisation
+        using XTB.
+
+        Args:
+            fixed_point_idx (int): Atomic index.
+
+        Raises:
+            ValueError: If the atomic index is out of range.
+        """
+        
+        if fixed_point_idx < 0 or fixed_point_idx >= self.mol.GetNumAtoms():
+            raise ValueError(
+                'error'
+            )
+        self.fixed_atoms.add(fixed_point_idx)
+
+    def ClearFixedPoints(
+        self
+    ) -> None:
+        """
+        Clears all atoms from the list of fixed atoms for geometry optimisation
+        using XTB.
+        """
+        
+        self.fixed_atoms.clear()
 
     def _run_xtb_calculation(
         self,
@@ -215,6 +248,9 @@ class XTBOptimiser:
             if minimize:
                 cmd.extend(['--opt'])
                 cmd.extend(['--cycles', str(max_iter)])
+                if self.fixed_atoms:
+                    self._write_xtb_xcontrol_file(f'{tmpdir}/xtb.inp')
+                    cmd.extend(['--input', f'{tmpdir}/xtb.inp'])
 
             cmd.extend(['--gfn', self.XTB_METHODS[self.method]])
 
@@ -247,6 +283,30 @@ class XTBOptimiser:
                 coords = None
 
             return energy, coords
+        
+    def _write_xtb_xcontrol_file(
+        self,
+        xtb_xcontrol_file: str
+    ) -> None:
+        """
+        Writes an XTB xcontrol file to provide additional input to the XTB
+        program. See https://xtb-docs.readthedocs.io/en/latest/xcontrol.html
+        for the relevant documentation.
+
+        At present, fixing atoms is the only additional input supported by
+        this function; fixed atoms can be defined exactly as for RDKit
+        forcefield (rdForceField.ForceField) objects, i.e., using the
+        AddFixedPoint() [and ClearFixedPoint()] methods.
+
+        Args:
+            xtb_xcontrol_file (str): Path to the XTB xcontrol file.
+        """
+        
+        with open(xtb_xcontrol_file, 'w') as f:
+            f.write('$fix\n')
+            fixed_atoms = [str(atom_idx + 1) for atom_idx in self.fixed_atoms]
+            f.write(' atoms: ' + ','.join(fixed_atoms) + '\n')
+            f.write('$end\n')
 
 ###############################################################################
 ################################## FUNCTIONS ##################################
