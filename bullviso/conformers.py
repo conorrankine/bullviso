@@ -120,14 +120,14 @@ def generate_confs(
     )
 
     if coord_map:
-        fixed_atom_idx = [i for i in coord_map.keys()]
+        fixed_atom_idxs = set([i for i in coord_map.keys()])
     else:
-        fixed_atom_idx = None
+        fixed_atom_idxs = None
 
     optimise_confs(
         mol,
         ff_type = ff_type,
-        fixed_atom_idx = fixed_atom_idx,
+        fixed_atom_idxs = fixed_atom_idxs,
         max_iter = max_iter
     )
 
@@ -200,7 +200,7 @@ def embed_confs(
 def optimise_confs(
     mol: Chem.Mol,
     ff_type: str = 'mmff',
-    fixed_atom_idx: list[int] = None,
+    fixed_atom_idxs: set[int] = None,
     max_iter: int = 600
 ) -> None:
     """
@@ -212,8 +212,8 @@ def optimise_confs(
         mol (Chem.Mol): Molecule.
         ff_type (str, optional): Forcefield type; choices are 'mmff' and 
             'uff'. Defaults to 'mmff'.
-        fixed_atom_idx (list[int], optional): List of atom indices for atoms
-            to fix/freeze during conformer optimisation. Defaults to `None`.
+        fixed_atom_idxs (set[int], optional): Set of atomic indices defining
+            the fixed atoms. Defaults to `None`.
         max_iter (int, optional): Maximum number of iterations for conformer
             optimisation. Defaults to 600.
     """
@@ -224,9 +224,9 @@ def optimise_confs(
 
         for conf in mol.GetConformers():            
             ff = _get_forcefield(ff_type, mol, conf_id = conf.GetId())
-            if fixed_atom_idx:
+            if fixed_atom_idxs:
                 _fix_atoms(
-                    ff, fixed_atom_idx
+                    ff, fixed_atom_idxs
                 )                      
             opt_result = ff.Minimize(maxIts = max_iter)
             if opt_result == 0:
@@ -531,7 +531,7 @@ def _get_uff_forcefield(
 
 def _fix_atoms(
     ff: rdForceField.ForceField,
-    fixed_atom_idxs: list[int]
+    fixed_atom_idxs: set[int]
 ) -> None:
     """
     Fixes atomic positions for a forcefield by atomic index; atoms that are
@@ -540,8 +540,8 @@ def _fix_atoms(
 
     Args:
         ff (rdForceField.ForceField): Forcefield.
-        fixed_atom_idx (list[int]): List of atomic indices defining set of
-            fixed atoms.
+        fixed_atom_idxs (set[int]): Set of atomic indices defining the fixed
+            atoms.
     """
 
     for atom_idx in fixed_atom_idxs:
