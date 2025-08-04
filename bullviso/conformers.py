@@ -49,7 +49,7 @@ MAX_CONFS = 300
 
 def generate_confs(
     mol: Chem.Mol,
-    ff_type: str = 'mmff',
+    optimiser_type: str = 'mmff',
     max_iter: int = 600,
     coord_map: dict[int, rdGeometry.Point3D] = None,
     energy_threshold: float = 10.0,
@@ -66,8 +66,9 @@ def generate_confs(
 
         1. embedded using the ETKDGv3 distance geometry algorithm;
 
-        2. optimised using either the Merck Molecular Forcefield (MMFF) or
-           Universal Forcefield (UFF);
+        2. optimised using either the Merck Molecular Forcefield (MMFF),
+           Universal Forcefield (UFF), or Extended Tight Binding (XTB)
+           semiempirical quantum mechanical framework;
 
         3. filtered to remove high-energy instances that exceed a cutoff energy
            threshold relative to the lowest-energy conformer;
@@ -82,8 +83,8 @@ def generate_confs(
 
     Args:
         mol (Chem.Mol): Molecule.
-        ff_type (str, optional): Forcefield type for conformer optimisation;
-            choices are 'mmff' and 'uff'. Defaults to 'mmff'.
+        optimiser_type (str, optional): Optimiser type; supported options are
+            'mmff', 'uff', and 'xtb'. Defaults to 'mmff'.
         max_iter (int, optional): Maximum number of iterations for conformer
             optimisation. Defaults to 600.
         coord_map (dict[int, rdGeometry.Point3D], optional): Coordinate map
@@ -128,7 +129,7 @@ def generate_confs(
 
     optimise_confs(
         mol,
-        ff_type = ff_type,
+        optimiser_type = optimiser_type,
         fixed_atom_idxs = fixed_atom_idxs,
         max_iter = max_iter
     )
