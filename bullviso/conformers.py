@@ -20,6 +20,7 @@ this program.  If not, see <https://www.gnu.org/licenses/>.
 ###############################################################################
 
 import copy
+from typing import Union
 from rdkit import Chem
 from rdkit.Chem import AllChem
 from rdkit.Chem import rdMolDescriptors
@@ -224,7 +225,7 @@ def optimise_confs(
         keep_conf_ids = []
 
         for conf in mol.GetConformers():            
-            ff = _get_forcefield(ff_type, mol, conf_id = conf.GetId())
+            ff = _get_optimiser(ff_type, mol, conf_id = conf.GetId())
             if fixed_atom_idxs:
                 _fix_atoms(
                     ff, fixed_atom_idxs
@@ -447,43 +448,46 @@ def _prune_confs(
         if conf.GetId() not in keep_conf_ids:
             mol.RemoveConformer(conf.GetId())
 
-def _get_forcefield(
-    ff_type: str,
+def _get_optimiser(
+    optimiser_type: str,
     mol: Chem.Mol,
     conf_id: int = -1
-) -> rdForceField.ForceField:
+) -> Union[rdForceField.ForceField, XTBOptimiser]:
     """
-    Returns the specified type of forcefield for a molecule `mol` as an
-    rdForceField.ForceField instance.
+    Returns the specified type of optimiser for a molecule `mol` as either an
+    rdForceField.ForceField or XTBOptimiser instance.
 
     Args:
-        ff_type (str): Forcefield type; choices are 'mmff' and 'uff'.
+        optimiser_type (str): Optimiser type; supported options are 'mmff',
+            'uff', and 'xtb'.
         mol (Chem.Mol): Molecule.
         conf_id (int, optional): Conformer ID to return the specified type of
-            forcefield for. Defaults to -1.
+            optimiser for. Defaults to -1.
 
     Raises:
-        ValueError: If `ff_type` is not either 'mmff' or 'uff'.
+        ValueError: If `optimiser_type` is not one of 'mmff', 'uff', or 'xtb'.
 
     Returns:
-        rdForceField.ForceField: Forcefield.
+        Union[rdForceField.ForceField, XTBOptimiser]: Optimiser.
     """
     
-    forcefield_getter_functions = {
+    optimiser_getters = {
         'mmff': _get_mmff_forcefield,
-        'uff': _get_uff_forcefield
+        'uff': _get_uff_forcefield,
+        'xtb': _get_xtb_optimiser
     }
 
     try:
-        forcefield_getter_function = (
-            forcefield_getter_functions[ff_type]
+        optimiser_getter = (
+            optimiser_getters[optimiser_type]
         )
     except KeyError:
         raise ValueError(
-            f'{ff_type} is not a recognised forcefield'
+            f'{optimiser_type} is not a supported optimiser: supported '
+            f'optimisers include {{{", ".join(optimiser_getters)}}}'
         ) from None
     
-    return forcefield_getter_function(
+    return optimiser_getter(
         mol, conf_id = conf_id
     )
 
