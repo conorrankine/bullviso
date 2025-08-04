@@ -28,6 +28,7 @@ from rdkit.Chem.rdMolAlign import AlignMolConformers
 from rdkit.Geometry import rdGeometry
 from rdkit.ForceField import rdForceField
 from rdkit.ML.Cluster import Butina
+from .xtb_wrapper import XTBOptimiser
 
 ###############################################################################
 ################################## CONSTANTS ##################################
@@ -527,6 +528,27 @@ def _get_uff_forcefield(
     
     return AllChem.UFFGetMoleculeForceField(
         mol, confId = conf_id
+    )
+
+def _get_xtb_optimiser(
+    mol: Chem.Mol,
+    conf_id: int = -1,
+    **kwargs
+) -> XTBOptimiser:
+    """
+    Returns an XTB optimiser for a molecule `mol` as an XTBOptimiser instance.
+
+    Args:
+        mol (Chem.Mol): Molecule.
+        conf_id (int, optional): Conformer ID to return the XTB optimiser for.
+            Defaults to -1.
+
+    Returns:
+        XTBOptimiser: XTB optimiser.
+    """
+    
+    return XTBOptimiser(
+        mol, conf_id = conf_id, **kwargs
     )
 
 def _fix_atoms(
