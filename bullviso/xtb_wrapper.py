@@ -234,8 +234,9 @@ class XTBOptimiser:
 
             if result.returncode != 0:
                 raise RuntimeError(
-                    f'XTB did not finish successfully - spooling stderr: '
-                    f'{result.stderr}'
+                    f'XTB calculation failed (returncode {result.returncode}) '
+                    f'\n command: {" ".join(cmd)}'
+                    f'\n std.err: {result.stderr}'
                 )
             
             energy = _get_xtb_energy_au(result.stdout)
