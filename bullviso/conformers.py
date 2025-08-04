@@ -120,14 +120,14 @@ def generate_confs(
     )
 
     if coord_map:
-        fixed_atom_idx = [i for i in coord_map.keys()]
+        fixed_atom_idxs = set([i for i in coord_map.keys()])
     else:
-        fixed_atom_idx = None
+        fixed_atom_idxs = None
 
     optimise_confs(
         mol,
         ff_type = ff_type,
-        fixed_atom_idx = fixed_atom_idx,
+        fixed_atom_idxs = fixed_atom_idxs,
         max_iter = max_iter
     )
 
@@ -200,7 +200,7 @@ def embed_confs(
 def optimise_confs(
     mol: Chem.Mol,
     ff_type: str = 'mmff',
-    fixed_atom_idx: list[int] = None,
+    fixed_atom_idxs: set[int] = None,
     max_iter: int = 600
 ) -> None:
     """
@@ -212,8 +212,8 @@ def optimise_confs(
         mol (Chem.Mol): Molecule.
         ff_type (str, optional): Forcefield type; choices are 'mmff' and 
             'uff'. Defaults to 'mmff'.
-        fixed_atom_idx (list[int], optional): List of atom indices for atoms
-            to fix/freeze during conformer optimisation. Defaults to `None`.
+        fixed_atom_idxs (set[int], optional): Set of atomic indices defining
+            the fixed atoms. Defaults to `None`.
         max_iter (int, optional): Maximum number of iterations for conformer
             optimisation. Defaults to 600.
     """
@@ -224,9 +224,9 @@ def optimise_confs(
 
         for conf in mol.GetConformers():            
             ff = _get_forcefield(ff_type, mol, conf_id = conf.GetId())
-            if fixed_atom_idx:
-                ff = _add_atomic_position_constraints(
-                    ff, ff_type, fixed_atom_idx
+            if fixed_atom_idxs:
+                _fix_atoms(
+                    ff, fixed_atom_idxs
                 )                      
             opt_result = ff.Minimize(maxIts = max_iter)
             if opt_result == 0:
@@ -529,44 +529,20 @@ def _get_uff_forcefield(
         mol, confId = conf_id
     )
 
-def _add_atomic_position_constraints(
+def _fix_atoms(
     ff: rdForceField.ForceField,
-    ff_type: str,
-    fixed_atom_idx: list[int]
-) -> rdForceField.ForceField:
+    fixed_atom_idxs: set[int]
+) -> None:
     """
-    Adds atomic position constraints to a forcefield, e.g., to keep atoms
-    fixed/frozen during conformer optimisation; the Merck Molecular Forcefield
-    (MMFF) and Universal Forcefield (UFF) are supported.
+    Fixes atomic positions for a forcefield by atomic index; atoms that are
+    fixed do not have their Cartesian coordinates modified during a subsequent
+    geometry optimisation using the forcefield.
 
     Args:
         ff (rdForceField.ForceField): Forcefield.
-        ff_type (str): Forcefield type; choices are 'mmff' and 'uff'.
-        fixed_atom_idx (list[int]): List of atom indices for atoms to apply
-            atomic position constraints to.
-
-    Raises:
-        ValueError: If `ff_type` is not either 'mmff' or 'uff'.
-
-    Returns:
-        rdForceField.ForceField: Forcefield with atomic position constraints.
+        fixed_atom_idxs (set[int]): Set of atomic indices defining the fixed
+            atoms.
     """
-    
-    position_constraint_functions = {
-        'mmff': ff.MMFFAddPositionConstraint,
-        'uff': ff.UFFAddPositionConstraint
-    }
 
-    try:
-        position_constraint_function = (
-            position_constraint_functions[ff_type]
-        )
-    except KeyError:
-        raise ValueError(
-            f'{ff_type} is not a recognised forcefield'
-        ) from None    
-
-    for atom_idx in fixed_atom_idx:
-        position_constraint_function(atom_idx, 0.0, 1.0E5)
-
-    return ff
+    for atom_idx in fixed_atom_idxs:
+        ff.AddFixedPoint(atom_idx)
