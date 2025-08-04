@@ -556,19 +556,19 @@ def _get_xtb_optimiser(
     )
 
 def _fix_atoms(
-    ff: rdForceField.ForceField,
+    optimiser: Union[rdForceField.ForceField, XTBOptimiser],
     fixed_atom_idxs: set[int]
 ) -> None:
     """
-    Fixes atomic positions for a forcefield by atomic index; atoms that are
+    Fixes atomic positions for an optimiser by atomic index; atoms that are
     fixed do not have their Cartesian coordinates modified during a subsequent
-    geometry optimisation using the forcefield.
+    geometry optimisation using the optimiser.
 
     Args:
-        ff (rdForceField.ForceField): Forcefield.
+        optimiser (Union[rdForceField.ForceField, XTBOptimiser]): Optimiser.
         fixed_atom_idxs (set[int]): Set of atomic indices defining the fixed
             atoms.
     """
 
     for atom_idx in fixed_atom_idxs:
-        ff.AddFixedPoint(atom_idx)
+        optimiser.AddFixedPoint(atom_idx)
