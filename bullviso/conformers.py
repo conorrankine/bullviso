@@ -230,14 +230,16 @@ def optimise_confs(
         keep_conf_ids = []
 
         for conf in mol.GetConformers():            
-            optimiser = _get_optimiser(ff_type, mol, conf_id = conf.GetId())
+            optimiser = _get_optimiser(
+                optimiser_type, mol, conf_id = conf.GetId()
+            )
             if fixed_atom_idxs:
                 _fix_atoms(
                     optimiser, fixed_atom_idxs
                 )                      
             opt_result = optimiser.Minimize(maxIts = max_iter)
             if opt_result == 0:
-                conf.SetDoubleProp('energy', ff.CalcEnergy())
+                conf.SetDoubleProp('energy', optimiser.CalcEnergy())
                 keep_conf_ids.append(conf.GetId())
 
         _prune_confs(mol, keep_conf_ids)
