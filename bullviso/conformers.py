@@ -201,19 +201,23 @@ def embed_confs(
 
 def optimise_confs(
     mol: Chem.Mol,
-    ff_type: str = 'mmff',
+    optimiser_type: str = 'mmff',
     fixed_atom_idxs: set[int] = None,
     max_iter: int = 600
 ) -> None:
     """
-    Optimises conformers of a molecule `mol` using a molecular mechanics / 
-    forcefield method; the Merck Molecular Forcefield (MMFF) and Universal
-    Forcefield (UFF) are available via RDKit.
+    Optimises conformers of a molecule `mol`; the Merck Molecular Forcefield
+    (MMFF), Universal Forcefield (UFF), and Extended Tight Binding (XTB)
+    semiempirical quantum mechanical framework are available.
+
+    Note:
+        MMFF and UFF are available through RDKit, while XTB requires a working
+        installation of XTB accessible via the system PATH.
 
     Args:
         mol (Chem.Mol): Molecule.
-        ff_type (str, optional): Forcefield type; choices are 'mmff' and 
-            'uff'. Defaults to 'mmff'.
+        optimiser_type (str, optional): Optimiser type; supported options are
+            'mmff', 'uff', and 'xtb'. Defaults to 'mmff'.
         fixed_atom_idxs (set[int], optional): Set of atomic indices defining
             the fixed atoms. Defaults to `None`.
         max_iter (int, optional): Maximum number of iterations for conformer
@@ -225,12 +229,12 @@ def optimise_confs(
         keep_conf_ids = []
 
         for conf in mol.GetConformers():            
-            ff = _get_optimiser(ff_type, mol, conf_id = conf.GetId())
+            optimiser = _get_optimiser(ff_type, mol, conf_id = conf.GetId())
             if fixed_atom_idxs:
                 _fix_atoms(
-                    ff, fixed_atom_idxs
+                    optimiser, fixed_atom_idxs
                 )                      
-            opt_result = ff.Minimize(maxIts = max_iter)
+            opt_result = optimiser.Minimize(maxIts = max_iter)
             if opt_result == 0:
                 conf.SetDoubleProp('energy', ff.CalcEnergy())
                 keep_conf_ids.append(conf.GetId())
