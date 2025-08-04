@@ -225,8 +225,8 @@ def optimise_confs(
         for conf in mol.GetConformers():            
             ff = _get_forcefield(ff_type, mol, conf_id = conf.GetId())
             if fixed_atom_idx:
-                ff = _add_atomic_position_constraints(
-                    ff, ff_type, fixed_atom_idx
+                _fix_atoms(
+                    ff, fixed_atom_idx
                 )                      
             opt_result = ff.Minimize(maxIts = max_iter)
             if opt_result == 0:
@@ -529,44 +529,20 @@ def _get_uff_forcefield(
         mol, confId = conf_id
     )
 
-def _add_atomic_position_constraints(
+def _fix_atoms(
     ff: rdForceField.ForceField,
-    ff_type: str,
-    fixed_atom_idx: list[int]
-) -> rdForceField.ForceField:
+    fixed_atom_idxs: list[int]
+) -> None:
     """
-    Adds atomic position constraints to a forcefield, e.g., to keep atoms
-    fixed/frozen during conformer optimisation; the Merck Molecular Forcefield
-    (MMFF) and Universal Forcefield (UFF) are supported.
+    Fixes atomic positions for a forcefield by atomic index; atoms that are
+    fixed do not have their Cartesian coordinates modified during a subsequent
+    geometry optimisation using the forcefield.
 
     Args:
         ff (rdForceField.ForceField): Forcefield.
-        ff_type (str): Forcefield type; choices are 'mmff' and 'uff'.
-        fixed_atom_idx (list[int]): List of atom indices for atoms to apply
-            atomic position constraints to.
-
-    Raises:
-        ValueError: If `ff_type` is not either 'mmff' or 'uff'.
-
-    Returns:
-        rdForceField.ForceField: Forcefield with atomic position constraints.
+        fixed_atom_idx (list[int]): List of atomic indices defining set of
+            fixed atoms.
     """
-    
-    position_constraint_functions = {
-        'mmff': ff.MMFFAddPositionConstraint,
-        'uff': ff.UFFAddPositionConstraint
-    }
 
-    try:
-        position_constraint_function = (
-            position_constraint_functions[ff_type]
-        )
-    except KeyError:
-        raise ValueError(
-            f'{ff_type} is not a recognised forcefield'
-        ) from None    
-
-    for atom_idx in fixed_atom_idx:
-        position_constraint_function(atom_idx, 0.0, 1.0E5)
-
-    return ff
+    for atom_idx in fixed_atom_idxs:
+        ff.AddFixedPoint(atom_idx)
