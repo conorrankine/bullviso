@@ -30,6 +30,12 @@ from pathlib import Path
 from typing import Union
 
 ###############################################################################
+################################## CONSTANTS ##################################
+###############################################################################
+
+SUPPORTED_CALCULATORS = ('mmff', 'uff', 'xtb')
+
+###############################################################################
 ############################## ARGUMENT PARSING ###############################
 ###############################################################################
 
@@ -62,9 +68,9 @@ def parse_args() -> Namespace:
         help = 'maximum number of conformational isomers to generate'
     )
     p.add_argument(
-        '--ff_type', '-ff', type = str, default = 'mmff',
-        choices = ('mmff', 'uff'),
-        help = 'forcefield type for conformer optimisation'
+        '--calculator_type', '-c', type = str, default = 'mmff',
+        choices = SUPPORTED_CALCULATORS,
+        help = 'calculator type for conformer optimisation'
     )
     p.add_argument(
         '--max_iter', '-it', type = int, default = '600',
@@ -339,7 +345,7 @@ def main():
         )
         mol = bv.conformers.generate_confs(
             mol,
-            ff_type = args.ff_type,
+            calculator_type = args.calculator_type,
             max_iter = args.max_iter,
             coord_map = coord_map,
             energy_threshold = args.energy_threshold,
