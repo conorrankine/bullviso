@@ -458,7 +458,8 @@ def _prune_confs(
 def _get_calculator(
     calculator_type: str,
     mol: Chem.Mol,
-    conf_id: int = -1
+    conf_id: int = -1,
+    **kwargs
 ) -> Union[rdForceField.ForceField, XTBCalculator]:
     """
     Returns the specified type of calculator for a molecule `mol` as either an
@@ -470,6 +471,8 @@ def _get_calculator(
         mol (Chem.Mol): Molecule.
         conf_id (int, optional): Conformer ID to return the specified type of
             calculator for. Defaults to -1.
+        **kwargs: Additional keyword arguments (kwargs) passed to the
+            calculator class constructor.
 
     Raises:
         ValueError: If `calculator_type` is not one of 'mmff', 'uff', or 'xtb'.
@@ -478,25 +481,33 @@ def _get_calculator(
         Union[rdForceField.ForceField, XTBCalculator]: Calculator.
     """
     
-    calculator_getters = {
-        'mmff': _get_mmff_forcefield,
-        'uff': _get_uff_forcefield,
-        'xtb': _get_xtb_calculator
+    calculators = {
+        'mmff': {'function': _get_mmff_forcefield, 'accepts_kwargs': False},
+        'uff':  {'function': _get_uff_forcefield,  'accepts_kwargs': False},
+        'xtb':  {'function': _get_xtb_calculator,  'accepts_kwargs': True}
     }
 
     try:
-        calculator_getter = (
-            calculator_getters[calculator_type]
-        )
+        calculator_info = calculators[calculator_type]
     except KeyError:
         raise ValueError(
             f'{calculator_type} is not a supported calculator: supported '
-            f'calculators include {{{", ".join(calculator_getters)}}}'
+            f'calculators include {{{", ".join(calculators)}}}'
         ) from None
     
-    return calculator_getter(
-        mol, conf_id = conf_id
-    )
+    if calculator_info['accepts_kwargs']:
+        return calculator_info['function'](
+            mol, conf_id = conf_id, **kwargs
+        )
+    elif kwargs:
+        raise TypeError(
+            f'{calculator_type} does not accept additional keyword arguments: '
+            f'{list(kwargs.keys())}'
+        )
+    else:
+        return calculator_info['function'](
+            mol, conf_id = conf_id
+        )
 
 def _get_mmff_forcefield(
     mol: Chem.Mol,
@@ -553,6 +564,8 @@ def _get_xtb_calculator(
         mol (Chem.Mol): Molecule.
         conf_id (int, optional): Conformer ID to return the XTB calculator for.
             Defaults to -1.
+        **kwargs: Additional keyword arguments (kwargs) passed to the
+            calculator class constructor.
 
     Returns:
         XTBCalculator: XTB calculator.
