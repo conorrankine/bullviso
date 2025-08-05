@@ -36,12 +36,12 @@ HARTREE_TO_KCALMOL = 627.5094740
 ################################### CLASSES ###################################
 ###############################################################################
 
-class XTBOptimiser:
+class XTBCalculator:
     """_
     XTB wrapper that implements and exposes the same interface as RDKit
     forcefield (rdForceField.ForceField) objects.
 
-    `XTBOptimiser` exposes a convenient interface for carrying out XTB
+    `XTBCalculator` exposes a convenient interface for carrying out XTB
     calculations on RDKit molecule (Mol) objects, supporting single-point
     energy, gradient, and geometry optimisation calculations, and allowing
     seamless integration into existing RDKit forcefield-based workflows.
@@ -53,9 +53,9 @@ class XTBOptimiser:
         >>> mol = Chem.MolFromSmiles('C[NH3+]')
         >>> mol = Chem.AddHs(mol)
         >>> AllChem.EmbedMolecule(mol)
-        >>> optimiser = XTBOptimiser(mol)
-        >>> energy = optimiser.CalcEnergy()  # single-point energy (kcal/mol)
-        >>> _ = optimiser.Minimize()         # geometry optimisation
+        >>> calculator = XTBCalculator(mol)
+        >>> energy = calculator.CalcEnergy()   # single-point energy (kcal/mol)
+        >>> _ = calculator.Minimize()          # geometry optimisation
 
     Note:
         Requires a working installation of XTB accessible via the system PATH
@@ -77,12 +77,12 @@ class XTBOptimiser:
         n_proc: int = 1
     ):
         """
-        Initialises an `XTBOptimiser` instance.
+        Initialises an `XTBCalculator` instance.
 
         Args:
             mol (Chem.Mol): Molecule.
             conf_id (int, optional): Conformer ID to initialise the
-                `XTBOptimiser` instance for. Defaults to -1.
+                `XTBCalculator` instance for. Defaults to -1.
             method (str, optional): XTB method. Defaults to 'GFN2-xTB'.
             xtb_path (str, optional): Path to the XTB executable. Defaults to
                 'xtb'.

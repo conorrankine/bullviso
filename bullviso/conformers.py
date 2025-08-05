@@ -29,7 +29,7 @@ from rdkit.Chem.rdMolAlign import AlignMolConformers
 from rdkit.Geometry import rdGeometry
 from rdkit.ForceField import rdForceField
 from rdkit.ML.Cluster import Butina
-from .xtb_wrapper import XTBOptimiser
+from .xtb_wrapper import XTBCalculator
 
 ###############################################################################
 ################################## CONSTANTS ##################################
@@ -49,7 +49,7 @@ MAX_CONFS = 300
 
 def generate_confs(
     mol: Chem.Mol,
-    optimiser_type: str = 'mmff',
+    calculator_type: str = 'mmff',
     max_iter: int = 600,
     coord_map: dict[int, rdGeometry.Point3D] = None,
     energy_threshold: float = 10.0,
@@ -83,7 +83,7 @@ def generate_confs(
 
     Args:
         mol (Chem.Mol): Molecule.
-        optimiser_type (str, optional): Optimiser type; supported options are
+        calculator_type (str, optional): Calculator type; supported options are
             'mmff', 'uff', and 'xtb'. Defaults to 'mmff'.
         max_iter (int, optional): Maximum number of iterations for conformer
             optimisation. Defaults to 600.
@@ -129,7 +129,7 @@ def generate_confs(
 
     optimise_confs(
         mol,
-        optimiser_type = optimiser_type,
+        calculator_type = calculator_type,
         fixed_atom_idxs = fixed_atom_idxs,
         max_iter = max_iter
     )
@@ -202,7 +202,7 @@ def embed_confs(
 
 def optimise_confs(
     mol: Chem.Mol,
-    optimiser_type: str = 'mmff',
+    calculator_type: str = 'mmff',
     fixed_atom_idxs: set[int] = None,
     max_iter: int = 600
 ) -> None:
@@ -217,7 +217,7 @@ def optimise_confs(
 
     Args:
         mol (Chem.Mol): Molecule.
-        optimiser_type (str, optional): Optimiser type; supported options are
+        calculator_type (str, optional): Calculator type; supported options are
             'mmff', 'uff', and 'xtb'. Defaults to 'mmff'.
         fixed_atom_idxs (set[int], optional): Set of atomic indices defining
             the fixed atoms. Defaults to `None`.
@@ -230,16 +230,16 @@ def optimise_confs(
         keep_conf_ids = []
 
         for conf in mol.GetConformers():            
-            optimiser = _get_optimiser(
-                optimiser_type, mol, conf_id = conf.GetId()
+            calculator = _get_calculator(
+                calculator_type, mol, conf_id = conf.GetId()
             )
             if fixed_atom_idxs:
                 _fix_atoms(
-                    optimiser, fixed_atom_idxs
+                    calculator, fixed_atom_idxs
                 )                      
-            opt_result = optimiser.Minimize(maxIts = max_iter)
+            opt_result = calculator.Minimize(maxIts = max_iter)
             if opt_result == 0:
-                conf.SetDoubleProp('energy', optimiser.CalcEnergy())
+                conf.SetDoubleProp('energy', calculator.CalcEnergy())
                 keep_conf_ids.append(conf.GetId())
 
         _prune_confs(mol, keep_conf_ids)
@@ -455,46 +455,46 @@ def _prune_confs(
         if conf.GetId() not in keep_conf_ids:
             mol.RemoveConformer(conf.GetId())
 
-def _get_optimiser(
-    optimiser_type: str,
+def _get_calculator(
+    calculator_type: str,
     mol: Chem.Mol,
     conf_id: int = -1
-) -> Union[rdForceField.ForceField, XTBOptimiser]:
+) -> Union[rdForceField.ForceField, XTBCalculator]:
     """
-    Returns the specified type of optimiser for a molecule `mol` as either an
-    rdForceField.ForceField or XTBOptimiser instance.
+    Returns the specified type of calculator for a molecule `mol` as either an
+    rdForceField.ForceField or XTBCalculator instance.
 
     Args:
-        optimiser_type (str): Optimiser type; supported options are 'mmff',
+        calculator_type (str): Calculator type; supported options are 'mmff',
             'uff', and 'xtb'.
         mol (Chem.Mol): Molecule.
         conf_id (int, optional): Conformer ID to return the specified type of
-            optimiser for. Defaults to -1.
+            calculator for. Defaults to -1.
 
     Raises:
-        ValueError: If `optimiser_type` is not one of 'mmff', 'uff', or 'xtb'.
+        ValueError: If `calculator_type` is not one of 'mmff', 'uff', or 'xtb'.
 
     Returns:
-        Union[rdForceField.ForceField, XTBOptimiser]: Optimiser.
+        Union[rdForceField.ForceField, XTBCalculator]: Calculator.
     """
     
-    optimiser_getters = {
+    calculator_getters = {
         'mmff': _get_mmff_forcefield,
         'uff': _get_uff_forcefield,
-        'xtb': _get_xtb_optimiser
+        'xtb': _get_xtb_calculator
     }
 
     try:
-        optimiser_getter = (
-            optimiser_getters[optimiser_type]
+        calculator_getter = (
+            calculator_getters[calculator_type]
         )
     except KeyError:
         raise ValueError(
-            f'{optimiser_type} is not a supported optimiser: supported '
-            f'optimisers include {{{", ".join(optimiser_getters)}}}'
+            f'{calculator_type} is not a supported calculator: supported '
+            f'calculators include {{{", ".join(calculator_getters)}}}'
         ) from None
     
-    return optimiser_getter(
+    return calculator_getter(
         mol, conf_id = conf_id
     )
 
@@ -541,41 +541,41 @@ def _get_uff_forcefield(
         mol, confId = conf_id
     )
 
-def _get_xtb_optimiser(
+def _get_xtb_calculator(
     mol: Chem.Mol,
     conf_id: int = -1,
     **kwargs
-) -> XTBOptimiser:
+) -> XTBCalculator:
     """
-    Returns an XTB optimiser for a molecule `mol` as an XTBOptimiser instance.
+    Returns an XTB calculator for a molecule `mol` as a XTBCalculator instance.
 
     Args:
         mol (Chem.Mol): Molecule.
-        conf_id (int, optional): Conformer ID to return the XTB optimiser for.
+        conf_id (int, optional): Conformer ID to return the XTB calculator for.
             Defaults to -1.
 
     Returns:
-        XTBOptimiser: XTB optimiser.
+        XTBCalculator: XTB calculator.
     """
     
-    return XTBOptimiser(
+    return XTBCalculator(
         mol, conf_id = conf_id, **kwargs
     )
 
 def _fix_atoms(
-    optimiser: Union[rdForceField.ForceField, XTBOptimiser],
+    calculator: Union[rdForceField.ForceField, XTBCalculator],
     fixed_atom_idxs: set[int]
 ) -> None:
     """
-    Fixes atomic positions for an optimiser by atomic index; atoms that are
+    Fixes atomic positions for a calculator by atomic index; atoms that are
     fixed do not have their Cartesian coordinates modified during a subsequent
-    geometry optimisation using the optimiser.
+    geometry optimisation using the calculator.
 
     Args:
-        optimiser (Union[rdForceField.ForceField, XTBOptimiser]): Optimiser.
+        calculator (Union[rdForceField.ForceField, XTBCalculator]): Calculator.
         fixed_atom_idxs (set[int]): Set of atomic indices defining the fixed
             atoms.
     """
 
     for atom_idx in fixed_atom_idxs:
-        optimiser.AddFixedPoint(atom_idx)
+        calculator.AddFixedPoint(atom_idx)
