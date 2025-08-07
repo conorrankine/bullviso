@@ -112,9 +112,10 @@ def generate_confs(
     
     params = getattr(Chem.rdDistGeom, EMBED_METHOD)()
     params.pruneRmsThresh = EMBED_PRUNERMSTHRESH
-    params.coordMap = {} if coord_map is None else coord_map
     params.randomSeed = seed
     params.numThreads = n_proc
+    if coord_map:
+        params.SetCoordMap(coord_map)
 
     mol = embed_confs(
         mol, params = params
