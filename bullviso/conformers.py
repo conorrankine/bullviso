@@ -36,7 +36,6 @@ from .xtb_wrapper import XTBCalculator
 ###############################################################################
 
 EMBED_METHOD = 'ETKDGv3'
-EMBED_MAXATTEMPTS = 1000
 EMBED_PRUNERMSTHRESH = 0.5
 
 ROTATABLE_BOND_THRESHOLD = 8
@@ -112,7 +111,6 @@ def generate_confs(
     """
     
     params = getattr(Chem.rdDistGeom, EMBED_METHOD)()
-    params.maxAttempts = EMBED_MAXATTEMPTS
     params.pruneRmsThresh = EMBED_PRUNERMSTHRESH
     params.coordMap = {} if coord_map is None else coord_map
     params.randomSeed = seed
