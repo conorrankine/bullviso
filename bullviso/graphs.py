@@ -53,6 +53,7 @@ def mol_to_graph(
         G.add_node(
             node_label_prefix + f'{i + 1}',
             element = atom.GetSymbol(),
+            chiral_tag = atom.GetChiralTag(),
             charge = atom.GetFormalCharge(),
             unpaired_electrons = atom.GetNumRadicalElectrons()
         )
@@ -96,6 +97,9 @@ def graph_to_mol(
         )
         atom = mol.GetAtomWithIdx(
             node_to_atom_mapping[node_i]
+        )
+        atom.SetChiralTag(
+            data.get('chiral_tag')
         )
         atom.SetFormalCharge(
             data.get('charge')
