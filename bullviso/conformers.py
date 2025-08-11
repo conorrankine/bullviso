@@ -294,8 +294,7 @@ def align_confs(
     
     AlignMolConformers(
         mol,
-        atomIds = rmsd_atom_idxs,
-        reflect = True
+        atomIds = rmsd_atom_idxs
     )
 
 def cluster_confs(
