@@ -63,14 +63,17 @@ def mol_to_graph(
         G.add_edge(
             node_label_prefix + f'{i + 1}',
             node_label_prefix + f'{j + 1}',
-            bond_type = bond.GetBondType()
+            bond_type = bond.GetBondType(),
+            bond_dir = bond.GetBondDir(),
+            stereo_tag = bond.GetStereo()
         )
 
     return G
 
 def graph_to_mol(
     G: nx.Graph,
-    sanitize: bool = True
+    sanitize: bool = True,
+    assign_stereochemistry: bool = True
 ) -> Chem.Mol:
     """
     Converts a molecular graph (Network-X Graph object) into a molecule (RDKit
@@ -78,9 +81,11 @@ def graph_to_mol(
 
     Args:
         G (nx.Graph): molecular graph (Network-X Graph object).
-        sanitize (bool, optional): If `True`, the molecular structure is
-            sanitized by RDKit using `Chem.SanitizeMol()` before the molecule is
-            returned. Defaults to `True`.
+        sanitize (bool, optional): If `True`, the molecule is sanitized by
+            RDKit using `Chem.SanitizeMol()` before return. Defaults to `True`.
+        assign_stereochemistry (bool, optional): If `True`, the stereochemistry
+            of the molecule is assigned by RDKit using
+            `Chem.AssignStereochemistry()` before return. Defaults to `True`.
 
     Returns:
         Chem.Mol: molecule (RDKit Mol object).
@@ -116,11 +121,28 @@ def graph_to_mol(
             bond_type if bond_type is not None
                 else Chem.rdchem.BondType.SINGLE
         )
+        bond = mol.GetBondBetweenAtoms(
+            node_to_atom_mapping[node_i],
+            node_to_atom_mapping[node_j]
+        )
+        bond_dir = data.get('bond_dir')
+        bond.SetBondDir(
+            bond_dir if bond_dir is not None
+                else Chem.rdchem.BondDir.NONE
+        )
+        stereo_tag = data.get('stereo_tag')
+        bond.SetStereo(
+            stereo_tag if stereo_tag is not None
+                else Chem.rdchem.BondStereo.STEREONONE
+        )
 
     mol = mol.GetMol()
 
     if sanitize:
         Chem.SanitizeMol(mol)
+
+    if assign_stereochemistry:
+        Chem.AssignStereochemistry(mol, cleanIt = True)
 
     return mol
 
