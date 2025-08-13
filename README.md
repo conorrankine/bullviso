@@ -124,7 +124,7 @@ bullviso "CCCC" -a 2
 
 generates the four unique constitutional isomers of 2-butylbullvalene.
 
-BULLVISO also accepts SMILES strings for charged and radical substituents, *e.g.*,
+BULLVISO can accept SMILES strings for charged and radical substituents, *e.g.*,
 
 ```
 bullviso "[O-]"
@@ -137,6 +137,37 @@ bullviso "[NH3+]"
 ```
 
 generates the four unique constitutional isomers of the bullvalene ammonium cation (the protonated form of aminobullvalene).
+
+BULLVISO can also accept SMILES strings with explicit stereochemical specifications for atoms (*i.e.* *R*/*S* chirality) and bonds (*i.e.* *E*/*Z* stereochemistry), *e.g.*,
+
+```
+bullviso "N[C@@H](C)C(=O)" -a 4
+```
+
+and
+
+```
+bullviso "N[C@H](C)C(=O)" -a 4
+```
+
+output the four unique constitutional isomers of (*L*-alanyl)bullvalene and (*D*-alanyl)bullvalene, respectively.
+
+⚠️ **Note**: the H, CH<sub>3</sub>, and C(=O)R groups appear clockwise (@@) and counterclockwise (@) when viewed down the N–C bond for (*L*-alanyl)bullvalene and (*D*-alanyl)bullvalene, respectively. The attachment point, set using the `-a [SUB_ATTACH_IDX]` flag, is to the **fourth** (**not the fifth!**) atom of the substituent since explicit hydrogens in SMILES strings are skipped, even in cases where they inform the stereochemistry.
+
+Similarly,
+
+```
+bullviso "C(=C/F)\F"
+```
+
+and
+
+```
+bullviso "C(=C/F)/F"
+```
+
+output the four unique constitutional isomers of (*E*-1,2-difluoroethenyl)bullvalene and (*Z*-1,2-difluoroethenyl)bullvalene, respectively.
+
 
 #### CONFORMER GENERATION
 
