@@ -231,3 +231,53 @@ def set_atom_stereochemistry(
         G.nodes[node_i]['chiral_tag'] = stereo_map[chiral_tag.lower()]
 
     return G
+
+def set_bond_stereochemistry(
+    G: nx.Graph,
+    bond_stereo_map: dict
+) -> nx.Graph:
+    """
+    Sets the E/Z stereochemistry of the specified bond(s) in a molecular graph.
+
+    Args:
+        G (nx.Graph): Molecular graph.
+        bond_stereo_map (dict): Dictionary mapping pairs of node labels
+            (tuple[str|int, str|int]) to stereo tags (str); valid stereo tags
+            are {'cis', 'trans', 'none'}.
+
+    Raises:
+        ValueError: If a key in `bond_stereo_map` is not a tuple (or list) with
+            two elements.
+        ValueError: If the edge defined by a pair of node labels is not an edge
+            in the molecular graph.
+        ValueError: If a stereo tag is not one of {'cis', 'trans', 'none'}.
+
+    Returns:
+        nx.Graph: Molecular graph with updated E/Z (bond) stereochemistry.
+    """
+    
+    stereo_map = {
+        'cis': Chem.rdchem.BondStereo.STEREOCIS,
+        'trans': Chem.rdchem.BondStereo.STEREOTRANS,
+        'none': Chem.rdchem.BondStereo.STEREONONE        
+    }
+
+    for node_labels, stereo_tag in bond_stereo_map.items():
+        if not isinstance(node_labels, (tuple, list)) or len(node_labels) != 2:
+            raise ValueError(
+                f'keys in `bond_stereo_map` should be tuples or lists of node '
+                f'labels: `{node_labels}` is not a valid key'
+            )
+        node_i, node_j = map(str, node_labels)
+        if not G.has_edge(node_i, node_j):
+            raise ValueError(
+                f'edge `{node_i}<->{node_j}` is not an edge in the graph'
+            )
+        if stereo_tag.lower() not in stereo_map:
+            raise ValueError(
+                f'`{stereo_tag.lower()}` is not a valid stereo tag: valid '
+                f'stereo tags are {{{", ".join(stereo_map)}}}'
+            )
+        G[node_i][node_j]['stereo_tag'] = stereo_map[stereo_tag.lower()]
+
+    return G
