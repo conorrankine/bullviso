@@ -320,6 +320,16 @@ def main():
         model_bullvalene, node_label_prefix = 'bullvalene_'
     )
 
+    bv.graphs.set_atom_stereochemistry(
+        bullvalene_G,
+        atom_stereo_map = {
+            'bullvalene_1'  : 'ccw',
+            'bullvalene_4'  : 'cw',
+            'bullvalene_7'  : 'ccw',
+            'bullvalene_10' : 'cw'
+        }
+    )
+
     sub_G = [
         bv.graphs.smiles_to_graph(
             sub_smile, node_label_prefix = f'sub{i}_'
