@@ -142,8 +142,7 @@ def generate_confs(
         mol,
         clusters = cluster_confs(
             mol,
-            rmsd_threshold = rmsd_threshold,
-            rmsd_atom_idxs = rmsd_atom_idxs
+            rmsd_threshold = rmsd_threshold
         )
     )
 
@@ -323,7 +322,7 @@ def cluster_confs(
 
     rms_matrix = AllChem.GetConformerRMSMatrix(
         mol,
-        atomIds = rmsd_atom_idxs,
+        atomIds = rmsd_atom_idxs
     )
 
     clusters = Butina.ClusterData(
