@@ -190,3 +190,44 @@ def graph_to_smiles(
     smiles = Chem.MolToSmiles(mol)
 
     return smiles
+
+def set_atom_stereochemistry(
+    G: nx.Graph,
+    atom_stereo_map: dict
+) -> nx.Graph:
+    """
+    Sets the R/S stereochemistry of the specified atom(s) in a molecular graph.
+
+    Args:
+        G (nx.Graph): Molecular graph.
+        atom_stereo_map (dict): Dictionary mapping node labels (str) to chiral
+            tags (str); valid chiral tags are {'ccw', 'cw', 'none'}.
+
+    Raises:
+        ValueError: If a node label is not a node in the molecular graph.
+        ValueError: If a chiral tag is not one of {'ccw', 'cw', 'none'}.
+
+    Returns:
+        nx.Graph: Molecular graph with updated R/S (atom) stereochemistry.
+    """
+    
+    stereo_map = {
+        'cw': Chem.rdchem.ChiralType.CHI_TETRAHEDRAL_CW,
+        'ccw': Chem.rdchem.ChiralType.CHI_TETRAHEDRAL_CCW,
+        'none': Chem.rdchem.ChiralType.CHI_UNSPECIFIED
+    }
+
+    for node_label, chiral_tag in atom_stereo_map.items():
+        node_i = str(node_label)
+        if node_i not in G.nodes:
+            raise ValueError(
+                f'node `{node_i}` is not a node in the graph'
+            )
+        if chiral_tag.lower() not in stereo_map:
+            raise ValueError(
+                f'`{chiral_tag.lower()}` is not a valid chiral tag: valid '
+                f'chiral tags are {{{", ".join(stereo_map)}}}'
+            )
+        G.nodes[node_i]['chiral_tag'] = stereo_map[chiral_tag.lower()]
+
+    return G
