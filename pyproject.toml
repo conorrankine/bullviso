@@ -1,6 +1,6 @@
 [project]
 name = "bullviso"
-version = "2.6"
+version = "2.5"
 description = """
 A Python package for generating 3D molecular structures of the
 constitutional, configurational, and conformational isomers of
