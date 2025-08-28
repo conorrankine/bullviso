@@ -110,7 +110,7 @@ def parse_args(
     )
     cleanup_group.add_argument(
         '-r', '--rmsd_threshold', type = float, default = 0.5,
-        help = 'RMSD threshold (Angstroem); '
+        help = 'RMSD threshold (Angstroem) for deduplicating optimised conformers'
     )
 
     system_group = p.add_argument_group('system options')
