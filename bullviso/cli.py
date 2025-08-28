@@ -22,7 +22,12 @@ this program.  If not, see <https://www.gnu.org/licenses/>.
 import ast
 from . import core
 from . import utils
-from argparse import ArgumentParser, ArgumentTypeError, Namespace
+from argparse import (
+    ArgumentParser,
+    ArgumentDefaultsHelpFormatter,
+    ArgumentTypeError,
+    Namespace
+)
 from pathlib import Path
 
 ###############################################################################
@@ -47,7 +52,9 @@ def parse_args(
         argparse.Namespace object that stores the arguments as attributes.
     """
 
-    p = ArgumentParser()
+    p = ArgumentParser(
+        formatter_class = ArgumentDefaultsHelpFormatter
+    )
 
     p.add_argument(
         'sub_smiles', type = str, nargs = '+',
