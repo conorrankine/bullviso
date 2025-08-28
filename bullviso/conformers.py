@@ -159,7 +159,7 @@ def generate_confs(
 def embed_confs(
     mol: Chem.Mol,
     n_confs: int = None,
-    rmsd_threshold: float = 0.5,
+    rmsd_threshold: float = 0.0,
     coord_map: dict[int, rdGeometry.Point3D] = None,
     n_proc: int = 1,
     seed: int = -1
@@ -182,7 +182,7 @@ def embed_confs(
             molecule. Defaults to `None`.
         rmsd_threshold (float, optional): RMSD threshold for deduplicating
             embeddings; conformers with RMSDs below the RMSD threshold are
-            considered to be duplicates. Defaults to 0.5 (Angstroem).
+            considered to be duplicates. Defaults to 0.0 (Angstroem).
         coord_map (dict[int, rdGeometry.Point3D], optional): Coordinate map
             dictionary mapping atom indices to their 3D coordinates
             (represented as rdGeometry.Point3D instances); these atoms are
