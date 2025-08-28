@@ -51,14 +51,16 @@ EMBED_N_CONFS_DEFAULT_MAX = 512
 
 def generate_confs(
     mol: Chem.Mol,
+    embed_n_confs: int = None,
+    embed_rmsd_threshold: float = 0.0,
     calculator_type: str = 'mmff',
     max_iter: int = 600,
-    coord_map: dict[int, rdGeometry.Point3D] = None,
     energy_threshold: float = 10.0,
     rmsd_threshold: float = 0.5,
     rmsd_atom_idxs: list[int] = None,
+    coord_map: dict[int, rdGeometry.Point3D] = None,
+    n_proc: int = 1,
     seed: int = -1,
-    n_proc: int = 1
 ) -> Chem.Mol:
     """
     Orchestrates a multi-step conformer generation, optimisation, and selection
@@ -85,14 +87,16 @@ def generate_confs(
 
     Args:
         mol (Chem.Mol): Molecule.
+        embed_n_confs (int, optional): Number of conformers to embed; if
+            `None`, a default is determined based on the number of rotatable
+            bonds in the molecule. Defaults to `None`.
+        embed_rmsd_threshold (float, optional): RMSD threshold for deduplicating
+            embeddings; conformers with RMSDs below the RMSD threshold are
+            considered to be duplicates. Defaults to 0.0 (Angstroem).
         calculator_type (str, optional): Calculator type; supported options are
             'mmff', 'uff', and 'xtb'. Defaults to 'mmff'.
         max_iter (int, optional): Maximum number of iterations for conformer
             optimisation. Defaults to 600.
-        coord_map (dict[int, rdGeometry.Point3D], optional): Coordinate map
-            dictionary mapping atom indices to their 3D coordinates
-            (represented as rdGeometry.Point3D instances); these atoms are fixed
-            during conformer embedding and optimisation. Defaults to `None`.
         energy_threshold (float, optional): Maximum allowed energy difference
             (in kcal/mol) relative to the lowest-energy conformation.
             Defaults to 10.0 (kcal/mol).
@@ -102,11 +106,14 @@ def generate_confs(
         rmsd_atom_idxs (list[int], optional): List of atom indices defining the
             atoms to align pre-calculation of the pairwise RMSDs; if `None`,
             all atoms are used to align. Defaults to `None`.
+        coord_map (dict[int, rdGeometry.Point3D], optional): Coordinate map
+            dictionary mapping atom indices to their 3D coordinates
+            (represented as rdGeometry.Point3D instances); these atoms are fixed
+            during conformer embedding and optimisation. Defaults to `None`.
+        n_proc (int, optional): Number of (parallel) processes for conformer
+            embedding and optimisation. Defaults to 1.
         seed (int, optional): Seed for conformer embedding; if -1, the seed is
             obtained via pseudo-random number generation. Defaults to -1.
-        n_proc (int, optional): Number of parallel processes for conformer
-            embedding and optimisation; if 1, conformer embedding and
-            optimisation is serial. Defaults to 1.
 
     Returns:
         Chem.Mol: Molecule with a diverse set of low-energy molecular
@@ -115,6 +122,8 @@ def generate_confs(
 
     mol = embed_confs(
         mol,
+        n_confs = embed_n_confs,
+        rmsd_threshold = embed_rmsd_threshold,
         coord_map = coord_map,
         n_proc = n_proc,
         seed = seed
