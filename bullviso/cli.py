@@ -76,6 +76,10 @@ def parse_args() -> Namespace:
         help = 'RMSD threshold (Angstroem) for deduplicating embeddings'
     )
     p.add_argument(
+        '--embed_timeout', '-et', type = float, default = None,
+        help = 'timout (seconds) for conformer embedding'
+    )
+    p.add_argument(
         '--calculator_type', '-c', type = str, default = 'mmff',
         choices = SUPPORTED_CALCULATORS,
         help = 'calculator type for conformer optimisation'
@@ -365,6 +369,7 @@ def main():
             mol,
             embed_n_confs = args.embed_n_confs,
             embed_rmsd_threshold = args.embed_rmsd_threshold,
+            embed_timeout = args.embed_timeout,
             calculator_type = args.calculator_type,
             max_iter = args.max_iter,
             coord_map = coord_map,
