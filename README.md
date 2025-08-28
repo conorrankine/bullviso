@@ -201,14 +201,17 @@ outputs (up to a maximum of) the six lowest-energy conformational isomers for ea
 
 The workflow is '*black-box*' and you don't *have* to alter the presets, although it's easy to do this from the command line if you need to configure/customise it! The relevant command line arguments are summarised below:
 
-| Argument             | Flag  | Description                                                           | Default |
-|:---------------------|:------|:----------------------------------------------------------------------|--------:|
-| `--calculator_type`  | `-c` | calculator type for conformer optimisation                            | 'MMFF'  |
-| `--max_iter`         | `-it` | maximum number of iterations for conformer optimisation               | 600     |
-| `--energy_threshold` | `-e`  | energy threshold (kcal/mol) for energy-based conformer filtration     | 10.0    |
-| `--rmsd_threshold`   | `-r`  | RMSD threshold (Angstroem) for distance-based conformer clustering    | 0.5     |
-| `--seed`             | `-s`  | seed for conformer embedding                                          | −1      |
-| `--n_proc`           | `-np` | number of parallel processes for conformer embedding and optimisation | 1       |
+| Argument                 | Flag  | Description                                                             | Default |
+|:-------------------------|:------|:------------------------------------------------------------------------|--------:|
+| `--embed_n_confs`        | `-en` | maximum number of conformational isomers to embed                       | None    |
+| `--embed_rmsd_threshold` | `-er` | RMSD threshold (Angstroem) for deduplicating embeddings                 | 0.1     |
+| `--embed_timeout`        | `-et` | timeout (seconds) for conformer embedding                               | None    |
+| `--embed_seed`           | `-es` | random seed for conformer embedding                                     | None    |
+| `--calculator_type`      | `-c`  | calculator type for conformer optimisation                              | 'MMFF'  |
+| `--max_iter`             | `-it` | maximum number of iterations for conformer optimisation                 | 600     |
+| `--energy_threshold`     | `-e`  | energy threshold (kcal/mol) for energy-based conformer filtration       | 10.0    |
+| `--rmsd_threshold`       | `-r`  | RMSD threshold (Angstroem) for distance-based conformer clustering      | 0.5     |
+| `--n_proc`               | `-np` | number of (parallel) processes for conformer embedding and optimisation | 1       |
 
 ##### XTB SUPPORT
 
