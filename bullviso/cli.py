@@ -80,6 +80,10 @@ def parse_args() -> Namespace:
         help = 'timout (seconds) for conformer embedding'
     )
     p.add_argument(
+        '--embed_seed', '-es', type = int, default = None,
+        help = 'random seed for conformer embedding'
+    )
+    p.add_argument(
         '--calculator_type', '-c', type = str, default = 'mmff',
         choices = SUPPORTED_CALCULATORS,
         help = 'calculator type for conformer optimisation'
@@ -95,11 +99,6 @@ def parse_args() -> Namespace:
     p.add_argument(
         '--rmsd_threshold', '-r', type = float, default = 0.5,
         help = 'RMSD threshold (Angstroem); '
-    )
-    p.add_argument(
-        '--seed', '-s', type = int, default = -1,
-        help = ('seed for conformer embedding; if -1, the seed is obtained '
-            'via pseudo-random number generation')
     )
     p.add_argument(
         '--n_proc', '-np', type = int, default = 1,
@@ -370,13 +369,13 @@ def main():
             embed_n_confs = args.embed_n_confs,
             embed_rmsd_threshold = args.embed_rmsd_threshold,
             embed_timeout = args.embed_timeout,
+            embed_seed = args.embed_seed,
             calculator_type = args.calculator_type,
             max_iter = args.max_iter,
             coord_map = coord_map,
             energy_threshold = args.energy_threshold,
             rmsd_threshold = args.rmsd_threshold,
             rmsd_atom_idxs = [i for i in range(10)],
-            seed = args.seed,
             n_proc = args.n_proc
         )
         confs = list(mol.GetConformers())

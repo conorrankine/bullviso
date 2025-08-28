@@ -54,14 +54,14 @@ def generate_confs(
     embed_n_confs: int = None,
     embed_rmsd_threshold: float = 0.0,
     embed_timeout: int = None,
+    embed_seed: int = None,
     calculator_type: str = 'mmff',
     max_iter: int = 600,
     energy_threshold: float = 10.0,
     rmsd_threshold: float = 0.5,
     rmsd_atom_idxs: list[int] = None,
     coord_map: dict[int, rdGeometry.Point3D] = None,
-    n_proc: int = 1,
-    seed: int = -1,
+    n_proc: int = 1
 ) -> Chem.Mol:
     """
     Orchestrates a multi-step conformer generation, optimisation, and selection
@@ -96,6 +96,8 @@ def generate_confs(
             considered to be duplicates. Defaults to 0.0 (Angstroem).
         embed_timeout (int, optional): Timeout (in seconds) for conformer
             embedding. Defaults to `None`.
+        embed_seed (int, optional): Random seed for conformer embedding.
+            Defaults to `None`.
         calculator_type (str, optional): Calculator type; supported options are
             'mmff', 'uff', and 'xtb'. Defaults to 'mmff'.
         max_iter (int, optional): Maximum number of iterations for conformer
@@ -115,8 +117,6 @@ def generate_confs(
             during conformer embedding and optimisation. Defaults to `None`.
         n_proc (int, optional): Number of (parallel) processes for conformer
             embedding and optimisation. Defaults to 1.
-        seed (int, optional): Seed for conformer embedding; if -1, the seed is
-            obtained via pseudo-random number generation. Defaults to -1.
 
     Returns:
         Chem.Mol: Molecule with a diverse set of low-energy molecular
@@ -130,7 +130,7 @@ def generate_confs(
         timeout = embed_timeout,
         coord_map = coord_map,
         n_proc = n_proc,
-        seed = seed
+        seed = embed_seed
     )
 
     if coord_map:
@@ -176,7 +176,7 @@ def embed_confs(
     timeout: int = None,
     coord_map: dict[int, rdGeometry.Point3D] = None,
     n_proc: int = 1,
-    seed: int = -1
+    seed: int = None
 ) -> Chem.Mol:
     """
     Embeds `n_confs` 3D conformers of a molecule `mol`.
@@ -205,8 +205,8 @@ def embed_confs(
             fixed during conformer embedding. Defaults to `None`.
         n_proc (int, optional): Number of (parallel) processes for conformer
             embedding. Defaults to 1.
-        seed (int, optional): Seed for conformer embedding; if -1, the seed is
-            obtained via pseudo-random number generation. Defaults to -1.
+        seed (int, optional): Random seed for conformer embedding. Defaults to
+            `None`.
 
     Returns:
         Chem.Mol: Molecule with embedded conformers.
@@ -222,11 +222,12 @@ def embed_confs(
     params = getattr(Chem.rdDistGeom, EMBED_METHOD_DEFAULT)()
     params.pruneRmsThresh = rmsd_threshold
     params.numThreads = n_proc
-    params.randomSeed = seed
     if coord_map:
         params.SetCoordMap(coord_map)
     if timeout:
         params.timeout = timeout
+    if seed:
+        params.randomSeed = seed
 
     EmbedMultipleConfs(
         mol, numConfs = n_confs, params = params
