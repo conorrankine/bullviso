@@ -38,9 +38,13 @@ from .xtb_wrapper import XTBCalculator
 EMBED_METHOD = 'ETKDGv3'
 EMBED_PRUNERMSTHRESH = 0.5
 
-ROTATABLE_BOND_THRESHOLD = 8
-MIN_CONFS = 60
-MAX_CONFS = 300
+EMBED_N_CONFS_DEFAULT = {
+     8 :  64,
+    10 : 128,
+    12 : 256,
+}
+
+EMBED_N_CONFS_DEFAULT_MAX = 512
 
 ###############################################################################
 ################################## FUNCTIONS ##################################
@@ -169,10 +173,9 @@ def embed_confs(
 
     Args:
         mol (Chem.Mol): Molecule.
-        n_confs (int, optional): Number of conformers to embed; if `None`,
-            the default is to embed 30 conformers if the number of rotatable
-            bonds is less than 8, else 120 conformers if the number of
-            rotatable bonds is 8 or greater. Defaults to `None`.
+        n_confs (int, optional): Number of conformers to embed; if `None`, a
+            default is determined based on the number of rotatable bonds in the
+            molecule. Defaults to `None`.
         params (EmbedParameters, optional): RDKit rdDistGeom.EmbedParameters
             object that holds optional parameters to control conformer
             embedding as attributes. Defaults to `None`.
@@ -181,16 +184,12 @@ def embed_confs(
         Chem.Mol: Molecule with embedded conformers.
     """
 
-    if n_confs is None:
-        n_rotatable_bonds = rdMolDescriptors.CalcNumRotatableBonds(mol)
-        n_confs = (
-            MIN_CONFS if n_rotatable_bonds < ROTATABLE_BOND_THRESHOLD
-            else MAX_CONFS
-        )
-
     mol = copy.deepcopy(mol)
     if mol.GetNumAtoms() == mol.GetNumHeavyAtoms():
         mol = Chem.AddHs(mol)
+
+    if not n_confs:
+        n_confs = _determine_n_confs_to_embed(mol)
 
     EmbedMultipleConfs(
         mol, numConfs = n_confs, params = params
@@ -373,7 +372,7 @@ def select_cluster_representatives(
     _prune_confs(mol, keep_conf_ids)
 
 def order_confs_by_energy(
-        mol: Chem.Mol,
+     mol: Chem.Mol,
 ) -> None:
     """
     (Re)orders conformers of a molecule `mol` in ascending order by energy.
@@ -451,6 +450,32 @@ def _prune_confs(
     for conf in list(mol.GetConformers()):
         if conf.GetId() not in keep_conf_ids:
             mol.RemoveConformer(conf.GetId())
+
+def _determine_n_confs_to_embed(
+    mol: Chem.Mol,
+) -> int:
+    """
+    Returns a default number of conformers to embed for a molecule `mol` based
+    on the number of rotatable bonds in the molecule.
+    
+    The default number of conformers to embed is determined using predefined
+    rotatable bond count thresholds in `EMBED_N_CONFS_DEFAULT`; if the
+    rotatable bond count of the molecule exceeds all thresholds, a maximum
+    value (`EMBED_N_CONFS_DEFAULT_MAX`) is returned.
+
+    Args:
+        mol (Chem.Mol): Molecule.
+
+    Returns:
+        int: Number of conformers to embed.
+    """
+    
+    n_rotatable_bonds = rdMolDescriptors.CalcNumRotatableBonds(mol)
+    
+    for threshold, n_confs in sorted(EMBED_N_CONFS_DEFAULT.items()):
+        if n_rotatable_bonds <= threshold:
+            return n_confs
+    return EMBED_N_CONFS_DEFAULT_MAX
 
 def _get_calculator(
     calculator_type: str,
