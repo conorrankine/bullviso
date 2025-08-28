@@ -19,33 +19,32 @@ this program.  If not, see <https://www.gnu.org/licenses/>.
 ############################### LIBRARY IMPORTS ###############################
 ###############################################################################
 
-import bullviso as bv
-import networkx as nx
-import tqdm
-import datetime
 import ast
+from . import core
 from . import utils
 from argparse import ArgumentParser, ArgumentTypeError, Namespace
 from pathlib import Path
-from typing import Union
 
 ###############################################################################
 ################################## CONSTANTS ##################################
 ###############################################################################
 
 SUPPORTED_CALCULATORS = ('mmff', 'uff', 'xtb')
+SUPPORTED_OUTPUT_FILETYPES = ('xyz', 'sdf', 'gaussian', 'orca')
 
 ###############################################################################
 ############################## ARGUMENT PARSING ###############################
 ###############################################################################
 
-def parse_args() -> Namespace:
+def parse_args(
+    argv: list[str] | None = None
+) -> Namespace:
     """
-    Parses command line arguments for `bullviso:cli.py`.
+    Parses command line arguments.
 
     Returns:
         argparse.Namespace: Parsed command line arguments as an
-        argparse.Namespace object that holds the arguments as attributes.
+        argparse.Namespace object that stores the arguments as attributes.
     """
 
     p = ArgumentParser()
@@ -89,7 +88,7 @@ def parse_args() -> Namespace:
         help = 'calculator type for conformer optimisation'
     )
     p.add_argument(
-        '--max_iter', '-it', type = int, default = '600',
+        '--max_iter', '-it', type = int, default = 600,
         help = 'maximum number of iterations for conformer optimisation'
     )
     p.add_argument(
@@ -111,7 +110,7 @@ def parse_args() -> Namespace:
     )
     p.add_argument(
         '--output_filetype', '-f', type = str, default = 'xyz',
-        choices = ('xyz', 'sdf', 'gaussian', 'orca'),
+        choices = SUPPORTED_OUTPUT_FILETYPES,
         help = 'filetype (e.g., .xyz, .sdf, etc.) for outputting geometries'
     )
 
@@ -128,22 +127,22 @@ def parse_args() -> Namespace:
     return args
 
 def _int_or_list_of_ints(
-    input: Union[int, list[Union[int, list[int]]]]
-) -> list[Union[int, list[int]]]:
+    input: int | list[int | list[int]]
+) -> list[int | list[int]]:
     """
     Custom argument type for a command line argument to allow the user to
     pass an integer, list of integers, or list of integers with nested
     (sub)lists of integers as an input value.
 
     Args:
-        input (Union[int, list[Union[int, list[int]]]]): Input value.
+        input (int | list[int | list[int]]): Input value.
 
     Raises:
         ArgumentTypeError: If `input` is not an integer, list of integers, or
             list of integers with nested (sub)lists of integers.
 
     Returns:
-        list[Union[int, list[int]]: List of integers with or without nested
+        list[int | list[int]]: List of integers with or without nested
             (sub)lists of integers; a length-1 list if `input` is an integer,
             else a length-n list (where n = len(`input`)).
     """
@@ -166,7 +165,7 @@ def _int_or_list_of_ints(
     
 def _validate_list(
     input: list
-) -> list[Union[int, list[int]]]:
+) -> list[int | list[int]]:
     """
     Validates an input list recursively to ensure that it contains only integer
     elements or nested (sub)lists of integer elements.
@@ -180,7 +179,7 @@ def _validate_list(
             non-integer elements.
 
     Returns:
-        list[Union[int, list[int]]]: List of integers and/or nested (sub)lists
+        list[int | list[int]]: List of integers and/or nested (sub)lists
             of integers; maintains the initial structure of `input`.
     """
     
@@ -273,137 +272,10 @@ def _validate_args(
 ################################ MAIN FUNCTION ################################
 ###############################################################################
 
-def main():
+def main(
+    argv: list[str] | None = None
+) -> None:
 
-    datetime_ = datetime.datetime.now()
-    print(f'launched @ {datetime_.strftime("%H:%M:%S (%Y-%m-%d)")}\n')
+    args = parse_args(argv)
 
-    args = parse_args()
-
-    header_f = Path(__file__).parent / 'assets' / 'banners' / 'banner.txt'
-    with open(header_f, 'r') as f:
-        for line in f.readlines():
-            print(line.rstrip())
-    print('\n')
-
-    print(' ' * 3 + f'{"SMILEs":<30} {"number":>10} {"attached @":>15}')
-    print('-' * 60)
-    for i, (sub_smile, n_sub, attach_idx) in enumerate(
-        zip(args.sub_smiles, args.n_subs, args.sub_attach_idx), start = 1
-    ):
-        print(f'{i}. {sub_smile:<30} {str(n_sub):>10} {str(attach_idx):>15}')
-    print('-' * 60 + '\n')
-
-    sub_smiles = utils.repeat_list_elements(
-        args.sub_smiles, args.n_subs
-    )
-
-    sub_attach_idx = utils.repeat_list_elements(
-        args.sub_attach_idx, args.n_subs
-    )
-
-    canonical_barcode = bv.barcodes.create_barcode(
-        sub_smiles,
-        sub_attach_idx
-    )
-    print(f'canonical barcode: {canonical_barcode}\n')
-
-    connectivity_map = {
-        i: f'sub{sub_n+1}_{sub_attach_idx_}'
-            for i, (sub_n, sub_attach_idx_) in enumerate(
-                utils.iterate_and_index(sub_attach_idx), start = 1
-            )
-    }
-
-    print('identifying inequivalent permutations...')
-    barcodes = set(
-        barcode for barcode in tqdm.tqdm(
-            canonical_barcode.permutations(), ncols = 60, total = 3628800
-        )
-    )
-    print('...done!\n')
-
-    model_bullvalene = bv.io.sdf_to_mol(
-        Path(__file__).parent / 'structures' / 'bv.sdf'
-    )
-
-    bullvalene_G = bv.graphs.mol_to_graph(
-        model_bullvalene, node_label_prefix = 'bullvalene_'
-    )
-
-    bv.graphs.set_atom_stereochemistry(
-        bullvalene_G,
-        atom_stereo_map = {
-            'bullvalene_1'  : 'ccw',
-            'bullvalene_4'  : 'cw',
-            'bullvalene_7'  : 'ccw',
-            'bullvalene_10' : 'cw'
-        }
-    )
-
-    sub_G = [
-        bv.graphs.smiles_to_graph(
-            sub_smile, node_label_prefix = f'sub{i}_'
-        ) for i, sub_smile in enumerate(sub_smiles, start = 1)
-    ]
-        
-    super_G = nx.compose_all([bullvalene_G, *sub_G])
-
-    coord_map = bv.conformers.get_coord_map(
-        model_bullvalene
-    )
-
-    print('generating geometries and writing output...')
-    for barcode in tqdm.tqdm(barcodes, ncols = 60):
-        super_G_ = super_G.copy()
-        for i, bit in enumerate(barcode.barcode, start = 1):
-            if bit != 0:
-                super_G_.add_edge(
-                    f'bullvalene_{i}', connectivity_map[bit]
-                )
-        mol = bv.graphs.graph_to_mol(
-            super_G_
-        )
-        mol = bv.conformers.generate_confs(
-            mol,
-            embed_n_confs = args.embed_n_confs,
-            embed_rmsd_threshold = args.embed_rmsd_threshold,
-            embed_timeout = args.embed_timeout,
-            embed_seed = args.embed_seed,
-            calculator_type = args.calculator_type,
-            max_iter = args.max_iter,
-            coord_map = coord_map,
-            energy_threshold = args.energy_threshold,
-            rmsd_threshold = args.rmsd_threshold,
-            rmsd_atom_idxs = [i for i in range(10)],
-            n_proc = args.n_proc
-        )
-        confs = list(mol.GetConformers())
-        for conf_idx in range(min(args.m_confs, mol.GetNumConformers())):
-            conf = confs[conf_idx]
-            output_dir = args.output_dir / (
-                f'./{barcode}/{barcode}_{conf_idx+1:03d}/'
-            )
-            if not output_dir.is_dir():
-                output_dir.mkdir(parents = True)
-            bv.io.mol_to_file(
-                output_dir / f'./{barcode}_{conf_idx+1:03d}',
-                mol,
-                filetype = args.output_filetype,
-                conf_id = conf.GetId()
-            )
-    print('...done!\n')
-
-    datetime_ = datetime.datetime.now()
-    print(f'finished @ {datetime_.strftime("%H:%M:%S (%Y-%m-%d)")}')
-
-################################################################################
-############################## PROGRAM STARTS HERE #############################
-################################################################################
-
-if __name__ == '__main__':
-    main()
-
-################################################################################
-############################### PROGRAM ENDS HERE ##############################
-################################################################################
+    core.run_bullviso(args)
