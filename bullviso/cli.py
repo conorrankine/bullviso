@@ -34,8 +34,8 @@ from pathlib import Path
 ################################## CONSTANTS ##################################
 ###############################################################################
 
-SUPPORTED_CALCULATORS = ('mmff', 'uff', 'xtb')
-SUPPORTED_OUTPUT_FILETYPES = ('xyz', 'sdf', 'gaussian', 'orca')
+ALL_CALCULATORS = ('mmff', 'uff', 'xtb')
+ALL_OUTPUT_FILETYPES = ('xyz', 'sdf', 'gaussian', 'orca')
 
 ###############################################################################
 ############################## ARGUMENT PARSING ###############################
@@ -57,78 +57,106 @@ def parse_args(
     )
 
     p.add_argument(
-        'sub_smiles', type = str, nargs = '+',
-        help = 'SMILES string representation for each unique substituent'
+        'sub_smiles',
+        type = str, nargs = '+', help = (
+            'SMILES string(s) for each unique substituent'
+        )
     )
     p.add_argument(
-        '-n', '--n_subs', type = _int_or_list_of_ints, default = [1],
-        help = 'number of each unique substituent to add'
+        '-n', '--n_subs',
+        type = _int_or_list_of_ints, default = [1], help = (
+            'number of each unique substituent to add'
+        )
     )
     p.add_argument(
-        '-a', '--sub_attach_idx', type = _int_or_list_of_ints, default = [1],
-        help =('atomic index of the substituent-bullvalene attachment point '
-            'for each unique substituent')
+        '-a', '--sub_attach_idx',
+        type = _int_or_list_of_ints, default = [1], help = (
+            'atomic index of the attachment point for each unique substituent'
+        )
     )
     p.add_argument(
-        '-m', '--m_confs', type = int, default = 1,
-        help = 'maximum number of conformational isomers to generate'
+        '-m', '--m_confs',
+        type = int, default = 1, help = (
+            'maximum number of conformational isomers (per constitutional '
+            'isomer) to output'
+        )
     )
 
     embedding_group = p.add_argument_group('conformer embedding options')
     embedding_group.add_argument(
-        '-en', '--embed_n_confs', type = int, default = None,
-        help = 'maximum number of conformational isomers to embed'
+        '-en', '--embed_n_confs',
+        type = int, default = None, help = (
+            'maximum number of conformational isomers (per constitutional '
+            'isomer) to embed'
+        )
     )
     embedding_group.add_argument(
-        '-er', '--embed_rmsd_threshold', type = float, default = 0.1,
-        help = 'RMSD threshold (Angstroem) for deduplicating embeddings'
+        '-er', '--embed_rmsd_threshold',
+        type = float, default = 0.1, help = (
+            'RMSD threshold (Å) for deduplicating embeddings'
+        )
     )
     embedding_group.add_argument(
-        '-et', '--embed_timeout', type = int, default = None,
-        help = 'timout (seconds) for conformer embedding'
+        '-et', '--embed_timeout',
+        type = int, default = None, help = (
+            'timout (seconds per conformer) for conformer embedding'
+        )
     )
     embedding_group.add_argument(
-        '-es', '--embed_seed', type = int, default = None,
-        help = 'random seed for conformer embedding'
+        '-es', '--embed_seed',
+        type = int, default = None, help = (
+            'random seed for conformer embedding'
+        )
     )
 
     optimisation_group = p.add_argument_group('conformer optimisation options')
     optimisation_group.add_argument(
-        '-c', '--calculator_type', type = str, default = 'mmff',
-        choices = SUPPORTED_CALCULATORS,
-        help = 'calculator type for conformer optimisation'
+        '-c', '--calculator_type',
+        type = str, default = 'mmff', choices = ALL_CALCULATORS, help = (
+            'calculator type for conformer optimisation'
+        )
     )
     optimisation_group.add_argument(
-        '-it', '--max_iter', type = int, default = 600,
-        help = 'maximum number of iterations for conformer optimisation'
+        '-it', '--max_iter',
+        type = int, default = 600, help = (
+            'maximum number of iterations for conformer optimisation'
+        )
     )
 
     cleanup_group = p.add_argument_group('conformer cleanup options')
     cleanup_group.add_argument(
-        '-e', '--energy_threshold', type = float, default = 10.0,
-        help = 'energy threshold (kcal/mol) for keeping optimised conformers'
+        '-e', '--energy_threshold',
+        type = float, default = 10.0, help = (
+            'energy threshold (kcal/mol) for discarding optimised conformers'
+        )
     )
     cleanup_group.add_argument(
-        '-r', '--rmsd_threshold', type = float, default = 0.5,
-        help = 'RMSD threshold (Angstroem) for deduplicating optimised conformers'
+        '-r', '--rmsd_threshold',
+        type = float, default = 0.5, help = (
+            'RMSD threshold (Å) for deduplicating optimised conformers'
+        )
     )
 
     system_group = p.add_argument_group('system options')
     system_group.add_argument(
-        '-np', '--n_proc', type = int, default = 1,
-        help = ('number of parallel processes for conformer embedding and '
-            'optimisation')
+        '-np', '--n_proc',
+        type = int, default = 1, help = (
+            'number of parallel processes for conformer embedding'
+        )
     )
 
     output_group = p.add_argument_group('output options')
     output_group.add_argument(
-        '-o', '--output_dir', type = Path, default = Path('.'),
-        help = 'destination directory for outputting geometries'
+        '-o', '--output_dir',
+        type = Path, default = Path('.'), help = (
+            'output directory'
+        )
     )
     output_group.add_argument(
-        '-f', '--output_filetype', type = str, default = 'xyz',
-        choices = SUPPORTED_OUTPUT_FILETYPES,
-        help = 'filetype (e.g., .xyz, .sdf, etc.) for outputting geometries'
+        '-f', '--output_filetype',
+        type = str, default = 'xyz', choices = ALL_OUTPUT_FILETYPES, help = (
+            'output filetype/format'
+        )        
     )
 
     args = p.parse_args()
