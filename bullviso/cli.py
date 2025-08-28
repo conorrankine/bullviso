@@ -106,7 +106,7 @@ def parse_args(
     cleanup_group = p.add_argument_group('conformer cleanup options')
     cleanup_group.add_argument(
         '-e', '--energy_threshold', type = float, default = 10.0,
-        help = 'energy threshold (kcal/mol); '
+        help = 'energy threshold (kcal/mol) for keeping optimised conformers'
     )
     cleanup_group.add_argument(
         '-r', '--rmsd_threshold', type = float, default = 0.5,
