@@ -72,7 +72,7 @@ def parse_args() -> Namespace:
         help = 'maximum number of conformational isomers to embed'
     )
     p.add_argument(
-        '--embed_rmsd_threshold', '-er', type = float, default = 0.0,
+        '--embed_rmsd_threshold', '-er', type = float, default = 0.1,
         help = 'RMSD threshold (Angstroem) for deduplicating embeddings'
     )
     p.add_argument(

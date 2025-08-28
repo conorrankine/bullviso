@@ -52,7 +52,7 @@ EMBED_N_CONFS_DEFAULT_MAX = 512
 def generate_confs(
     mol: Chem.Mol,
     embed_n_confs: int = None,
-    embed_rmsd_threshold: float = 0.0,
+    embed_rmsd_threshold: float = 0.1,
     embed_timeout: int = None,
     embed_seed: int = None,
     calculator_type: str = 'mmff',
@@ -93,7 +93,7 @@ def generate_confs(
             bonds in the molecule. Defaults to `None`.
         embed_rmsd_threshold (float, optional): RMSD threshold for deduplicating
             embeddings; conformers with RMSDs below the RMSD threshold are
-            considered to be duplicates. Defaults to 0.0 (Angstroem).
+            considered to be duplicates. Defaults to 0.1 (Angstroem).
         embed_timeout (int, optional): Timeout (in seconds) for conformer
             embedding. Defaults to `None`.
         embed_seed (int, optional): Random seed for conformer embedding.
@@ -172,7 +172,7 @@ def generate_confs(
 def embed_confs(
     mol: Chem.Mol,
     n_confs: int = None,
-    rmsd_threshold: float = 0.0,
+    rmsd_threshold: float = 0.1,
     timeout: int = None,
     coord_map: dict[int, rdGeometry.Point3D] = None,
     n_proc: int = 1,
@@ -196,7 +196,7 @@ def embed_confs(
             molecule. Defaults to `None`.
         rmsd_threshold (float, optional): RMSD threshold for deduplicating
             embeddings; conformers with RMSDs below the RMSD threshold are
-            considered to be duplicates. Defaults to 0.0 (Angstroem).
+            considered to be duplicates. Defaults to 0.1 (Angstroem).
         timeout (int, optional): Timeout (in seconds) for conformer embedding.
             Defaults to `None`.
         coord_map (dict[int, rdGeometry.Point3D], optional): Coordinate map
