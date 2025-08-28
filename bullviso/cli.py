@@ -54,72 +54,72 @@ def parse_args(
         help = 'SMILES string representation for each unique substituent'
     )
     p.add_argument(
-        '--n_subs', '-n', type = _int_or_list_of_ints, default = [1],
+        '-n', '--n_subs', type = _int_or_list_of_ints, default = [1],
         help = 'number of each unique substituent to add'
     )
     p.add_argument(
-        '--sub_attach_idx', '-a', type = _int_or_list_of_ints, default = [1],
+        '-a', '--sub_attach_idx', type = _int_or_list_of_ints, default = [1],
         help =('atomic index of the substituent-bullvalene attachment point '
             'for each unique substituent')
     )
     p.add_argument(
-        '--m_confs', '-m', type = int, default = 1,
+        '-m', '--m_confs', type = int, default = 1,
         help = 'maximum number of conformational isomers to generate'
     )
 
     embedding_group = p.add_argument_group('conformer embedding options')
     embedding_group.add_argument(
-        '--embed_n_confs', '-en', type = int, default = None,
+        '-en', '--embed_n_confs', type = int, default = None,
         help = 'maximum number of conformational isomers to embed'
     )
     embedding_group.add_argument(
-        '--embed_rmsd_threshold', '-er', type = float, default = 0.1,
+        '-er', '--embed_rmsd_threshold', type = float, default = 0.1,
         help = 'RMSD threshold (Angstroem) for deduplicating embeddings'
     )
     embedding_group.add_argument(
-        '--embed_timeout', '-et', type = int, default = None,
+        '-et', '--embed_timeout', type = int, default = None,
         help = 'timout (seconds) for conformer embedding'
     )
     embedding_group.add_argument(
-        '--embed_seed', '-es', type = int, default = None,
+        '-es', '--embed_seed', type = int, default = None,
         help = 'random seed for conformer embedding'
     )
 
     optimisation_group = p.add_argument_group('conformer optimisation options')
     optimisation_group.add_argument(
-        '--calculator_type', '-c', type = str, default = 'mmff',
+        '-c', '--calculator_type', type = str, default = 'mmff',
         choices = SUPPORTED_CALCULATORS,
         help = 'calculator type for conformer optimisation'
     )
     optimisation_group.add_argument(
-        '--max_iter', '-it', type = int, default = 600,
+        '-it', '--max_iter', type = int, default = 600,
         help = 'maximum number of iterations for conformer optimisation'
     )
 
     cleanup_group = p.add_argument_group('conformer cleanup options')
     cleanup_group.add_argument(
-        '--energy_threshold', '-e', type = float, default = 10.0,
+        '-e', '--energy_threshold', type = float, default = 10.0,
         help = 'energy threshold (kcal/mol); '
     )
     cleanup_group.add_argument(
-        '--rmsd_threshold', '-r', type = float, default = 0.5,
+        '-r', '--rmsd_threshold', type = float, default = 0.5,
         help = 'RMSD threshold (Angstroem); '
     )
 
     system_group = p.add_argument_group('system options')
     system_group.add_argument(
-        '--n_proc', '-np', type = int, default = 1,
+        '-np', '--n_proc', type = int, default = 1,
         help = ('number of parallel processes for conformer embedding and '
             'optimisation')
     )
 
     output_group = p.add_argument_group('output options')
     output_group.add_argument(
-        '--output_dir', '-o', type = Path, default = Path('.'),
+        '-o', '--output_dir', type = Path, default = Path('.'),
         help = 'destination directory for outputting geometries'
     )
     output_group.add_argument(
-        '--output_filetype', '-f', type = str, default = 'xyz',
+        '-f', '--output_filetype', type = str, default = 'xyz',
         choices = SUPPORTED_OUTPUT_FILETYPES,
         help = 'filetype (e.g., .xyz, .sdf, etc.) for outputting geometries'
     )
