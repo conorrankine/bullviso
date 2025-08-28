@@ -76,7 +76,7 @@ def parse_args() -> Namespace:
         help = 'RMSD threshold (Angstroem) for deduplicating embeddings'
     )
     p.add_argument(
-        '--embed_timeout', '-et', type = float, default = None,
+        '--embed_timeout', '-et', type = int, default = None,
         help = 'timout (seconds) for conformer embedding'
     )
     p.add_argument(

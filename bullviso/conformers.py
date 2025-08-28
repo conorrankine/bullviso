@@ -53,7 +53,7 @@ def generate_confs(
     mol: Chem.Mol,
     embed_n_confs: int = None,
     embed_rmsd_threshold: float = 0.0,
-    embed_timeout: float = None,
+    embed_timeout: int = None,
     calculator_type: str = 'mmff',
     max_iter: int = 600,
     energy_threshold: float = 10.0,
@@ -94,7 +94,7 @@ def generate_confs(
         embed_rmsd_threshold (float, optional): RMSD threshold for deduplicating
             embeddings; conformers with RMSDs below the RMSD threshold are
             considered to be duplicates. Defaults to 0.0 (Angstroem).
-        embed_timeout (float, optional): Timeout (in seconds) for conformer
+        embed_timeout (int, optional): Timeout (in seconds) for conformer
             embedding. Defaults to `None`.
         calculator_type (str, optional): Calculator type; supported options are
             'mmff', 'uff', and 'xtb'. Defaults to 'mmff'.
@@ -173,7 +173,7 @@ def embed_confs(
     mol: Chem.Mol,
     n_confs: int = None,
     rmsd_threshold: float = 0.0,
-    timeout: float = None,
+    timeout: int = None,
     coord_map: dict[int, rdGeometry.Point3D] = None,
     n_proc: int = 1,
     seed: int = -1
@@ -197,8 +197,8 @@ def embed_confs(
         rmsd_threshold (float, optional): RMSD threshold for deduplicating
             embeddings; conformers with RMSDs below the RMSD threshold are
             considered to be duplicates. Defaults to 0.0 (Angstroem).
-        timeout (float, optional): Timeout (in seconds) for conformer
-            embedding. Defaults to `None`.
+        timeout (int, optional): Timeout (in seconds) for conformer embedding.
+            Defaults to `None`.
         coord_map (dict[int, rdGeometry.Point3D], optional): Coordinate map
             dictionary mapping atom indices to their 3D coordinates
             (represented as rdGeometry.Point3D instances); these atoms are
