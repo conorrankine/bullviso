@@ -68,6 +68,14 @@ def parse_args() -> Namespace:
         help = 'maximum number of conformational isomers to generate'
     )
     p.add_argument(
+        '--embed_n_confs', '-en', type = int, default = None,
+        help = 'maximum number of conformational isomers to embed'
+    )
+    p.add_argument(
+        '--embed_rmsd_threshold', '-er', type = float, default = 0.0,
+        help = 'RMSD threshold (Angstroem) for deduplicating embeddings'
+    )
+    p.add_argument(
         '--calculator_type', '-c', type = str, default = 'mmff',
         choices = SUPPORTED_CALCULATORS,
         help = 'calculator type for conformer optimisation'
@@ -355,6 +363,8 @@ def main():
         )
         mol = bv.conformers.generate_confs(
             mol,
+            embed_n_confs = args.embed_n_confs,
+            embed_rmsd_threshold = args.embed_rmsd_threshold,
             calculator_type = args.calculator_type,
             max_iter = args.max_iter,
             coord_map = coord_map,
