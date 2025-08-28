@@ -24,7 +24,7 @@ from typing import Union
 from rdkit import Chem
 from rdkit.Chem import AllChem
 from rdkit.Chem import rdMolDescriptors
-from rdkit.Chem.rdDistGeom import EmbedMultipleConfs, EmbedParameters
+from rdkit.Chem.rdDistGeom import EmbedMultipleConfs
 from rdkit.Chem.rdMolAlign import AlignMolConformers
 from rdkit.Geometry import rdGeometry
 from rdkit.ForceField import rdForceField
@@ -35,8 +35,7 @@ from .xtb_wrapper import XTBCalculator
 ################################## CONSTANTS ##################################
 ###############################################################################
 
-EMBED_METHOD = 'ETKDGv3'
-EMBED_PRUNERMSTHRESH = 0.5
+EMBED_METHOD_DEFAULT = 'ETKDGv3'
 
 EMBED_N_CONFS_DEFAULT = {
      8 :  64,
@@ -92,8 +91,8 @@ def generate_confs(
             optimisation. Defaults to 600.
         coord_map (dict[int, rdGeometry.Point3D], optional): Coordinate map
             dictionary mapping atom indices to their 3D coordinates
-            (represented as rdGeometry.Point3D instances); these atoms are
-            fixed/frozen during conformer optimisation. Defaults to `None`.
+            (represented as rdGeometry.Point3D instances); these atoms are fixed
+            during conformer embedding and optimisation. Defaults to `None`.
         energy_threshold (float, optional): Maximum allowed energy difference
             (in kcal/mol) relative to the lowest-energy conformation.
             Defaults to 10.0 (kcal/mol).
@@ -113,16 +112,12 @@ def generate_confs(
         Chem.Mol: Molecule with a diverse set of low-energy molecular
             conformations sorted in ascending order by energy.
     """
-    
-    params = getattr(Chem.rdDistGeom, EMBED_METHOD)()
-    params.pruneRmsThresh = EMBED_PRUNERMSTHRESH
-    params.randomSeed = seed
-    params.numThreads = n_proc
-    if coord_map:
-        params.SetCoordMap(coord_map)
 
     mol = embed_confs(
-        mol, params = params
+        mol,
+        coord_map = coord_map,
+        n_proc = n_proc,
+        seed = seed
     )
 
     if coord_map:
@@ -164,21 +159,38 @@ def generate_confs(
 def embed_confs(
     mol: Chem.Mol,
     n_confs: int = None,
-    params: EmbedParameters = None
+    rmsd_threshold: float = 0.5,
+    coord_map: dict[int, rdGeometry.Point3D] = None,
+    n_proc: int = 1,
+    seed: int = -1
 ) -> Chem.Mol:
     """
-    Embeds `n_confs` conformers of a molecule `mol`; optional parameters to
-    control conformer embedding can be passed as an RDKit
-    rdDistGeom.EmbedParameter object.
+    Embeds `n_confs` 3D conformers of a molecule `mol`.
+
+    Notes:
+        - The embedding algorithm uses the distance geometry method defined
+          by the `EMBED_METHOD_DEFAULT` module-level variable.
+        - The molecule is deep-copied before embedding; the original molecule
+          is not modified.
+        - If the molecule does not have explicit hydrogen atoms, these are
+          added before embedding using RDKit's `Chem.AddHs()` function.        
 
     Args:
         mol (Chem.Mol): Molecule.
         n_confs (int, optional): Number of conformers to embed; if `None`, a
             default is determined based on the number of rotatable bonds in the
             molecule. Defaults to `None`.
-        params (EmbedParameters, optional): RDKit rdDistGeom.EmbedParameters
-            object that holds optional parameters to control conformer
-            embedding as attributes. Defaults to `None`.
+        rmsd_threshold (float, optional): RMSD threshold for deduplicating
+            embeddings; conformers with RMSDs below the RMSD threshold are
+            considered to be duplicates. Defaults to 0.5 (Angstroem).
+        coord_map (dict[int, rdGeometry.Point3D], optional): Coordinate map
+            dictionary mapping atom indices to their 3D coordinates
+            (represented as rdGeometry.Point3D instances); these atoms are
+            fixed during conformer embedding. Defaults to `None`.
+        n_proc (int, optional): Number of (parallel) processes for conformer
+            embedding. Defaults to 1.
+        seed (int, optional): Seed for conformer embedding; if -1, the seed is
+            obtained via pseudo-random number generation. Defaults to -1.
 
     Returns:
         Chem.Mol: Molecule with embedded conformers.
@@ -190,6 +202,13 @@ def embed_confs(
 
     if not n_confs:
         n_confs = _determine_n_confs_to_embed(mol)
+
+    params = getattr(Chem.rdDistGeom, EMBED_METHOD_DEFAULT)()
+    params.pruneRmsThresh = rmsd_threshold
+    params.numThreads = n_proc
+    params.randomSeed = seed
+    if coord_map:
+        params.SetCoordMap(coord_map)
 
     EmbedMultipleConfs(
         mol, numConfs = n_confs, params = params
