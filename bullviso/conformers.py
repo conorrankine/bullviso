@@ -221,13 +221,13 @@ def embed_confs(
 
     params = getattr(Chem.rdDistGeom, EMBED_METHOD_DEFAULT)()
     params.pruneRmsThresh = rmsd_threshold
-    params.numThreads = n_proc
     if coord_map:
         params.SetCoordMap(coord_map)
     if timeout:
         params.timeout = timeout
     if seed:
         params.randomSeed = seed
+    params.numThreads = n_proc
 
     EmbedMultipleConfs(
         mol, numConfs = n_confs, params = params
