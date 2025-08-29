@@ -45,11 +45,15 @@ def parse_args(
     argv: list[str] | None = None
 ) -> Namespace:
     """
-    Parses command line arguments.
+    Parses, validates, and normalises command line arguments for BULLVISO.
+
+    Args:
+        argv (list[str] | None, optional): List of command line arguments; if
+            None, the command line arguments are taken from `sys.argv`.
 
     Returns:
-        argparse.Namespace: Parsed command line arguments as an
-        argparse.Namespace object that stores the arguments as attributes.
+        argparse.Namespace: Parsed, validated, and normalised command line
+            arguments for BULLVISO.
     """
 
     p = ArgumentParser(
@@ -320,6 +324,13 @@ def _validate_args(
 def main(
     argv: list[str] | None = None
 ) -> None:
+    """
+    Main entry point to the command line interface (CLI) for BULLVISO.
+
+    Args:
+        argv (list[str] | None, optional): List of command line arguments; if
+            None, the command line arguments are taken from `sys.argv`.
+    """
 
     args = parse_args(argv)
 
