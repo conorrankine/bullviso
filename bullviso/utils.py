@@ -25,6 +25,21 @@ from typing import Union, Generator, Any
 #                                  FUNCTIONS
 # =============================================================================
 
+def all_same_length(
+    *input_lists: list[Any] 
+) -> bool:
+    """
+    Validates that all of the input lists have the same length.
+
+    Returns:
+        bool: True if all of the input lists have the same length, else False.
+    """
+    
+    if not input_lists:
+        return True
+    else:
+        return len({len(input_list) for input_list in input_lists}) == 1
+
 def count_list_elements(
     input_list: list[Any]
 ) -> int:
