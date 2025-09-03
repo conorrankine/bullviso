@@ -19,322 +19,307 @@ this program.  If not, see <https://www.gnu.org/licenses/>.
 #                               LIBRARY IMPORTS
 # =============================================================================
 
+import click
+import typer
 import ast
 from . import core
 from . import utils
-from argparse import (
-    ArgumentParser,
-    ArgumentDefaultsHelpFormatter,
-    ArgumentTypeError,
-    Namespace
-)
 from pathlib import Path
 
 # =============================================================================
-#                                  CONSTANTS
+#                                     APP
 # =============================================================================
 
-ALL_CALCULATORS = ('mmff', 'uff', 'xtb')
-ALL_OUTPUT_FILETYPES = ('xyz', 'sdf', 'gaussian', 'orca')
+app = typer.Typer()
+
+# =============================================================================
+#                                   CLASSES
+# =============================================================================
+
+class NestedIntListParamType(click.ParamType):
+    """
+    Custom `click.ParamType` that parses a string literal into a (nested) list
+    of integers.
+
+    Examples:
+        "1" -> [1]
+        "[1,2]" -> [1,2]
+        "[1,2,3]" -> [1,2,3]
+        "[1,[2,3]] -> [1,[2,3]]
+    """
+
+    name = '(NESTED) INTEGER LIST'
+
+    def __init__(
+        self,
+        max_depth: int = 1,
+        require_positive: bool = False
+    ) -> None:
+
+        self.max_depth = max_depth
+        self.require_positive = require_positive
+
+    def convert(
+        self,
+        input_str: str,
+        param: click.Parameter | None,
+        ctx: click.Context | None
+    ) -> list[int | list]:
+        """
+        Converts the input string literal into a (nested) list of integers. 
+
+        Args:
+            input_str (str): Input string literal to convert.
+            param (click.Parameter, Optional): Click parameter (unused;
+                required by the `click` API).
+            ctx (click.Context, Optional): Click context (unused;
+                required by the `click` API).
+
+        Raises:
+            typer.BadParameter: If the input string is invalid.
+
+        Returns:
+            list[int | list]: (Nested) list of integers.
+        """
+
+        try:
+            result = ast.literal_eval(input_str.strip())
+        except Exception as e:
+            raise click.BadParameter(
+                f'invalid Python literal syntax: {e}'
+            )
+        
+        if isinstance(result, int):
+            result = list([result])
+               
+        if not isinstance(result, list):
+            raise click.BadParameter(
+                f'input must be an integer or a (nested) list: got {result} '
+                f'(type: {type(result).__name__})'
+            )
+
+        if not self._validate_input(
+            result, require_positive = self.require_positive
+        ):
+            if not self.require_positive:
+                raise click.BadParameter(
+                    f'all elements of the input list and any (nested) '
+                    f'sublists must be integers: got {result}'
+                )
+            else:
+                raise click.BadParameter(
+                    f'all elements of the input list and any (nested) '
+                    f'sublists must be positive integers (> 0): got {result}'
+                )
+        
+        max_depth = utils.maxdepth(result)
+        if max_depth > self.max_depth:
+            raise click.BadParameter(
+                f'input list exceeds max allowed depth ({self.max_depth}): '
+                f'got an input list with depth {max_depth}'
+            )
+        
+        return result
+        
+    def _validate_input(
+        self,
+        input_: int | list,
+        require_positive: bool = False
+    ) -> bool:
+        """
+        Validates that the input is i) an integer, or ii) a list comprising
+        only integers and (nested) lists of integers; optionally validates
+        that the integers are positive (i.e., > 0).
+
+        Args:
+            input_ (int | list): Input to validate.
+            require_positive (bool, optional): If True, all integers are
+                required to be positive (i.e., > 0). Defaults to False. 
+
+        Returns:
+            bool: True if the input passes validation, else False.
+        """
+
+        if isinstance(input_, int):
+            return input_ > 0 if require_positive else True
+        if isinstance(input_, list):
+            return all(
+                self._validate_input(
+                    item, require_positive = require_positive
+                )
+                for item in input_
+            )
+        return False
 
 # =============================================================================
 #                                  FUNCTIONS
 # =============================================================================
 
-def parse_args(
-    argv: list[str] | None = None
-) -> Namespace:
+def _normalise_substituent_config_vars(
+    sub_smiles: list[str],
+    n_subs: list[int],
+    sub_attach_idx: list[int | list[int]]
+) -> tuple[list[int], list[int | list[int]]]:
     """
-    Parses, validates, and normalises command line arguments for BULLVISO.
+    Normalises substituent config variables (`n_subs` and `sub_attach_idx`).
 
     Args:
-        argv (list[str] | None, optional): List of command line arguments; if
-            None, the command line arguments are taken from `sys.argv`.
-
-    Returns:
-        argparse.Namespace: Parsed, validated, and normalised command line
-            arguments for BULLVISO.
-    """
-
-    p = ArgumentParser(
-        formatter_class = ArgumentDefaultsHelpFormatter
-    )
-
-    p.add_argument(
-        'sub_smiles',
-        type = str, nargs = '+', help = (
-            'SMILES string(s) for each unique substituent'
-        )
-    )
-    p.add_argument(
-        '-n', '--n_subs',
-        type = _int_or_list_of_ints, default = [1], help = (
-            'number of each unique substituent to add'
-        )
-    )
-    p.add_argument(
-        '-a', '--sub_attach_idx',
-        type = _int_or_list_of_ints, default = [1], help = (
-            'atomic index of the attachment point for each unique substituent'
-        )
-    )
-    p.add_argument(
-        '-m', '--m_confs',
-        type = int, default = 1, help = (
-            'maximum number of conformational isomers (per constitutional '
-            'isomer) to output'
-        )
-    )
-
-    embedding_group = p.add_argument_group('conformer embedding options')
-    embedding_group.add_argument(
-        '-en', '--embed_n_confs',
-        type = int, default = None, help = (
-            'maximum number of conformational isomers (per constitutional '
-            'isomer) to embed'
-        )
-    )
-    embedding_group.add_argument(
-        '-er', '--embed_rmsd_threshold',
-        type = float, default = 0.1, help = (
-            'RMSD threshold (Å) for deduplicating embeddings'
-        )
-    )
-    embedding_group.add_argument(
-        '-et', '--embed_timeout',
-        type = int, default = None, help = (
-            'timout (seconds per conformer) for conformer embedding'
-        )
-    )
-    embedding_group.add_argument(
-        '-es', '--embed_seed',
-        type = int, default = None, help = (
-            'random seed for conformer embedding'
-        )
-    )
-
-    optimisation_group = p.add_argument_group('conformer optimisation options')
-    optimisation_group.add_argument(
-        '-c', '--calculator_type',
-        type = str, default = 'mmff', choices = ALL_CALCULATORS, help = (
-            'calculator type for conformer optimisation'
-        )
-    )
-    optimisation_group.add_argument(
-        '-it', '--max_iter',
-        type = int, default = 600, help = (
-            'maximum number of iterations for conformer optimisation'
-        )
-    )
-
-    cleanup_group = p.add_argument_group('conformer cleanup options')
-    cleanup_group.add_argument(
-        '-e', '--energy_threshold',
-        type = float, default = 10.0, help = (
-            'energy threshold (kcal/mol) for discarding optimised conformers'
-        )
-    )
-    cleanup_group.add_argument(
-        '-r', '--rmsd_threshold',
-        type = float, default = 0.5, help = (
-            'RMSD threshold (Å) for deduplicating optimised conformers'
-        )
-    )
-
-    system_group = p.add_argument_group('system options')
-    system_group.add_argument(
-        '-np', '--n_proc',
-        type = int, default = 1, help = (
-            'number of parallel processes for conformer embedding'
-        )
-    )
-
-    output_group = p.add_argument_group('output options')
-    output_group.add_argument(
-        '-o', '--output_dir',
-        type = Path, default = Path('.'), help = (
-            'output directory'
-        )
-    )
-    output_group.add_argument(
-        '-f', '--output_filetype',
-        type = str, default = 'xyz', choices = ALL_OUTPUT_FILETYPES, help = (
-            'output filetype/format'
-        )        
-    )
-
-    args = p.parse_args()
-
-    if len(args.sub_smiles) > 1:
-        if len(args.n_subs) == 1:
-            args.n_subs = args.n_subs * len(args.sub_smiles)
-        if len(args.sub_attach_idx) == 1:
-            args.sub_attach_idx = args.sub_attach_idx * len(args.sub_smiles)
-
-    _validate_args(args)
-
-    return args
-
-def _int_or_list_of_ints(
-    input: int | list[int | list[int]]
-) -> list[int | list[int]]:
-    """
-    Custom argument type for a command line argument to allow the user to
-    pass an integer, list of integers, or list of integers with nested
-    (sub)lists of integers as an input value.
-
-    Args:
-        input (int | list[int | list[int]]): Input value.
+        sub_smiles (list[str]): SMILES strings for each unique substituent.
+        n_subs (list[int]): Count for each unique substituent.
+        sub_attach_idx (list[int  |  list[int]]): Attachment indices for each
+            unique substituent.
 
     Raises:
-        ArgumentTypeError: If `input` is not an integer, list of integers, or
-            list of integers with nested (sub)lists of integers.
+        ValueError: If the lengths of the substituent config variables are
+            incompatible, i.e., if `len(var) != 1` when `len(sub_smiles) > 1`,
+            and `len(var) != len(sub_smiles)` in this case, for `var` in
+            {`n_subs`, `sub_attach_idx`}.
 
     Returns:
-        list[int | list[int]]: List of integers with or without nested
-            (sub)lists of integers; a length-1 list if `input` is an integer,
-            else a length-n list (where n = len(`input`)).
+        tuple[list[int], list[int | list[int]]]: Normalised substituent config
+            variables (`n_subs` and `sub_attach_idx`).
     """
+
+    n_smiles = len(sub_smiles)
+
+    if n_smiles == 0:
+        raise ValueError(
+            '`sub_smiles` cannot be empty'
+        )
+
+    if len(n_subs) == 1 and n_smiles > 1:
+        n_subs = n_subs * n_smiles
+    elif len(n_subs) != n_smiles:
+        raise ValueError(
+            f'length of `n_subs` should be i) 1, or ii) equal to the length '
+            f'of `sub_smiles` ({n_smiles}): got {len(n_subs)}'
+        )
+
+    if len(sub_attach_idx) == 1 and n_smiles > 1:
+        sub_attach_idx = sub_attach_idx * n_smiles
+    elif len(sub_attach_idx) != n_smiles:
+        raise ValueError(
+            f'length of `sub_attach_idx` should be i) 1, or ii) equal to the '
+            f'length of `sub_smiles` ({n_smiles}): got {len(sub_attach_idx)}'
+        )
+
+    return n_subs, sub_attach_idx
+
+@app.command()
+def bullviso_cli(
+    sub_smiles: list[str] = typer.Argument(
+        ...,
+        help = 'SMILES strings for each unique substituent type'
+    ),
+    n_subs: str = typer.Option(
+        "1", '--n_subs', '-n',
+        click_type = NestedIntListParamType(
+            max_depth = 1, require_positive = True
+        ),
+        help = 'count for each unique substituent type'
+    ),
+    sub_attach_idx: str = typer.Option(
+        "1", '--sub_attach_idx', '-a',
+        click_type = NestedIntListParamType(
+            max_depth = 2, require_positive = True
+        ),
+        help = 'attachment index for each unique substituent type'
+    ),
+    m_confs: int = typer.Option(
+        1, '--m_confs', '-m',
+        min = 1, max = None,
+        help = 'maximum number of conformers to output'
+    ),
+    embed_n_confs: int = typer.Option(
+        None, '--embed_n_confs', '-en',
+        min = 1, max = None,
+        help = 'maximum number of conformers to embed'
+    ),
+    embed_rmsd_threshold: float = typer.Option(
+        0.0, '--embed_rmsd_threshold', '-er',
+        min = 0.0, max = None,
+        help = 'RMSD threshold (Å) for deduplicating conformer embeddings'
+    ),
+    embed_timeout: int = typer.Option(
+        None, '--embed_timeout', '-et',
+        min = 1, max = None,
+        help = 'timeout (seconds) for conformer embedding'
+    ),
+    embed_seed: int = typer.Option(
+        None, '--embed_seed', '-es',
+        help = 'random seed for conformer embedding'
+    ),
+    calculator_type: str = typer.Option(
+        'mmff', '--calculator_type', '-c',
+        click_type = click.Choice(
+            ['mmff', 'uff', 'xtb'], case_sensitive = False
+        ),
+        help = 'calculator type for conformer optimisation'
+    ),
+    max_iter: int = typer.Option(
+        600, '--max_iter', '-it',
+        min = 1, max = None,
+        help = 'maximum number of iterations for conformer optimisation'
+    ),
+    energy_threshold: float = typer.Option(
+        10.0, '--energy_threshold', '-e',
+        min = 0.0, max = None,
+        help = 'energy threshold (kcal/mol) for discarding optimised conformers'
+    ),
+    rmsd_threshold: float = typer.Option(
+        0.5, '--rmsd_threshold', '-r',
+        min = 0.0, max = None,
+        help = 'RMSD threshold (Å) for deduplicating optimised conformers'
+    ),
+    n_proc: int = typer.Option(
+        1, '--n_proc', '-np',
+        min = 1, max = None,
+        help = 'number of parallel processes to launch'
+    ),
+    output_dir: Path = typer.Option(
+        Path('.'), '--output_dir', '-o',
+        exists = True, writable = True, dir_okay = True, file_okay = False,
+        help = 'output directory path'
+    ),
+    output_filetype: str = typer.Option(
+        'xyz', '--output_filetype', '-f',
+        click_type = click.Choice(
+            ['xyz', 'sdf', 'gaussian', 'orca'], case_sensitive = False
+        ),
+        help = 'output filetype'
+    )
+) -> None:
     
     try:
-        input = ast.literal_eval(input)
-        if isinstance(input, int):
-            return [input]
-        elif isinstance(input, list):
-            return _validate_list(input)
-        else:
-            raise ArgumentTypeError(
-                'argument should be an integer, list of integers, or list of '
-                'integers with nested (sub)lists of integers'
-            )
-    except (ValueError, SyntaxError):
-        raise ArgumentTypeError(
-            f'invalid argument: {input}'
+
+        n_subs, sub_attach_idx = _normalise_substituent_config_vars(
+            sub_smiles, n_subs, sub_attach_idx
         )
     
-def _validate_list(
-    input: list
-) -> list[int | list[int]]:
-    """
-    Validates an input list recursively to ensure that it contains only integer
-    elements or nested (sub)lists of integer elements.
-
-    Args:
-        input (list): Input list.
-
-    Raises:
-        ArgumentTypeError: If `input` contains elements that are not integers
-            or nested (sub)lists, or if any nested sublist contains
-            non-integer elements.
-
-    Returns:
-        list[int | list[int]]: List of integers and/or nested (sub)lists
-            of integers; maintains the initial structure of `input`.
-    """
+        params = core.BullvisoParams(
+            sub_smiles = sub_smiles,
+            n_subs = n_subs,
+            sub_attach_idx = sub_attach_idx,
+            m_confs = m_confs,
+            embed_n_confs = embed_n_confs,
+            embed_rmsd_threshold = embed_rmsd_threshold,
+            embed_timeout = embed_timeout,
+            embed_seed = embed_seed,
+            calculator_type = calculator_type,
+            max_iter = max_iter,
+            energy_threshold = energy_threshold,
+            rmsd_threshold = rmsd_threshold,
+            n_proc = n_proc,
+            output_dir = output_dir,
+            output_filetype = output_filetype
+        )
     
-    validated_list = []
+        core._bullviso(params)
 
-    for i in input:
-        if isinstance(i, int):
-            validated_list.append(i)
-        elif isinstance(i, list):
-            validated_list.append(_validate_list(i))
-        else:
-            raise ArgumentTypeError(
-                'list should contain only integer elements or lists of '
-                'integer elements'
-            ) 
-    
-    return validated_list
-    
-def _validate_args(
-    args: Namespace
-):
-    """
-    Validates command line arguments for `bullviso:cli.py`.
-
-    Args:
-        args (Namespace): Parsed command line arguments as an
-        argparse.Namespace object that holds the arguments as attributes.
-
-    Raises:
-        ValueError: If any of the following conditions are encountered:
-
-            1. `args.sub_smiles`, `args.n_subs`, and `args.sub_attach_idx`
-                are not of equal length;
-
-            2. `args.n_subs` has a maximum depth greater than 1;
-
-            3. `args.sub_attach_idx` has a maximum depth greater than 2;
-
-            4. the sum of the integer elements in `args.n_subs` is greater
-                than 9;
-
-            5. there are greater than 9 elements in `args.sub_attach_idx`
-                (counting elements in the outer list and nested (sub)lists,
-                and accounting via multiplication for the number of each
-                unique substituent given in `args.n_subs`);
-
-            6. `args.n_subs` and/or `args.sub_attach_idx` contain null/zero-
-                valued elements.
-    """
-
-    if not (
-        len(args.sub_smiles) == len(args.n_subs) == len(args.sub_attach_idx)
-    ):
-        raise ValueError(
-            '`args.sub_smiles`, `args.n_subs`, and `args.sub_attach_idx` '
-            'should have the same length'
-        )
-    if utils.maxdepth(args.n_subs) > 1:
-        raise ValueError(
-            '`args.n_subs` should be a list of integers with a maximum depth '
-            'no greater than 1'
-        )
-    if utils.maxdepth(args.sub_attach_idx) > 2:
-        raise ValueError(
-            '`args.sub_attach_idx` should be a list of integers or nested '
-            '(sub)lists of integers with a maximum depth no greater than 2'
-        )
-    if sum(args.n_subs) > 9:
-        raise ValueError(
-            '`args.n_subs` is too large; support is only available for up '
-            'to (and including) 9 substituents'
-        )
-    if utils.count_list_elements(
-        utils.repeat_list_elements(args.sub_attach_idx, args.n_subs)
-    ) > 9:
-        raise ValueError(
-            'too many attachment indices in `args.sub_attach_idx`; support is '
-            'only available for up to (and including) 9 substituents'
-        )
-    if 0 in args.n_subs:
-        raise ValueError(
-            '`args.n_subs` cannot contain null/zero-valued elements'
-        )
-    if 0 in args.sub_attach_idx:
-        raise ValueError(
-            '`args.sub_attach_idx` cannot contain null/zero-valued elements'
-        )
-
-# =============================================================================
-#                                 ENTRY POINT
-# =============================================================================
-
-def main(
-    argv: list[str] | None = None
-) -> None:
-    """
-    Main entry point to the command line interface (CLI) for BULLVISO.
-
-    Args:
-        argv (list[str] | None, optional): List of command line arguments; if
-            None, the command line arguments are taken from `sys.argv`.
-    """
-
-    args = parse_args(argv)
-
-    core.run_bullviso(args)
+    except Exception as e:
+        err_prefix = typer.style('Error:', fg = typer.colors.RED)
+        typer.echo(f'{err_prefix} {e}', err = True)
+        raise typer.Exit(1)
 
 # =============================================================================
 #                                     EOF

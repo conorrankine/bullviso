@@ -12,6 +12,7 @@ dependencies = [
     "networkx>=3.4.2",
     "rdkit>=2025.03.5",
     "tqdm>=4.67.1",
+    "typer>=0.16.1",
 ]
 
 [tool.setuptools]
@@ -26,4 +27,4 @@ packages = [
 ]
 
 [project.scripts]
-bullviso = "bullviso:cli.main"
+bullviso = "bullviso:cli.app"
