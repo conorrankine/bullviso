@@ -266,7 +266,7 @@ BULLVISO outputs the structures of the substituted bullvalenes in .xyz format by
 Don't forget that you can always get a reminder of, and help with, the available command line flags by entering:
 
 ```
-bullviso -h
+bullviso --help
 ```
 
 ### ADVANCED USAGE:
