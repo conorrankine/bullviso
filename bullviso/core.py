@@ -138,9 +138,8 @@ def _bullviso(
             barcode,
             connectivity_map
         )
-        mol = bv.graphs.graph_to_mol(
-            super_G_
-        )
+        mol = bv.graphs.graph_to_mol(super_G_)
+        mol.SetProp('barcode', str(barcode))
         mol = bv.conformers.generate_confs(
             mol,
             embed_n_confs = params.embed_n_confs,
@@ -155,19 +154,18 @@ def _bullviso(
             rmsd_atom_idxs = [i for i in range(10)],
             n_proc = params.n_proc
         )
-        confs = list(mol.GetConformers())
-        for conf_idx in range(min(params.m_confs, mol.GetNumConformers())):
-            conf = confs[conf_idx]
+        conf_ids = _get_conf_ids(mol, max_conf_ids = params.m_confs)
+        for conf_id in conf_ids:
             output_dir = params.output_dir / (
-                f'./{barcode}/{barcode}_{conf_idx+1:03d}/'
+                f'./{barcode}/{barcode}_{conf_id+1:03d}/'
             )
             if not output_dir.is_dir():
                 output_dir.mkdir(parents = True)
             bv.io.mol_to_file(
-                output_dir / f'./{barcode}_{conf_idx+1:03d}',
+                output_dir / f'./{barcode}_{conf_id+1:03d}',
                 mol,
                 filetype = params.output_filetype,
-                conf_id = conf.GetId()
+                conf_id = conf_id
             )
     print('...done!\n')
 
@@ -303,6 +301,27 @@ def _bv_mol_to_graph(
 
     return bv_mol_G
 
+def _get_conf_ids(
+    mol: Chem.Mol,
+    max_conf_ids: int = None
+) -> list[int]:
+    """
+    Returns a list of conformer IDs for an RDKit `Chem.Mol` molecule.
+
+    Args:
+        mol (Chem.Mol): Molecule.
+        max_conf_ids (int, optional): Maximum number of conformer IDs to
+            return; if None, all conformer IDs are returned. Defaults to None.
+
+    Returns:
+        list[int]: List of conformer IDs.
+    """
+    
+    confs = [conf for conf in mol.GetConformers()]
+    if max_conf_ids is None:
+        return [conf.GetId() for conf in confs]
+    return [conf.GetId() for conf in confs[:max_conf_ids]]
+    
 # =============================================================================
 #                                     EOF
 # =============================================================================
