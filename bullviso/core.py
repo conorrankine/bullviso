@@ -133,13 +133,11 @@ def _bullviso(
 
     print('generating geometries and writing output...')
     for barcode in tqdm.tqdm(barcodes, ncols = 60):
-        super_G_ = super_G.copy()
-        for i, bit in enumerate(barcode.barcode, start = 1):
-            if bit != 0:
-                super_G_.add_edge(
-                    'bullvalene_{}'.format(i),
-                    'sub{}_{}'.format(*connectivity_map[bit])
-                )
+        super_G_ = _connect_molecular_supergraph(
+            super_G,
+            barcode,
+            connectivity_map
+        )
         mol = bv.graphs.graph_to_mol(
             super_G_
         )
@@ -225,6 +223,47 @@ def _build_molecular_supergraph_from_mols(
     ]
 
     return nx.compose_all([bv_mol_G, *sub_mol_Gs])
+
+def _connect_molecular_supergraph(
+    super_G: nx.Graph,
+    barcode: bv.BVBarcode,
+    connectivity_map: dict[int, tuple[int]],
+    inplace: bool = False
+) -> nx.Graph:
+    """
+    Connects the discrete subgraphs representing i) bullvalene and ii) the
+    supplied substituents in the molecular supergraph using the bullvalene
+    barcode and the associated instructions encoded in the connectivity map.
+
+    For each non-zero bit in the bullvalene barcode, an edge is added to the
+    molecular supergraph between a bullvalene atom node (`bullvalene_[I]`,
+    where [I] is the index of the non-zero bit) and a substituent atom node
+    (`sub[J]_[K]`), where [J] and [K] are derived from the connectivity map
+    as [BIT_VALUE] -> ([J],[K]).
+
+    Args:
+        super_G (nx.Graph): Molecular supergraph.
+        barcode (bv.BVBarcode): Bullvalene barcode.
+        connectivity_map (dict[int, tuple[int]]): Connectivity map relating
+            the unique value of each non-zero bit in the bullvalene barcode
+            to a tuple of indices defining a i) substituent and ii) atom.
+        inplace (bool, optional): If True, `super_G` is modified in place,
+            else a copy is made, modified, and returned. Defaults to False.
+
+    Returns:
+        nx.Graph: Molecular supergraph with additional connections.
+    """
+    
+    G = super_G if inplace else super_G.copy()
+
+    for i, bit in enumerate(barcode.barcode, start = 1):
+        if bit != 0:
+            G.add_edge(
+                'bullvalene_{}'.format(i),
+                'sub{}_{}'.format(*connectivity_map[bit])
+            )
+
+    return G
 
 def _bv_mol_to_graph(
     bv_mol: Chem.Mol,
