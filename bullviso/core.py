@@ -26,6 +26,7 @@ import datetime
 from . import utils
 from dataclasses import dataclass
 from pathlib import Path
+from rdkit import Chem
 
 # =============================================================================
 #                                   CLASSES
@@ -120,22 +121,13 @@ def _bullviso(
     )
     print('...done!\n')
 
-    model_bullvalene = bv.io.sdf_to_mol(
-        Path(__file__).parent / 'structures' / 'bv.sdf'
-    )
+    bv_template_filepath = Path(__file__).parent / 'structures' / 'bv.sdf'
 
-    bullvalene_G = bv.graphs.mol_to_graph(
-        model_bullvalene, node_label_prefix = 'bullvalene_'
-    )
+    bv_template_mol = bv.io.sdf_to_mol(bv_template_filepath)
 
-    bv.graphs.set_atom_stereochemistry(
-        bullvalene_G,
-        atom_stereo_map = {
-            'bullvalene_1'  : 'ccw',
-            'bullvalene_4'  : 'cw',
-            'bullvalene_7'  : 'ccw',
-            'bullvalene_10' : 'cw'
-        }
+    bv_template_mol_G = _bv_mol_to_graph(
+        bv_template_mol,
+        set_stereochemistry = True
     )
 
     sub_G = [
@@ -144,10 +136,10 @@ def _bullviso(
         ) for i, sub_smile in enumerate(sub_smiles, start = 1)
     ]
         
-    super_G = nx.compose_all([bullvalene_G, *sub_G])
+    super_G = nx.compose_all([bv_template_mol_G, *sub_G])
 
     coord_map = bv.conformers.get_coord_map(
-        model_bullvalene
+        bv_template_mol
     )
 
     print('generating geometries and writing output...')
@@ -218,6 +210,44 @@ def _build_connectivity_map(
             utils.iterate_and_index(sub_attach_idx), start = 1
         )
     }
+
+def _bv_mol_to_graph(
+    bv_mol: Chem.Mol,
+    set_stereochemistry: bool = True
+) -> nx.Graph:
+    """
+    Converts an RDKit `Chem.Mol` representation of a bullvalene into a
+    molecular graph representation with nodes labelled as 'bullvalene_[N]'
+    (where [N] is the atom index in the range [1,10]). Optionally sets the
+    correct stereochemical tags for the `bullviso` workflow.
+
+    Args:
+        bv_mol (Chem.Mol): Bullvalene.
+        set_stereochemistry (bool, optional): Sets the correct stereochemical
+            tags for the `bullviso` workflow. Defaults to True.
+
+    Returns:
+        nx.Graph: Bullvalene represented as a molecular graph.
+    """
+
+    # TODO: validate that `bv_mol` is a valid representation of bullvalene
+
+    bv_mol_G = bv.graphs.mol_to_graph(
+        bv_mol, node_label_prefix = 'bullvalene_'
+    )
+    
+    if set_stereochemistry:
+        bv.graphs.set_atom_stereochemistry(
+            bv_mol_G,
+            atom_stereo_map = {
+                'bullvalene_1'  : 'ccw',
+                'bullvalene_4'  : 'cw',
+                'bullvalene_7'  : 'ccw',
+                'bullvalene_10' : 'cw'
+            }
+        )
+
+    return bv_mol_G
 
 # =============================================================================
 #                                     EOF
