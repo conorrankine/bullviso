@@ -123,24 +123,13 @@ def _bullviso(
 
     bv_template_filepath = Path(__file__).parent / 'structures' / 'bv.sdf'
 
-    bv_template_mol = bv.io.sdf_to_mol(bv_template_filepath)
+    bv_mol = bv.io.sdf_to_mol(bv_template_filepath)
 
-    bv_template_mol_G = _bv_mol_to_graph(
-        bv_template_mol,
-        set_stereochemistry = True
-    )
+    sub_mols = [bv.io.smiles_to_mol(sub_smile) for sub_smile in sub_smiles]
 
-    sub_G = [
-        bv.graphs.smiles_to_graph(
-            sub_smile, node_label_prefix = f'sub{i}_'
-        ) for i, sub_smile in enumerate(sub_smiles, start = 1)
-    ]
-        
-    super_G = nx.compose_all([bv_template_mol_G, *sub_G])
+    super_G = _build_molecular_supergraph_from_mols(bv_mol, sub_mols)
 
-    coord_map = bv.conformers.get_coord_map(
-        bv_template_mol
-    )
+    coord_map = bv.conformers.get_coord_map(bv_mol)
 
     print('generating geometries and writing output...')
     for barcode in tqdm.tqdm(barcodes, ncols = 60):
@@ -211,6 +200,32 @@ def _build_connectivity_map(
         )
     }
 
+def _build_molecular_supergraph_from_mols(
+    bv_mol: Chem.Mol,
+    sub_mols: list[Chem.Mol]
+) -> nx.Graph:
+    """
+    Builds a molecular supergraph uniting the molecular graphs of bullvalene
+    and the supplied substituents.
+
+    Args:
+        bv_mol (Chem.Mol): Bullvalene (`Chem.Mol` representation).
+        sub_mols (list[Chem.Mol]): Substituents (`Chem.Mol` representations).
+
+    Returns:
+        nx.Graph: Molecular supergraph uniting the molecular graphs of
+            bullvalene and the supplied substituents.
+    """
+
+    bv_mol_G = _bv_mol_to_graph(bv_mol)
+
+    sub_mol_Gs = [
+        bv.graphs.mol_to_graph(sub_mol, node_label_prefix = f'sub{i}_')
+        for i, sub_mol in enumerate(sub_mols, start = 1)
+    ]
+
+    return nx.compose_all([bv_mol_G, *sub_mol_Gs])
+
 def _bv_mol_to_graph(
     bv_mol: Chem.Mol,
     set_stereochemistry: bool = True
@@ -222,12 +237,12 @@ def _bv_mol_to_graph(
     correct stereochemical tags for the `bullviso` workflow.
 
     Args:
-        bv_mol (Chem.Mol): Bullvalene.
+        bv_mol (Chem.Mol): Bullvalene (`Chem.Mol` representation).
         set_stereochemistry (bool, optional): Sets the correct stereochemical
             tags for the `bullviso` workflow. Defaults to True.
 
     Returns:
-        nx.Graph: Bullvalene represented as a molecular graph.
+        nx.Graph: Bullvalene (molecular graph representation).
     """
 
     # TODO: validate that `bv_mol` is a valid representation of bullvalene
