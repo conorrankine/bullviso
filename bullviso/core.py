@@ -110,12 +110,7 @@ def _bullviso(
     )
     print(f'canonical barcode: {canonical_barcode}\n')
 
-    connectivity_map = {
-        i: f'sub{sub_n+1}_{sub_attach_idx_}'
-            for i, (sub_n, sub_attach_idx_) in enumerate(
-                utils.iterate_and_index(sub_attach_idx), start = 1
-            )
-    }
+    connectivity_map = _build_connectivity_map(sub_attach_idx)
 
     print('identifying inequivalent permutations...')
     barcodes = set(
@@ -161,7 +156,8 @@ def _bullviso(
         for i, bit in enumerate(barcode.barcode, start = 1):
             if bit != 0:
                 super_G_.add_edge(
-                    f'bullvalene_{i}', connectivity_map[bit]
+                    'bullvalene_{}'.format(i),
+                    'sub{}_{}'.format(*connectivity_map[bit])
                 )
         mol = bv.graphs.graph_to_mol(
             super_G_
@@ -198,6 +194,30 @@ def _bullviso(
 
     datetime_ = datetime.datetime.now()
     print(f'finished @ {datetime_.strftime("%H:%M:%S (%Y-%m-%d)")}')
+
+def _build_connectivity_map(
+    sub_attach_idx: list[int | list[int]]
+) -> dict[int, tuple[int]]:
+    """
+    Builds a connectivity map (`int` -> `tuple[int, int]`) relating the unique
+    value of each bit in a bullvalene barcode to a tuple of indices defining a
+    i) substituent and ii) atom ('attachment point').
+
+    Args:
+        sub_attach_idx (list[int | list[int]]): List of substituent attachment
+            indices where the n^th element of the list is either i) an integer
+            defining a single attachment point, or ii) a list of integers
+            defining multiple attachment points for the n^th substituent.
+
+    Returns:
+        dict[int, tuple[int]]: Connectivity map.
+    """
+
+    return {
+        i: (n+1, idx) for i, (n, idx) in enumerate(
+            utils.iterate_and_index(sub_attach_idx), start = 1
+        )
+    }
 
 # =============================================================================
 #                                     EOF
