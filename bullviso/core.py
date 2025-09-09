@@ -255,9 +255,9 @@ def _connect_molecular_supergraph(
     inplace: bool = False
 ) -> nx.Graph:
     """
-    Connects the discrete subgraphs representing i) bullvalene and ii) the
-    supplied substituents in the molecular supergraph using the bullvalene
-    barcode and the associated instructions encoded in the connectivity map.
+    Connects the molecular graphs of bullvalene and the supplied substituents
+    in the molecular supergraph using the bullvalene barcode and the associated
+    instructions encoded in the connectivity map.
 
     For each non-zero bit in the bullvalene barcode, an edge is added to the
     molecular supergraph between a bullvalene atom node (`bullvalene_[I]`,
@@ -268,9 +268,10 @@ def _connect_molecular_supergraph(
     Args:
         super_G (nx.Graph): Molecular supergraph.
         barcode (bv.BVBarcode): Bullvalene barcode.
-        connectivity_map (dict[int, tuple[int]]): Connectivity map relating
-            the unique value of each non-zero bit in the bullvalene barcode
-            to a tuple of indices defining a i) substituent and ii) atom.
+        connectivity_map (dict[int, tuple[int]]): Dictionary mapping unique
+            bullvalene barcode bit values (1-based) to substitutent attachment
+            points (1-based; tuple of indices defining the i) substituent and
+            ii) atom).
         inplace (bool, optional): If True, `super_G` is modified in place,
             else a copy is made, modified, and returned. Defaults to False.
 
@@ -282,10 +283,24 @@ def _connect_molecular_supergraph(
 
     for i, bit in enumerate(barcode.barcode, start = 1):
         if bit != 0:
-            G.add_edge(
-                'bullvalene_{}'.format(i),
-                'sub{}_{}'.format(*connectivity_map[bit])
-            )
+            if bit not in connectivity_map:
+                raise KeyError(
+                    f'bullvalene barcode bit value {bit} (position {i}) '
+                    f'is not defined in the connectivity map'
+                )
+            bv_atom_idx = i
+            bv_node = f'bullvalene_{bv_atom_idx}'
+            if bv_node not in G.nodes():
+                raise ValueError(
+                    f'bullvalene node `{bv_node}` is not a node in the graph'
+                )
+            sub_idx, sub_atom_idx = connectivity_map[bit]
+            sub_node = f'sub{sub_idx}_{sub_atom_idx}'
+            if sub_node not in G.nodes():
+                raise ValueError(
+                    f'substituent node `{sub_node}` is not a node in the graph'
+                )
+            G.add_edge(bv_node, sub_node)
 
     return G
 
