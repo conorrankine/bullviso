@@ -377,17 +377,21 @@ def _write_conf_to_file(
 ) -> None:
     """
     Writes a single conformer of the supplied RDKit `Chem.Mol` molecule to a
-    file in a conformer-specific subdirectory.
+    file in an organised directory structure.
     
-    The output directory structure is:
+    The schema for the organised directory structure is:
 
     `output_dir` / [BARCODE] / [BARCODE]_[CONF_ID] / 
         [BARCODE]_[CONF_ID].[OUTPUT_FILETYPE]
+
+    Note: `conf_id` is 0-based internally but output as 1-based in filenames
+    for user-friendliness, e.g., `conf_id = 0` -> [CONF_ID] = '001'.
     
     Args:
         mol (Chem.Mol): Molecule.
         conf_id (int): Conformer ID to write to file.
-        output_dir (Path): Output directory.
+        output_dir (Path): Output directory; the output directory is created
+            if it does not already exist.
         output_filetype (str): Output filetype.
 
     Raises:
@@ -401,15 +405,20 @@ def _write_conf_to_file(
         )
     barcode = mol.GetProp('barcode')
 
-    conf_dir = output_dir / barcode / f'{barcode}_{(conf_id+1):03d}'
-    conf_dir.mkdir(parents = True, exist_ok = True)
-    conf_file = conf_dir / f'{barcode}_{(conf_id+1):03d}'
-    bv.io.mol_to_file(
-        conf_file,
-        mol,
-        conf_id = conf_id,
-        filetype = output_filetype,
-    )
+    try:
+        conf_dir = output_dir / barcode / f'{barcode}_{(conf_id+1):03d}'
+        conf_dir.mkdir(parents = True, exist_ok = True)
+        conf_file = conf_dir / f'{barcode}_{(conf_id+1):03d}'
+        bv.io.mol_to_file(
+            conf_file,
+            mol,
+            conf_id = conf_id,
+            filetype = output_filetype,
+        )
+    except Exception as e:
+        raise ValueError(
+            f'failed to write conformer(s) to file: {e}'
+        )
     
 # =============================================================================
 #                                     EOF
