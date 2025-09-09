@@ -178,25 +178,44 @@ def _build_connectivity_map(
     sub_attach_idx: list[int | list[int]]
 ) -> dict[int, tuple[int]]:
     """
-    Builds a connectivity map (`int` -> `tuple[int, int]`) relating the unique
-    value of each bit in a bullvalene barcode to a tuple of indices defining a
-    i) substituent and ii) atom ('attachment point').
+    Builds a connectivity map (`int` -> `tuple[int, int]`) relating each unique
+    bullvalene barcode bit value to a substituent attachment point.
+    
+    Each element in `sub_attach_idx` represents the attachment point(s) for
+    each substituent; these are flattened into a mapping from unique bullvalene
+    barcode bit values (1-based) to substituent attachment points (1-based;
+    tuple of indices defining the i) substituent and ii) atom).
 
     Args:
         sub_attach_idx (list[int | list[int]]): List of substituent attachment
-            indices where the n^th element of the list is either i) an integer
-            defining a single attachment point, or ii) a list of integers
-            defining multiple attachment points for the n^th substituent.
+            points, supplied (for each substituent) as either:
+                - int: defining a single attachment point;
+                - list[int]: defining multiple attachment points.
 
     Returns:
-        dict[int, tuple[int]]: Connectivity map.
+        dict[int, tuple[int]]: Dictionary mapping unique bullvalene barcode bit
+            values (1-based) to substitutent attachment points (1-based;
+            tuple of indices defining the i) substituent and ii) atom).
     """
 
-    return {
-        i: (n+1, idx) for i, (n, idx) in enumerate(
-            utils.iterate_and_index(sub_attach_idx), start = 1
+    if not sub_attach_idx:
+        raise ValueError(
+            'no substituent attachment indices defined: `sub_attach_idx` '
+            'can\'t be empty'
         )
-    }
+
+    try:
+        connectivity_map = {
+            i: (n+1, idx) for i, (n, idx) in enumerate(
+                utils.iterate_and_index(sub_attach_idx), start = 1
+            )
+        }
+    except Exception as e:
+        raise ValueError(
+            f'failed to build connectivity map: {e}'
+        )
+
+    return connectivity_map
 
 def _build_molecular_supergraph_from_mols(
     bv_mol: Chem.Mol,
