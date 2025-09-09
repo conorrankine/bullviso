@@ -21,9 +21,9 @@ this program.  If not, see <https://www.gnu.org/licenses/>.
 
 import bullviso as bv
 import networkx as nx
-import tqdm
 import datetime
 from . import utils
+from tqdm import tqdm
 from dataclasses import dataclass
 from pathlib import Path
 from rdkit import Chem
@@ -113,13 +113,16 @@ def _bullviso(
 
     connectivity_map = _build_connectivity_map(sub_attach_idx)
 
-    print('identifying inequivalent permutations...')
+    print('identifying unique bullvalene barcodes:')
     barcodes = set(
-        barcode for barcode in tqdm.tqdm(
-            canonical_barcode.permutations(), ncols = 60, total = 3628800
+        barcode for barcode in tqdm(
+            canonical_barcode.permutations(),
+            ncols = 60,
+            total = 3628800,
+            bar_format='{l_bar}{bar}| [{elapsed}<{remaining}]'
         )
     )
-    print('...done!\n')
+    print('')
 
     bv_template_filepath = Path(__file__).parent / 'structures' / 'bv.sdf'
 
@@ -131,8 +134,12 @@ def _bullviso(
 
     coord_map = bv.conformers.get_coord_map(bv_mol)
 
-    print('generating geometries and writing output...')
-    for barcode in tqdm.tqdm(barcodes, ncols = 60):
+    print('building bullvalene isomers:')
+    for barcode in tqdm(
+        barcodes,
+        ncols = 60,
+        bar_format='{l_bar}{bar}| [{elapsed}<{remaining}]'
+    ):
         super_G_ = _connect_molecular_supergraph(
             super_G,
             barcode,
@@ -162,7 +169,7 @@ def _bullviso(
                 params.output_dir,
                 params.output_filetype
             )
-    print('...done!\n')
+    print('')
 
     datetime_ = datetime.datetime.now()
     print(f'finished @ {datetime_.strftime("%H:%M:%S (%Y-%m-%d)")}')
