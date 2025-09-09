@@ -352,16 +352,22 @@ def _get_conf_ids(
     Args:
         mol (Chem.Mol): Molecule.
         max_conf_ids (int, optional): Maximum number of conformer IDs to
-            return; if None, all conformer IDs are returned. Defaults to None.
+            return; if None, or if `max_conf_ids` exceeds the number of stored
+            conformers, all conformer IDs are returned. Defaults to None.
 
     Returns:
         list[int]: List of conformer IDs.
     """
     
-    confs = [conf for conf in mol.GetConformers()]
-    if max_conf_ids is None:
-        return [conf.GetId() for conf in confs]
-    return [conf.GetId() for conf in confs[:max_conf_ids]]
+    try:
+        confs = [conf for conf in mol.GetConformers()]
+        if max_conf_ids is None:
+            return [conf.GetId() for conf in confs]
+        return [conf.GetId() for conf in confs[:max_conf_ids]]
+    except Exception as e:
+        raise ValueError(
+            f'failed to retrieve conformer IDs: {e}'
+        )
 
 def _write_conf_to_file(
     mol: Chem.Mol,
