@@ -21,7 +21,7 @@ this program.  If not, see <https://www.gnu.org/licenses/>.
 
 from . import utils
 from itertools import permutations
-from typing import Generator, Union, TypeVar
+from typing import Generator, TypeVar
 
 # =============================================================================
 #                                   GLOBALS
@@ -97,48 +97,49 @@ class BVBarcode:
     def from_substituents(
         cls: type[T],
         sub_smiles: list[str],
-        sub_attach_idx: list[Union[int, list[int]]],
+        sub_attach_idx: list[int | list[int]],
         canonicalize: bool = True
     ) -> T:
         """
-        Creates a bullvalene isomer barcode (`BVBarcode` instance) using a list of
-        the substituent smiles and attachment indices.
+        Creates a new bullvalene barcode from a list of substituent SMILEs
+        strings and a list of attachment ooints.
 
         Args:
             sub_smiles (list[str]): List of SMILEs strings specifying the
                 substituents attached to the bullvalene.
-            sub_attach_idx (list[Union[int, list[int]]]): List of integers and/or
-                nested (sub)lists of integers specifying the attachment indices of
-                the substituents attached to the bullvalene.
-            canonicalize (bool, optional): If `True`, the bullvalene isomer barcode
-                is canonicalised.. Defaults to True.
+            sub_attach_idx (list[Union[int, list[int]]]): List of substituent
+                attachment points, supplied (for each substituent) as either:
+                    - int: defining a single attachment point;
+                    - list[int]: defining multiple attachment points.
+            canonicalize (bool, optional): If True, the bullvalene barcode is
+                canonicalised. Defaults to True.
 
         Raises:
             ValueError: If `sub_smiles` and `sub_attach_idx` are not of equal
-                length, or if there are greater than 9 elements in `sub_attach_idx`
-                (counting elements in the outer list and any nested (sub)lists).
+                length.
+            ValueError: If the number of attachment points is greater than 9.
 
         Returns:
-            BVBarcode: `BVBarcode` instance corresponding to the substituent and
-                attachment index specification.
+            BVBarcode: Bullvalene barcode.
         """
         
-        if len(sub_smiles) != len(sub_attach_idx):
+        if not utils.all_same_length(sub_smiles, sub_attach_idx):
             raise ValueError(
-                '`sub_smiles` and `sub_attach_idx` should have the same length'       
+                f'`sub_smiles` and `sub_attach_idx` should have equal '
+                f'length; got lists with length {len(sub_smiles)} and '
+                f'{len(sub_attach_idx)}'
             )
 
         groups = [
-            f'{sub_smiles[i]}_{sub_attach_idx_}' 
-                for (i, sub_attach_idx_) in utils.iterate_and_index(
-                    sub_attach_idx
-                )
+            f'{sub_smiles[n]}_{idx}' for (n, idx)
+                in utils.iterate_and_index(sub_attach_idx)
         ]
 
-        if len(groups) > 9:
+        n_attachment_points = len(groups)
+        if n_attachment_points > 9:
             raise ValueError(
-                'too many attachment indices in `sub_attach_idx`; support is '
-                'only available for up to (and including) 9 substituents'
+                f'too many attachment points defined: got '
+                f'{n_attachment_points} (maximum allowed = 9)'
             )
 
         equivalent_group_map = {
