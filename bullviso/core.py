@@ -222,26 +222,31 @@ def _build_molecular_supergraph_from_mols(
     sub_mols: list[Chem.Mol]
 ) -> nx.Graph:
     """
-    Builds a molecular supergraph uniting the molecular graphs of bullvalene
-    and the supplied substituents.
+    Builds a molecular supergraph comprising the molecular graphs of bullvalene
+    and the supplied substituents as disconnected entities.
 
     Args:
         bv_mol (Chem.Mol): Bullvalene (`Chem.Mol` representation).
         sub_mols (list[Chem.Mol]): Substituents (`Chem.Mol` representations).
 
     Returns:
-        nx.Graph: Molecular supergraph uniting the molecular graphs of
-            bullvalene and the supplied substituents.
+        nx.Graph: Molecular supergraph comprising the molecular graphs of
+            bullvalene and the supplied substituents as disconnected entities.
     """
 
-    bv_mol_G = _bv_mol_to_graph(bv_mol)
+    try:
+        bv_mol_G = _bv_mol_to_graph(bv_mol)
+        sub_mol_Gs = [
+            bv.graphs.mol_to_graph(sub_mol, node_label_prefix = f'sub{i}_')
+            for i, sub_mol in enumerate(sub_mols, start = 1)
+        ]
+        super_G = nx.compose_all([bv_mol_G, *sub_mol_Gs])
+    except Exception as e:
+        raise ValueError(
+            f'failed to build molecular supergraph: {e}'
+        )
 
-    sub_mol_Gs = [
-        bv.graphs.mol_to_graph(sub_mol, node_label_prefix = f'sub{i}_')
-        for i, sub_mol in enumerate(sub_mols, start = 1)
-    ]
-
-    return nx.compose_all([bv_mol_G, *sub_mol_Gs])
+    return super_G
 
 def _connect_molecular_supergraph(
     super_G: nx.Graph,
