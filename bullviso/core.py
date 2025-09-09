@@ -156,16 +156,11 @@ def _bullviso(
         )
         conf_ids = _get_conf_ids(mol, max_conf_ids = params.m_confs)
         for conf_id in conf_ids:
-            output_dir = params.output_dir / (
-                f'./{barcode}/{barcode}_{conf_id+1:03d}/'
-            )
-            if not output_dir.is_dir():
-                output_dir.mkdir(parents = True)
-            bv.io.mol_to_file(
-                output_dir / f'./{barcode}_{conf_id+1:03d}',
+            _write_conf_to_file(
                 mol,
-                filetype = params.output_filetype,
-                conf_id = conf_id
+                conf_id,
+                params.output_dir,
+                params.output_filetype
             )
     print('...done!\n')
 
@@ -321,6 +316,48 @@ def _get_conf_ids(
     if max_conf_ids is None:
         return [conf.GetId() for conf in confs]
     return [conf.GetId() for conf in confs[:max_conf_ids]]
+
+def _write_conf_to_file(
+    mol: Chem.Mol,
+    conf_id: int,
+    output_dir: Path,
+    output_filetype: str
+) -> None:
+    """
+    Writes a single conformer of the supplied RDKit `Chem.Mol` molecule to a
+    file in a conformer-specific subdirectory.
+    
+    The output directory structure is:
+
+    `output_dir` / [BARCODE] / [BARCODE]_[CONF_ID] / 
+        [BARCODE]_[CONF_ID].[OUTPUT_FILETYPE]
+    
+    Args:
+        mol (Chem.Mol): Molecule.
+        conf_id (int): Conformer ID to write to file.
+        output_dir (Path): Output directory.
+        output_filetype (str): Output filetype.
+
+    Raises:
+        ValueError: If the molecule does not have a `barcode` property.
+    """
+
+    if not mol.HasProp('barcode'):
+        raise ValueError(
+            'molecule does not have a \'barcode\' property; set one using '
+            '`mol.SetProp(\'barcode\', [BARCODE])`'
+        )
+    barcode = mol.GetProp('barcode')
+
+    conf_dir = output_dir / barcode / f'{barcode}_{(conf_id+1):03d}'
+    conf_dir.mkdir(parents = True, exist_ok = True)
+    conf_file = conf_dir / f'{barcode}_{(conf_id+1):03d}'
+    bv.io.mol_to_file(
+        conf_file,
+        mol,
+        conf_id = conf_id,
+        filetype = output_filetype,
+    )
     
 # =============================================================================
 #                                     EOF
