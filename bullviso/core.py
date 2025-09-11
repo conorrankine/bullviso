@@ -105,7 +105,7 @@ def _bullviso(
             f'(maximum allowed = 9)'
         )
 
-    canonical_barcode = bv.barcodes.create_barcode(
+    canonical_barcode = bv.BVBarcode.from_substituents(
         sub_smiles,
         sub_attach_idx
     )
