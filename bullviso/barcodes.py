@@ -184,23 +184,30 @@ class BVBarcode:
     @property
     def barcode(
         self
-    ) -> tuple[int, ...]:
+    ) -> tuple[int]:
         """
-        Returns the bullvalene barcode as a tuple.
-
         Returns:
-            tuple: The bullvalene barcode as a tuple.
+            tuple[int]: The bullvalene barcode as a tuple.
         """
 
         return self._barcode
     
     @property
+    def canonical_barcode(
+        self
+    ) -> tuple[int]:
+        """
+        Returns:
+            tuple[int, ...]: The canonical bullvalene barcode as a tuple.
+        """
+        
+        return self._canonical_barcode
+    
+    @property
     def barcode_labels(
         self
-    ) -> tuple[int, ...]:
+    ) -> tuple[int]:
         """
-        Returns the bullvalene barcode labels as a tuple.
-
         Returns:
             tuple: The bullvalene barcode labels as a tuple.
         """
