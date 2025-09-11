@@ -21,6 +21,7 @@ this program.  If not, see <https://www.gnu.org/licenses/>.
 
 from . import utils
 from itertools import permutations, count
+from functools import cached_property
 from typing import Generator, TypeVar
 
 # =============================================================================
@@ -63,10 +64,6 @@ class BVBarcode:
             )
 
         self._barcode = barcode
-
-        self._canonical_barcode = min(self._get_equivalent_barcodes())
-
-        self._barcode_labels = self._generate_barcode_labels()
 
         if canonicalize:
             self.canonicalize()
@@ -157,7 +154,7 @@ class BVBarcode:
             int: Hash for the bullvalene barcode.
         """
         
-        return hash(self._canonical_barcode)
+        return hash(self.canonical_barcode)
     
     def __eq__(
         self,
@@ -177,7 +174,7 @@ class BVBarcode:
         """
 
         if isinstance(barcode, type(self)):
-            return (self._canonical_barcode == barcode._canonical_barcode)
+            return (self.canonical_barcode == barcode.canonical_barcode)
         else:
             return False
 
@@ -192,7 +189,7 @@ class BVBarcode:
 
         return self._barcode
     
-    @property
+    @cached_property
     def canonical_barcode(
         self
     ) -> tuple[int]:
@@ -201,9 +198,9 @@ class BVBarcode:
             tuple[int, ...]: The canonical bullvalene barcode as a tuple.
         """
         
-        return self._canonical_barcode
+        return min(self._get_equivalent_barcodes())
     
-    @property
+    @cached_property
     def barcode_labels(
         self
     ) -> tuple[int]:
@@ -212,7 +209,7 @@ class BVBarcode:
             tuple: The bullvalene barcode labels as a tuple.
         """
 
-        return self._barcode_labels
+        return self._generate_barcode_labels()
     
     def permutations(
         self
@@ -277,11 +274,12 @@ class BVBarcode:
         """
 
         if inplace:
-            self._barcode = self._canonical_barcode
-            self._barcode_labels = self._generate_barcode_labels()
+            self._barcode = self.canonical_barcode
+            if hasattr(self, 'barcode_labels'):
+                delattr(self, 'barcode_labels')
         else:
             return type(self)(
-                self._canonical_barcode
+                self.canonical_barcode
             )
 
     def is_canonical(
@@ -299,7 +297,7 @@ class BVBarcode:
         """
 
         return (
-            self._barcode == self._canonical_barcode
+            self._barcode == self.canonical_barcode
         )
     
     def is_chiral(
