@@ -271,7 +271,7 @@ class BVBarcode:
 
         if inplace:
             self._barcode = self._canonical_barcode
-            self._barcode_labels = self._generate_barcode()
+            self._barcode_labels = self._generate_barcode_labels()
         else:
             return type(self)(
                 self._canonical_barcode
