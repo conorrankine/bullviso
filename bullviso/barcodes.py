@@ -20,7 +20,7 @@ this program.  If not, see <https://www.gnu.org/licenses/>.
 # =============================================================================
 
 from . import utils
-from itertools import permutations
+from itertools import permutations, count
 from typing import Generator, TypeVar
 
 # =============================================================================
@@ -38,30 +38,23 @@ class BVBarcode:
     def __init__(
         self,
         barcode: tuple[int, ...],
-        grouped_barcode: tuple[int, ...] = None,
         canonicalize: bool = False
     ):
         """
         Initialises a new bullvalene barcode (`BVBarcode`) instance.
 
         Args:
-            barcode (tuple): A tuple of 10 integers in the range 0-9 inclusive
-                representing the bullvalene barcode.
-            grouped_barcode (tuple): A tuple of 10 integers in the range 0-9
-                inclusive representing the grouped bullvalene barcode; e.g.,
-                for the barcode (0,0,0,0,0,0,1,2,3,4) and the grouped barcode
-                (0,0,0,0,0,0,1,1,1,2), the implication is that substituents 1,
-                2, and 3 are equivalent, while substituent 4 is unique (i.e.,
-                the bullvalene has two unique substituents).
-            canonicalize (bool): If `True`, the bullvalene barcode is
-                canonicalized.
+            barcode (tuple): A tuple of 10 integers in the range 0-9
+                inclusive representing the bullvalene barcode.
+            canonicalize (bool, optional): If `True`, the bullvalene barcode
+                is canonicalized. Defaults to `False`.
 
         Raises:
-            ValueError: If the barcode or grouped barcode i) are not of length
-                10, ii) contain non-integer elements, or iii) contain integers
-                less than 0 or greater than 9.
+            ValueError: If the bullvalene barcode i) is not of length 10, ii)
+                contains non-integer elements, or iii) contains integers less
+                than 0 or greater than 9.
         """
-
+       
         if len(barcode) == 10 and all(
             isinstance(x, int) and 0 <= x <= 9 for x in barcode
         ):        
@@ -70,22 +63,10 @@ class BVBarcode:
             raise ValueError(
                 f'{barcode} is not a valid barcode'
             )
-        
-        if grouped_barcode is not None:
-            if len(grouped_barcode) == 10 and all(
-                isinstance(x, int) and 0 <= x <= 9 for x in grouped_barcode
-            ):        
-                self._grouped_barcode = grouped_barcode
-            else:
-                raise ValueError(
-                    f'{grouped_barcode} is not a valid grouped barcode'
-                )
-        else:
-            self._grouped_barcode = barcode
 
-        self._canonicalized_barcode, self._canonicalized_grouped_barcode = (
-            min(self._get_equivalent_barcodes(), key = lambda t: t[1])
-        )
+        self._canonical_barcode = min(self._get_equivalent_barcodes())
+
+        self._barcode_labels = self._generate_barcode_labels()
 
         if canonicalize:
             self.canonicalize()
@@ -95,11 +76,11 @@ class BVBarcode:
         cls: type[T],
         sub_smiles: list[str],
         sub_attach_idx: list[int | list[int]],
-        canonicalize: bool = True
+        canonicalize: bool = False
     ) -> T:
         """
         Creates a new bullvalene barcode from a list of substituent SMILEs
-        strings and a list of attachment ooints.
+        strings and a list of attachment points.
 
         Args:
             sub_smiles (list[str]): List of SMILEs strings specifying the
@@ -108,8 +89,8 @@ class BVBarcode:
                 attachment points, supplied (for each substituent) as either:
                     - int: defining a single attachment point;
                     - list[int]: defining multiple attachment points.
-            canonicalize (bool, optional): If True, the bullvalene barcode is
-                canonicalised. Defaults to True.
+            canonicalize (bool, optional): If `True`, the bullvalene barcode
+                is canonicalised. Defaults to `False`.
 
         Raises:
             ValueError: If `sub_smiles` and `sub_attach_idx` are not of equal
@@ -146,72 +127,57 @@ class BVBarcode:
         }
 
         barcode = utils.pad_list(
-            [i for i in range(1, len(groups) + 1)],
-            length = 10,
-            direction = 'left'
-        )
-
-        grouped_barcode = utils.pad_list(
             [equivalent_group_map[group] for group in groups],
             length = 10,
             direction = 'left'
         )
 
-        return cls(
-            barcode,
-            grouped_barcode = grouped_barcode,
-            canonicalize = canonicalize
-        )
+        return cls(barcode, canonicalize = canonicalize)
 
     def __str__(
         self
     ) -> str:
         """
-        Returns a string representation of the `BVBarcode` instance.
+        Returns a string representation of the bullvalene barcode.
 
         Returns:
-            str: String representation for the `_grouped_barcode` attribute.
+            str: String representation of the bullvalene barcode.
         """
         
-        return ''.join(map(str, self._grouped_barcode))
+        return ''.join(map(str, self._barcode))
 
     def __hash__(
         self
     ) -> int:
         """
-        Returns a hash for the `BVBarcode` instance; two `BVBarcode` instances
+        Returns a hash for the bullvalene barcode; two bullvalene barcodes
         have the same hash if their canonical representations are the same.
 
         Returns:
-            int: Hash for the `BVBarcode` instance.
+            int: Hash for the bullvalene barcode.
         """
         
-        return hash(
-            self._canonicalized_grouped_barcode
-        )
+        return hash(self._canonical_barcode)
     
     def __eq__(
         self,
         barcode: 'BVBarcode'
     ) -> bool:
         """
-        Returns the result of an equality test between the `BVBarcode` instance
-        and another `BVBarcode` instance; two `BVBarcode` instances are
-        equal if their canonical representations are the same.
+        Returns the result of an equality test between the bullvalene barcode
+        and another bullvalene barcode; the equality test passes if the
+        canonical representations of both bullvalene barcodes are the same.
 
         Args:
-            barcode (BVBarcode): `BVBarcode` instance to test for equality.
+            barcode (BVBarcode): Bullvalene barcode.
 
         Returns:
-            bool: True if both `BVBarcode` instances have the same canonical
-                representation, else False.
+            bool: `True` if both bullvalene barcodes have the same canonical
+                representation, else `False`.
         """
 
         if isinstance(barcode, type(self)):
-            return (
-                self._canonicalized_grouped_barcode
-                == barcode._canonicalized_grouped_barcode
-            )
+            return (self._canonical_barcode == barcode._canonical_barcode)
         else:
             return False
 
@@ -229,48 +195,39 @@ class BVBarcode:
         return self._barcode
     
     @property
-    def grouped_barcode(
+    def barcode_labels(
         self
     ) -> tuple[int, ...]:
         """
-        Returns the grouped bullvalene barcode as a tuple.
+        Returns the bullvalene barcode labels as a tuple.
 
         Returns:
-            tuple: The grouped bullvalene barcode as a tuple.
+            tuple: The bullvalene barcode labels as a tuple.
         """
 
-        return self._grouped_barcode
+        return self._barcode_labels
     
     def permutations(
         self
     ) -> Generator['BVBarcode', None, None]:
         """
-        Generates all possible permutations of the bullvalene barcode, yielding
-        a new `BVBarcode` instance for each permutation.
+        Yields all possible permutations of the bullvalene barcode.
 
         Yields:
             BVBarcode: `BVBarcode` instances for each possible permutation of
                 the bullvalene barcode.
         """
 
-        for permutation_idx in permutations(range(len(self._barcode))):
-            barcode = tuple(
-                self._barcode[i] for i in permutation_idx
-            )
-            grouped_barcode = tuple(
-                self._grouped_barcode[i] for i in permutation_idx
-            )
-            yield type(self)(
-                barcode,
-                grouped_barcode = grouped_barcode
-            )
+        for permutation_idx in permutations(range(10)):
+            barcode = tuple(self._barcode[i] for i in permutation_idx)
+            yield type(self)(barcode)
 
     def equivalents(
         self
     ) -> tuple['BVBarcode']:
         """
-        Returns a tuple of the three `BVBarcode` instances equivalent by
-        rotation around the threefold symmetry axis of the bullvalene.
+        Returns the three bullvalene barcodes equivalent by rotation around the
+        threefold symmetry axis of the bullvalene.
 
         Returns:
             Tuple[BVBarcode]: Tuple of three `BVBarcode` instances equivalent
@@ -278,8 +235,7 @@ class BVBarcode:
         """
 
         return tuple(
-            type(self)(barcode, grouped_barcode = grouped_barcode)
-            for barcode, grouped_barcode in self._get_equivalent_barcodes()
+            type(self)(barcode) for barcode in self._get_equivalent_barcodes()
         )
     
     def connections(
@@ -297,67 +253,64 @@ class BVBarcode:
         """
         Canonicalizes the bullvalene barcode.
         
-        The `_barcode` and `_grouped_barcode` attributes of the `BVBarcode`
-        instance are updated to the canonical representation, i.e., to the
-        values of the equivalent that has the smallest grouped bullvalene
-        barcode lexicographically.
+        A bullvalene barcode is canonical if it is the lexicographically
+        smallest option of the three bullvalene barcodes equivalent by rotation
+        around the threefold symmetry axis of the bullvalene.
+
+        Note: the `_barcode_labels` attribute is refreshed on canonicalization.
 
         Args:
-            inplace (bool): If `True`, the `_barcode` and `_grouped_barcode`
-                attributes are updated in place, else a new `BVBarcode`
-                instance is returned with the `_barcode` and `_grouped_barcode`
-                attributes corresponding to the canonical representation.
+            inplace (bool): If `True`, the `_barcode` attribute is updated in
+                in place, else a new `BVBarcode` instance is returned with the
+                `_barcode` attribute canonicalized.
 
         Returns:
-            BVBarcode: Canonicalized `BVBarcode` instance if
-                `inplace = False`, else `None` if `inplace = True`.
+            BVBarcode: Canonicalized `BVBarcode` instance if `inplace = False`
+                else `None` if `inplace = True`.
         """
 
         if inplace:
-            self._barcode = self._canonicalized_barcode
-            self._grouped_barcode = self._canonicalized_grouped_barcode
+            self._barcode = self._canonical_barcode
+            self._barcode_labels = self._generate_barcode()
         else:
             return type(self)(
-                self._canonicalized_barcode,
-                grouped_barcode = self._canonicalized_grouped_barcode
+                self._canonical_barcode
             )
 
-    def is_canonicalized(
+    def is_canonical(
         self
     ) -> bool:
         """
-        Checks if the bullvalene barcode is canonicalized.
+        Checks if the bullvalene barcode is canonical.
         
-        If the bullvalene barcode is canonicalized, the `_barcode` and
-        `_grouped_barcode` attributes of the `BVBarcode` instance are the same
-        as those of the equivalent that has the smallest grouped bullvalene
-        barcode lexicographically.
+        A bullvalene barcode is canonical if it is the lexicographically
+        smallest option of the three bullvalene barcodes equivalent by rotation
+        around the threefold symmetry axis of the bullvalene.
 
         Returns:
-            bool: True if the bullvalene barcode is canonicalized, else False.
+            bool: `True` if the bullvalene barcode is canonical, else `False`.
         """
 
         return (
-            self._grouped_barcode == self._canonicalized_grouped_barcode
+            self._barcode == self._canonical_barcode
         )
     
     def is_chiral(
         self
     ) -> bool:
         """
-        Checks if the bullvalene barcode defines a chiral configuration.
+        Checks if the bullvalene barcode is chiral.
 
-        If the bullvalene barcode (a1,a2,a3,b1,b2,b3,c1,c2,c3,d1) defines a
-        chiral configuration, (a1,a2,a3) != (b1,b2,b3) != (c1,c2,c3).
+        A bullvalene barcode (a1,a2,a3,b1,b2,b3,c1,c2,c3,d1) is chiral if
+        (a1,a2,a3) != (b1,b2,b3) != (c1,c2,c3).
 
         Returns:
-            bool: `True` if the bullvalene isomer barcode corresponds to a
-                chiral bullvalene, else `False`.
+            bool: `True` if the bullvalene barcode is chiral, else `False`.
         """
 
         return (
             len(set(
-                self._grouped_barcode[(i * 3):(i * 3) + 3] for i in range(3)
+                self._barcode[(i * 3):(i * 3) + 3] for i in range(3)
             )) == 3
         )
     
@@ -369,33 +322,59 @@ class BVBarcode:
             '`is_connected()` is currently a placeholder method'
         )
 
-    def _get_equivalent_barcodes(
+    def _generate_barcode_labels(
         self
-    ) -> tuple[tuple[tuple[int, ...], tuple[int, ...]]]:
+    ) -> tuple[int, ...]:
         """
-        Returns a tuple of three (`barcode`, `grouped_barcode`) pairs that are
-        equivalent by rotation around the threefold symmetry axis of the
-        bullvalene.
+        Generates a tuple of unique integer labels for the non-zero elements
+        of a bullvalene barcode.
+
+        Each non-zero element in the bullvalene barcode is assigned a unique
+        integer label according to its ascending rank order; zeros are
+        preserved. Rank ordering is stable, i.e., earlier occurences of equal-
+        valued elements receive smaller unique integer labels.
 
         Returns:
-            tuple[tuple[tuple[int, ...], tuple[int, ...]]]: Tuple of three
-            (`barcode`, `grouped_barcode`) pairs that are equivalent by
-            rotation around the threefold symmetry axis of the bullvalene.
+            tuple[int, ...]: Tuple of equal length to the bullvalene barcode
+                with non-zero elements replaced by unique integer labels and
+                zeros preserved.
+        """
+        
+        nonzero_bits = [
+            (i, bit) for i, bit in enumerate(self._barcode) if bit != 0
+        ]
+
+        sorted_nonzero_bits = sorted(nonzero_bits, key = lambda t: t[1])
+
+        counter = count(1)
+        label_map = {idx: next(counter) for idx, _ in sorted_nonzero_bits}
+
+        return [
+            label_map.get(i, 0) for i in range(len(self._barcode))
+        ]
+
+    def _get_equivalent_barcodes(
+        self
+    ) -> tuple[tuple[int, ...]]:
+        """
+        Generates a tuple of three bullvalene barcodes (in integer tuple
+        format) equivalent by rotation around the threefold symmetry axis of
+        the bullvalene.
+
+        Returns:
+            tuple[tuple[int, ...]]: Tuple of three bullvalene barcodes (in
+            integer tuple format) equivalent by rotation around the threefold
+            symmetry axis of the bullvalene.
         """
         
         return tuple(
-            (utils.roll(
-                self._barcode[:-1], i * 3
-            ) + self._barcode[-1:], 
-            utils.roll(
-                self._grouped_barcode[:-1], i * 3
-            ) + self._grouped_barcode[-1:])
+            (utils.roll(self._barcode[:-1], i * 3) + self._barcode[-1:])
             for i in range(3)
         )
 
     def _get_connected_barcodes(
         self
-    ) ->  tuple[tuple[tuple[int, ...], tuple[int, ...]]]:
+    ) ->  tuple[tuple[int, ...]]:
         
         raise NotImplementedError(
             '`_get_connected_barcodes()` is currently a placeholder method'
