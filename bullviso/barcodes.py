@@ -42,22 +42,19 @@ class BVBarcode:
         canonicalize: bool = False
     ):
         """
-        Instantiates a bullvalene isomer barcode.
+        Initialises a new bullvalene barcode (`BVBarcode`) instance.
 
         Args:
             barcode (tuple): A tuple of 10 integers in the range 0-9 inclusive
-                representing the bullvalene isomer barcode.
+                representing the bullvalene barcode.
             grouped_barcode (tuple): A tuple of 10 integers in the range 0-9
-                inclusive representing the grouped bullvalene isomer barcode;
-                e.g. for the barcode (0,0,0,0,0,0,1,2,3,4) and the grouped
-                barcode (0,0,0,0,0,0,1,1,1,2), the implication is that
-                substituents 1, 2, and 3 are equivalent, while substituent
-                4 is unique (i.e. the bullvalene has two unique substituents).
-            canonicalize (bool): If `True`, the `barcode` and `grouped_barcode`
-                attributes are converted to the canonical representation (i.e.
-                the smallest grouped bullvalene isomer barcode
-                lexicographically), else (if `False`) the `barcode` and
-                `grouped_barcode` attributes are stored as-is.
+                inclusive representing the grouped bullvalene barcode; e.g.,
+                for the barcode (0,0,0,0,0,0,1,2,3,4) and the grouped barcode
+                (0,0,0,0,0,0,1,1,1,2), the implication is that substituents 1,
+                2, and 3 are equivalent, while substituent 4 is unique (i.e.,
+                the bullvalene has two unique substituents).
+            canonicalize (bool): If `True`, the bullvalene barcode is
+                canonicalized.
 
         Raises:
             ValueError: If the barcode or grouped barcode i) are not of length
@@ -170,8 +167,7 @@ class BVBarcode:
         self
     ) -> str:
         """
-        Returns a string representation for the `_grouped_barcode` attribute
-        of the `BVBarcode` instance.
+        Returns a string representation of the `BVBarcode` instance.
 
         Returns:
             str: String representation for the `_grouped_barcode` attribute.
@@ -184,8 +180,7 @@ class BVBarcode:
     ) -> int:
         """
         Returns a hash for the `BVBarcode` instance; two `BVBarcode` instances
-        will have the same hash if their canonical representations (i.e. their
-        `_canonicalized_grouped_barcode` attributes) are the same.
+        have the same hash if their canonical representations are the same.
 
         Returns:
             int: Hash for the `BVBarcode` instance.
@@ -201,16 +196,15 @@ class BVBarcode:
     ) -> bool:
         """
         Returns the result of an equality test between the `BVBarcode` instance
-        and another `BVBarcode` instance (`barcode`); two `BVBarcode` instances
-        are considered equal if their canonical representations (i.e. their
-        `_canonicalized_grouped_barcode` attributes) are the same.
+        and another `BVBarcode` instance; two `BVBarcode` instances are
+        equal if their canonical representations are the same.
 
         Args:
             barcode (BVBarcode): `BVBarcode` instance to test for equality.
 
         Returns:
-            bool: True if both `BVBarcode` instances have the same
-            canonicalized grouped barcode representation, else False.
+            bool: True if both `BVBarcode` instances have the same canonical
+                representation, else False.
         """
 
         if isinstance(barcode, type(self)):
@@ -226,10 +220,10 @@ class BVBarcode:
         self
     ) -> tuple[int, ...]:
         """
-        Returns the isomer barcode as a tuple.
+        Returns the bullvalene barcode as a tuple.
 
         Returns:
-            tuple: The isomer barcode as a tuple.
+            tuple: The bullvalene barcode as a tuple.
         """
 
         return self._barcode
@@ -239,10 +233,10 @@ class BVBarcode:
         self
     ) -> tuple[int, ...]:
         """
-        Returns the grouped isomer barcode as a tuple.
+        Returns the grouped bullvalene barcode as a tuple.
 
         Returns:
-            tuple: The grouped isomer barcode as a tuple.
+            tuple: The grouped bullvalene barcode as a tuple.
         """
 
         return self._grouped_barcode
@@ -251,14 +245,12 @@ class BVBarcode:
         self
     ) -> Generator['BVBarcode', None, None]:
         """
-        Generates all permutations of the bullvalene isomer barcode, yielding a
-        `BVBarcode` instance for each permutation; the `BVBarcode` instances
-        that the method yields are instantiated with the permuted attributes 
-        `barcode` and `grouped_barcode`.
+        Generates all possible permutations of the bullvalene barcode, yielding
+        a new `BVBarcode` instance for each permutation.
 
         Yields:
-            BVBarcode: `BVBarcode` instances for each bullvalene isomer barcode
-            permutation.
+            BVBarcode: `BVBarcode` instances for each possible permutation of
+                the bullvalene barcode.
         """
 
         for permutation_idx in permutations(range(len(self._barcode))):
@@ -277,14 +269,12 @@ class BVBarcode:
         self
     ) -> tuple['BVBarcode']:
         """
-        Returns a tuple of three `BVBarcode` instances that are equivalent by
-        rotation around the threefold symmetry axis of the bullvalene, i.e.
-        they correspond to the same configurational isomer.
+        Returns a tuple of the three `BVBarcode` instances equivalent by
+        rotation around the threefold symmetry axis of the bullvalene.
 
         Returns:
-            Tuple[BVBarcode]: Tuple of three `BVBarcode` instances that are
-            equivalent by rotation around the threefold symmetry axis of the
-            bullvalene.
+            Tuple[BVBarcode]: Tuple of three `BVBarcode` instances equivalent
+            by rotation around the threefold symmetry axis of the bullvalene.
         """
 
         return tuple(
@@ -305,23 +295,22 @@ class BVBarcode:
         inplace: bool = True
     ) -> 'BVBarcode':
         """
-        Canonicalizes the bullvalene isomer barcode; updates the `barcode` and
-        `grouped_barcode` attributes of the `BVBarcode` instance to the
-        canonical representation (i.e. the smallest grouped bullvalene isomer
-        barcode lexicographically) if `inplace = True`, else returns a new
-        `BVBarcode` instance with the `barcode` and `grouped_barcode`
-        attributes corresponding to the canonical representation.
+        Canonicalizes the bullvalene barcode.
+        
+        The `_barcode` and `_grouped_barcode` attributes of the `BVBarcode`
+        instance are updated to the canonical representation, i.e., to the
+        values of the equivalent that has the smallest grouped bullvalene
+        barcode lexicographically.
 
         Args:
-            inplace (bool): If `True`, the `barcode` and `grouped_barcode`
-                attributes are updated in place, else (if `False`) a new
-                `BVBarcode` instance is returned with the `barcode` and
-                `grouped_barcode` attributes corresponding to the canonical
-                representation.
+            inplace (bool): If `True`, the `_barcode` and `_grouped_barcode`
+                attributes are updated in place, else a new `BVBarcode`
+                instance is returned with the `_barcode` and `_grouped_barcode`
+                attributes corresponding to the canonical representation.
 
         Returns:
-            BVBarcode: Canonicalized `BVBarcode` instance if `inplace = False`, 
-                else `None` if `inplace = True`.
+            BVBarcode: Canonicalized `BVBarcode` instance if
+                `inplace = False`, else `None` if `inplace = True`.
         """
 
         if inplace:
@@ -337,15 +326,15 @@ class BVBarcode:
         self
     ) -> bool:
         """
-        Checks if the bullvalene isomer barcode is canonicalized, i.e. if
-        the `_grouped_barcode` and `_canonicalized_grouped_barcode` attributes
-        of the `BVBarcode` instance are the same; if canonicalized, the
-        bullvalene isomer barcode corresponds to the smallest of the set of
-        equivalent barcodes lexicographically.
+        Checks if the bullvalene barcode is canonicalized.
+        
+        If the bullvalene barcode is canonicalized, the `_barcode` and
+        `_grouped_barcode` attributes of the `BVBarcode` instance are the same
+        as those of the equivalent that has the smallest grouped bullvalene
+        barcode lexicographically.
 
         Returns:
-            bool: `True` if the bullvalene isomer barcode is canonicalized,
-                else `False`.
+            bool: True if the bullvalene barcode is canonicalized, else False.
         """
 
         return (
@@ -356,9 +345,10 @@ class BVBarcode:
         self
     ) -> bool:
         """
-        Checks if the bullvalene isomer barcode corresponds to a chiral
-        bullvalene, i.e. (a1,a2,a3) != (b1,b2,b3) != (c1,c2,c3) for the
-        bullvalene isomer barcode (a1,a2,a3,b1,b2,b3,c1,c2,c3,d1).
+        Checks if the bullvalene barcode defines a chiral configuration.
+
+        If the bullvalene barcode (a1,a2,a3,b1,b2,b3,c1,c2,c3,d1) defines a
+        chiral configuration, (a1,a2,a3) != (b1,b2,b3) != (c1,c2,c3).
 
         Returns:
             bool: `True` if the bullvalene isomer barcode corresponds to a
@@ -383,11 +373,9 @@ class BVBarcode:
         self
     ) -> tuple[tuple[tuple[int, ...], tuple[int, ...]]]:
         """
-        Returns a tuple of three (`barcode`, `grouped_barcode`) pairs, each
-        represented as a tuple of two tuples; the three (`barcode`,
-        `grouped_barcode`) pairs are equivalent by rotation around the
-        threefold symmetry axis of the bullvalene, i.e. they correspond to
-        the same configurational isomer.
+        Returns a tuple of three (`barcode`, `grouped_barcode`) pairs that are
+        equivalent by rotation around the threefold symmetry axis of the
+        bullvalene.
 
         Returns:
             tuple[tuple[tuple[int, ...], tuple[int, ...]]]: Tuple of three
