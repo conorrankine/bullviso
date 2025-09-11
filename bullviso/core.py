@@ -281,7 +281,7 @@ def _connect_molecular_supergraph(
     
     G = super_G if inplace else super_G.copy()
 
-    for i, bit in enumerate(barcode.barcode, start = 1):
+    for i, bit in enumerate(barcode.barcode_labels, start = 1):
         if bit != 0:
             if bit not in connectivity_map:
                 raise KeyError(
