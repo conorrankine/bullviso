@@ -54,15 +54,15 @@ class BVBarcode:
                 contains non-integer elements, or iii) contains integers less
                 than 0 or greater than 9.
         """
-       
-        if len(barcode) == 10 and all(
-            isinstance(x, int) and 0 <= x <= 9 for x in barcode
-        ):        
-            self._barcode = barcode
-        else:
+
+        try:
+            self._validate_barcode(barcode)
+        except Exception as e:
             raise ValueError(
-                f'{barcode} is not a valid barcode'
+                f'invalid barcode | {e}'
             )
+
+        self._barcode = barcode
 
         self._canonical_barcode = min(self._get_equivalent_barcodes())
 
@@ -104,7 +104,7 @@ class BVBarcode:
         if not utils.all_same_length(sub_smiles, sub_attach_idx):
             raise ValueError(
                 f'`sub_smiles` and `sub_attach_idx` should have equal '
-                f'length; got lists with length {len(sub_smiles)} and '
+                f'length: got lists with length {len(sub_smiles)} and '
                 f'{len(sub_attach_idx)}'
             )
 
@@ -379,6 +379,32 @@ class BVBarcode:
         raise NotImplementedError(
             '`_get_connected_barcodes()` is currently a placeholder method'
         )
+    
+    def _validate_barcode(
+        self,
+        barcode: tuple[int]
+    ) -> None:
+        
+        n_bits = len(barcode)
+        if n_bits != 10:
+            raise ValueError(
+                f'barcodes should have 10 bits: got {n_bits} bits'
+            )
+        
+        if not all(isinstance(bit, int) and 0<=bit<=9 for bit in barcode):
+            raise ValueError(
+                f'barcodes should have only integer bits in the range [0, 9] '
+                f'inclusive: got {barcode}'
+            )
+        
+        unique_bits = sorted(set([bit for bit in barcode]))
+        expected_bits = list(range(max(unique_bits) + 1))
+        if unique_bits != expected_bits:
+            missing_bits = set(expected_bits) - set(unique_bits)
+            raise ValueError(
+                f'barcode bit values should be consecutive starting from 0: '
+                f'got {unique_bits} (missing bits = {missing_bits})'
+            )
 
 # =============================================================================
 #                                     EOF
