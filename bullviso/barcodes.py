@@ -436,10 +436,22 @@ class BVTSBarcode(BVBarcode):
     def _get_equivalent_barcodes(
         self
     ) -> tuple[tuple[int, ...]]:
+        """
+        Generates a tuple of two bullvalene transition state barcodes (in
+        integer tuple format) equivalent by reflection in the $\sigma_{v}$
+        and $\sigma_{v'}$ mirror planes.
+
+        Returns:
+            tuple[tuple[int, ...]]: Tuple of two bullvalene transition state
+            barcodes (in integer tuple format) equivalent by reflection in
+            the $\sigma_{v}$ and $\sigma_{v'}$ mirror planes.
+        """
         
-        raise NotImplementedError(
-            '`_get_equivalent_barcodes()` is currently a placeholder method'
-        )
+        b = self.barcode
+        sigma_v1 = b[3:6] + b[0:3] + b[6:]
+        sigma_v2 = b[0:3][::-1] + b[3:6][::-1] + b[6:][::-1]
+
+        return sigma_v1, sigma_v2
 
     def _get_connected_barcodes(
         self
