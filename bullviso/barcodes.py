@@ -410,6 +410,32 @@ class BVBarcode:
                 f'barcode bit values should be consecutive starting from 0: '
                 f'got {unique_bits} (missing bits = {missing_bits})'
             )
+        
+class BVTSBarcode(BVBarcode):
+
+    def is_chiral(
+        self
+    ) -> bool:
+
+        raise NotImplementedError(
+            '`_is_chiral()` is currently a placeholder method'
+        )
+
+    def _get_equivalent_barcodes(
+        self
+    ) -> tuple[tuple[int, ...]]:
+        
+        raise NotImplementedError(
+            '`_get_equivalent_barcodes()` is currently a placeholder method'
+        )
+
+    def _get_connected_barcodes(
+        self
+    ) ->  tuple[tuple[int, ...]]:
+        
+        raise NotImplementedError(
+            '`_get_connected_barcodes()` is currently a placeholder method'
+        )
 
 # =============================================================================
 #                                     EOF
