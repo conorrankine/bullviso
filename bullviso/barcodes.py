@@ -368,8 +368,8 @@ class BVBarcode:
 
         Returns:
             tuple[tuple[int, ...]]: Tuple of three bullvalene barcodes (in
-            integer tuple format) equivalent by rotation around the threefold
-            symmetry axis of the bullvalene.
+                integer tuple format) equivalent by rotation around the
+                threefold symmetry axis of the bullvalene.
         """
         
         return tuple(
@@ -416,9 +416,21 @@ class BVTSBarcode(BVBarcode):
     def is_chiral(
         self
     ) -> bool:
+        """
+        Checks if the bullvalene transition state barcode is chiral.
 
-        raise NotImplementedError(
-            '`_is_chiral()` is currently a placeholder method'
+        A bullvalene transition state barcode (a1,a2,a3,b1,b2,b3,c1,c2,c3,c4)
+        is chiral if (a1,a2,a3) != (b1,b2,b3).
+
+        Returns:
+            bool: `True` if the bullvalene transition state barcode is chiral,
+                else `False`.
+        """
+
+        return (
+            len(set(
+                self._barcode[(i * 3):(i * 3) + 3] for i in range(2)
+            )) == 2
         )
 
     def _get_equivalent_barcodes(
