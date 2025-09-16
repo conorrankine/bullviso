@@ -185,6 +185,23 @@ def build_bullvalene_from_barcode(
 def load_bullvalene_from_library(
     transition_state: bool = False
 ) -> Chem.Mol:
+    """
+    Loads a bullvalene (or, optionally, Cope rearrangement transition state)
+    RDKit `Chem.Mol` instance from the `bullviso.structures` library with
+    preset 3D/Cartesian coordinates.
+
+    Args:
+        transition_state (bool, optional): If `True`, a Cope rearrangement
+            transition state bullvalene is returned rather than a stable-state
+            bullvalene. Defaults to `False`.
+
+    Raises:
+        ValueError: If the RDKit `Chem.Mol` instance fails to load from the
+            relevant mol (.sdf) file in the `bullviso.structures` library.
+
+    Returns:
+        Chem.Mol: Bullvalene.
+    """
     
     mol_file_name = 'bv.sdf' if not transition_state else 'bv_ts.sdf'
     with resources.open_text('bullviso.structures', mol_file_name) as mol_file:
