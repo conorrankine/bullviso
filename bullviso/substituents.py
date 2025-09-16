@@ -27,7 +27,8 @@ from .barcodes import BVBarcode, BVTSBarcode
 
 __all__ = [
     "Substituent",
-    "build_bullvalene_from_barcode"
+    "build_bullvalene_from_barcode",
+    "load_bullvalene_from_library"
 ]
 
 # =============================================================================
