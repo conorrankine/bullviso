@@ -29,7 +29,7 @@ from . import barcodes
 from . import graphs
 from . import conformers
 from . import io
-from .barcodes import BVBarcode
+from .barcodes import BVBarcode, BVTSBarcode
 
 # =============================================================================
 #                                     EOF
