@@ -1,5 +1,6 @@
 build
 bullviso.egg-info/
 bullviso/__pycache__/
+bullviso/structures/__pycache__/
 .venv
 .vscode

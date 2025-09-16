@@ -21,10 +21,8 @@ packages = [
 ]
 
 [tool.setuptools.package-data]
-"bullviso" = [
-    "structures/*.sdf",
-    "assets/banners/*.txt"
-]
+"bullviso.structures" = ["*.sdf"]
+"bullviso.assets.banners" = ["banner.txt"]
 
 [project.scripts]
 bullviso = "bullviso:cli.app"
