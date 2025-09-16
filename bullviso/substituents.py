@@ -22,7 +22,9 @@ this program.  If not, see <https://www.gnu.org/licenses/>.
 from __future__ import annotations
 from dataclasses import dataclass
 from importlib import resources
+from itertools import count
 from rdkit import Chem
+from .utils import all_same_length
 from .barcodes import BVBarcode, BVTSBarcode
 
 __all__ = [
@@ -42,17 +44,100 @@ class Substituent:
 
     Attributes: 
         smiles (str): SMILES string for the substituent.
-        attach_idxs (list[int]): [#TODO: DESCRIPTION]
+        attachment_idxs (list[int]): [#TODO: DESCRIPTION]
         barcode_bits (list[int]): [#TODO: DESCRIPTION]   
     """
 
     smiles: str
-    attach_idxs: list[int]
+    attachment_idxs: list[int]
     barcode_bits: list[int]
 
 # =============================================================================
 #                                  FUNCTIONS
 # =============================================================================
+
+def substituents_from_specifications(
+    substituent_smiles: list[str],
+    num_substituents: list[int],
+    attachment_idxs: list[list[int]]
+) -> tuple[Substituent, ...]:
+    """
+    Generates a tuple of `Substituent` instances from a user-friendly shorthand
+    substituent specification.
+
+    This function automates the boilerplate associated with creating multiple
+    `Substituent` instances manually and ensures that a unique bullvalene
+    barcode bit value is assigned to each attachment point.
+
+    Args:
+        substituent_smiles (list[str]): Sequence of SMILES strings (one per
+            substituent).
+        num_substituents (list[int]): Sequence of integers (one per
+            substituent) defining the substituent count, i.e., the number of
+            times that the corresponding substituent should appear. 
+        attachment_idxs (list[list[int]]): Sequence of integer sequences (one
+            per substituent) defining the atom indices of the attachment
+            point(s) for the corresponding substituent.
+
+    Raises:
+        ValueError: If `substituent_smiles`, `num_substituents`, and
+            `attachment_idxs` are not all of equal length.
+        ValueError: If any element of `num_substituents` is < 0.
+        ValueError: If any element of `attachment_idxs` is empty.
+        ValueError: If more than 9 attachment points are specified (summed over
+            all substituents).
+
+    Returns:
+        tuple[Substituent, ...]: Tuple of `Substituent` instances with unique
+            bullvalene barcode bit values assigned to each attachment point.
+    """
+
+    if not all_same_length(
+        substituent_smiles, num_substituents, attachment_idxs
+    ):
+        raise ValueError(
+            f'`substituent_smiles`, `num_substituents`, and `attachment_idxs` '
+            f'should all be of equal length; got sequences with lengths '
+            f'{len(substituent_smiles)}, {len(num_substituents)}, and '
+            f'{len(attachment_idxs)} (respectively)'
+        )
+    
+    substituents: list[Substituent] = []
+
+    barcode_bit_value = count(start = 1)
+
+    for smiles_, num_substituents_, attachment_idxs_ in zip(
+        substituent_smiles, num_substituents, attachment_idxs
+    ):
+        if num_substituents_ <= 0:
+            raise ValueError(
+                f'`num_substituents` should be positive: got '
+                f'{num_substituents_} for SMILES = \'{smiles_}\''
+            )
+        if not attachment_idxs_:
+            raise ValueError(
+                f'`attachment_idxs` should not be empty: got '
+                f'{attachment_idxs_} for SMILES = \'{smiles_}\''
+            )
+        for _ in range(num_substituents_):
+            substituents.append(
+                Substituent(
+                    smiles = smiles_,
+                    attachment_idxs = attachment_idxs_,
+                    barcode_bits = [
+                        next(barcode_bit_value) for _ in attachment_idxs_
+                    ]
+                )
+            )
+
+    num_attachment_idxs = next(barcode_bit_value) - 1
+    if num_attachment_idxs > 9:
+        raise ValueError(
+            f'support is only available for up to 9 attachment points: got '
+            f'{num_attachment_idxs}'
+        )
+
+    return tuple(substituents)
 
 def build_bullvalene_from_barcode(
     barcode: BVBarcode | BVTSBarcode,
@@ -179,17 +264,17 @@ def _add_substituent(
         bullvalene.GetNumAtoms() - substituent_mol.GetNumAtoms()
     )
     
-    for barcode_bit, attach_idx in zip(
-        substituent.barcode_bits, substituent.attach_idxs
+    for barcode_bit, attachment_idx in zip(
+        substituent.barcode_bits, substituent.attachment_idxs
     ):
-        attach_idx_bullvalene = barcode.barcode_labels.index(barcode_bit)
-        attach_idx_substituent = attach_idx + offset
+        attachment_idx_bullvalene = barcode.barcode_labels.index(barcode_bit)
+        attachment_idx_substituent = attachment_idx + offset
         _remove_explicit_hydrogens(
-            bullvalene, attach_idx_bullvalene
+            bullvalene, attachment_idx_bullvalene
         )
         bullvalene.AddBond(
-            attach_idx_bullvalene,
-            attach_idx_substituent,
+            attachment_idx_bullvalene,
+            attachment_idx_substituent,
             Chem.rdchem.BondType.SINGLE
         )
 
