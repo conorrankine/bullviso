@@ -361,9 +361,20 @@ def _remove_explicit_hydrogens(
     Args:
         mol (Chem.Mol): Molecule.
         atom_idx (int): Atom index.
+
+    Raises:
+        IndexError: If the atom index is out of bounds, i.e., less than zero,
+            or greater than the number of atoms in the molecule.
     """
 
+    if not (0 <= atom_idx < mol.GetNumAtoms()):
+        raise IndexError(
+            f'atom index {atom_idx} is out of bounds for a molecule with '
+            f'{mol.GetNumAtoms()} atoms'
+        )
+
     atom = mol.GetAtomWithIdx(atom_idx)
+    
     atom.SetNumExplicitHs(0)
     atom.UpdatePropertyCache()
 
