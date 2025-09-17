@@ -24,6 +24,7 @@ from dataclasses import dataclass
 from importlib import resources
 from functools import lru_cache
 from itertools import count
+from enum import Enum
 from rdkit import Chem
 from .utils import all_same_length
 from .barcodes import BVBarcode, BVTSBarcode
@@ -33,6 +34,19 @@ __all__ = [
     "build_bullvalene_from_barcode",
     "load_bullvalene_from_library"
 ]
+
+# =============================================================================
+#                                  CONSTANTS
+# =============================================================================
+
+ATOM_STEREO_FLAGS = Enum(
+    'ATOM_STEREO_FLAGS', {
+        'CW': Chem.rdchem.ChiralType.CHI_TETRAHEDRAL_CW,
+        'CCW': Chem.rdchem.ChiralType.CHI_TETRAHEDRAL_CCW
+    }
+)
+
+BULLVALENE_STEREO_MAP = {0: 'CCW', 3: 'CW', 6: 'CCW', 9: 'CW'}
 
 # =============================================================================
 #                                   CLASSES
@@ -143,7 +157,8 @@ def substituents_from_specifications(
 def build_bullvalene_from_barcode(
     barcode: BVBarcode | BVTSBarcode,
     substituents: tuple[Substituent, ...],
-    sanitize: bool = True
+    sanitize: bool = True,
+    set_stereochemistry: bool = True
 ) -> Chem.Mol:
     """
     Builds a substituted bullvalene with the supplied substituents attached.
@@ -160,6 +175,9 @@ def build_bullvalene_from_barcode(
             and the barcode bit <-> attachment point mapping(s).
         sanitize (bool, optional): If `True`, the substituted bullvalene is
             sanitized by RDKit using `Chem.SanitizeMol()` before return.
+            Defaults to `True`.
+        set_stereochemistry (bool, optional): If `True`, the stereochemistry of
+            the substituted bullvalene is set for compatibility with BULLVISO.
             Defaults to `True`.
 
     Returns:
@@ -183,6 +201,12 @@ def build_bullvalene_from_barcode(
 
     if sanitize:
         Chem.SanitizeMol(substituted_bullvalene)
+
+    if set_stereochemistry:
+        _set_atom_stereochemistry(
+            substituted_bullvalene,
+            BULLVALENE_STEREO_MAP
+        )
 
     return substituted_bullvalene
 
@@ -365,7 +389,7 @@ def _remove_explicit_hydrogens(
         atom_idx (int): Atom index.
 
     Raises:
-        IndexError: If the atom index is out of bounds, i.e., less than zero,
+        IndexError: If the atom index is out of bounds, i.e., less than zero
             or greater than the number of atoms in the molecule.
     """
 
@@ -379,6 +403,43 @@ def _remove_explicit_hydrogens(
     
     atom.SetNumExplicitHs(0)
     atom.UpdatePropertyCache()
+
+def _set_atom_stereochemistry(
+    mol: Chem.Mol,
+    stereo_map: dict[int, str]
+) -> None:
+    """
+    Sets stereochemical tags of atoms in a molecule according to a dictionary
+    mapping of atom indices to stereochemical (chirality) flags.
+
+    Stereochemical flags:
+        - 'cw' = clockwise (tetrahedral)
+        - 'ccw' = counterclockwise (tetrahedral)
+
+    Args:
+        mol (Chem.Mol): Molecule.
+        stereo_map (dict): Dictionary mapping of atomic indices to
+            stereochemical (chirality) flags.
+
+    Raises:
+        IndexError: If any atom index in `stereo_map` is out of bounds, i.e.,
+            less than zero or greater than the number of atoms in the molecule.
+        ValueError: If any stereochemical (chirality) flag is not recognised,
+            i.e., if it is not one of {'cw', 'ccw'}.
+    """
+    
+    for atom_idx, stereo_flag in stereo_map.items():
+        if not (0 <= atom_idx < mol.GetNumAtoms()):
+            raise IndexError(
+                f'atom index {atom_idx} is out of bounds for a molecule with '
+                f'{mol.GetNumAtoms()} atoms'
+            )
+        atom = mol.GetAtomWithIdx(atom_idx)
+        if stereo_flag.upper() not in ATOM_STEREO_FLAGS.__members__:
+            raise ValueError(
+                f'invalid stereochemical flag: got {stereo_flag}'
+            )
+        atom.SetChiralTag(ATOM_STEREO_FLAGS[stereo_flag].value)
 
 # =============================================================================
 #                                     EOF
