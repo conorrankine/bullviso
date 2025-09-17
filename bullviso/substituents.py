@@ -58,7 +58,7 @@ class Substituent:
 
 def substituents_from_specifications(
     substituent_smiles: list[str],
-    num_substituents: list[int],
+    substituent_counts: list[int],
     attachment_idxs: list[list[int]]
 ) -> tuple[Substituent, ...]:
     """
@@ -72,7 +72,7 @@ def substituents_from_specifications(
     Args:
         substituent_smiles (list[str]): Sequence of SMILES strings (one per
             substituent).
-        num_substituents (list[int]): Sequence of integers (one per
+        substituent_counts (list[int]): Sequence of integers (one per
             substituent) defining the substituent count, i.e., the number of
             times that the corresponding substituent should appear. 
         attachment_idxs (list[list[int]]): Sequence of integer sequences (one
@@ -80,9 +80,9 @@ def substituents_from_specifications(
             point(s) for the corresponding substituent.
 
     Raises:
-        ValueError: If `substituent_smiles`, `num_substituents`, and
+        ValueError: If `substituent_smiles`, `substituent_count`, and
             `attachment_idxs` are not all of equal length.
-        ValueError: If any element of `num_substituents` is < 0.
+        ValueError: If any element of `substituent_count` is < 0.
         ValueError: If any element of `attachment_idxs` is empty.
         ValueError: If more than 9 attachment points are specified (summed over
             all substituents).
@@ -93,12 +93,12 @@ def substituents_from_specifications(
     """
 
     if not all_same_length(
-        substituent_smiles, num_substituents, attachment_idxs
+        substituent_smiles, substituent_counts, attachment_idxs
     ):
         raise ValueError(
-            f'`substituent_smiles`, `num_substituents`, and `attachment_idxs` '
+            f'`substituent_smiles`, `substituent_count`, and `attachment_idxs` '
             f'should all be of equal length; got sequences with lengths '
-            f'{len(substituent_smiles)}, {len(num_substituents)}, and '
+            f'{len(substituent_smiles)}, {len(substituent_counts)}, and '
             f'{len(attachment_idxs)} (respectively)'
         )
     
@@ -106,20 +106,20 @@ def substituents_from_specifications(
 
     barcode_bit_value = count(start = 1)
 
-    for smiles_, num_substituents_, attachment_idxs_ in zip(
-        substituent_smiles, num_substituents, attachment_idxs
+    for smiles_, substituent_count_, attachment_idxs_ in zip(
+        substituent_smiles, substituent_counts, attachment_idxs
     ):
-        if num_substituents_ <= 0:
+        if substituent_count_ <= 0:
             raise ValueError(
-                f'`num_substituents` should be positive: got '
-                f'{num_substituents_} for SMILES = \'{smiles_}\''
+                f'`substituent_count` should be positive: got '
+                f'{substituent_count_} for SMILES = \'{smiles_}\''
             )
         if not attachment_idxs_:
             raise ValueError(
                 f'`attachment_idxs` should not be empty: got '
                 f'{attachment_idxs_} for SMILES = \'{smiles_}\''
             )
-        for _ in range(num_substituents_):
+        for _ in range(substituent_count_):
             substituents.append(
                 Substituent(
                     smiles = smiles_,
@@ -134,7 +134,7 @@ def substituents_from_specifications(
     if num_attachment_idxs > 9:
         raise ValueError(
             f'support is only available for up to 9 attachment points: got '
-            f'{num_attachment_idxs}'
+            f'{num_attachment_idxs} attachment points across all substituents'
         )
 
     return tuple(substituents)
