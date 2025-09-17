@@ -22,6 +22,7 @@ this program.  If not, see <https://www.gnu.org/licenses/>.
 from __future__ import annotations
 from dataclasses import dataclass
 from importlib import resources
+from functools import lru_cache
 from itertools import count
 from rdkit import Chem
 from .utils import all_same_length
@@ -185,6 +186,7 @@ def build_bullvalene_from_barcode(
 
     return substituted_bullvalene
 
+@lru_cache(maxsize = 2)
 def load_bullvalene_from_library(
     transition_state: bool = False
 ) -> Chem.Mol:
