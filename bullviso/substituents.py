@@ -165,8 +165,11 @@ def build_bullvalene_from_barcode(
         Chem.Mol: Substituted bullvalene.
     """
 
+    _validate_barcode_substituent_compatibility(barcode, substituents)
+
+    transition_state = isinstance(barcode, BVTSBarcode)
     bullvalene = load_bullvalene_from_library(
-        transition_state = isinstance(barcode, BVTSBarcode)
+        transition_state = transition_state
     )
 
     substituted_bullvalene = _add_substituents(
@@ -215,6 +218,56 @@ def load_bullvalene_from_library(
         )
     
     return bullvalene
+
+def _validate_barcode_substituent_compatibility(
+    barcode: BVBarcode | BVTSBarcode,
+    substituents: tuple[Substituent, ...]
+) -> None:
+    """
+    Validates compatibility between the bullvalene barcode and substituents.
+
+    This function checks that every barcode bit is associated with a
+    corresponding substituent attachment point (i.e., there are no extra bits),
+    and that no substituents have attachment points that are not associated
+    with a corresponding barcode bit (i.e., there are no missing bits).
+
+    Args:
+        barcode (BVBarcode | BVTSBarcode): `BVBarcode` or `BVTSBarcode`
+            instance defining the substitution configuration of the bullvalene.
+        substituents (tuple[Substituent, ...]): Tuple of `Substituent`
+            instances defining the substituents to attach to the bullvalene
+            and the barcode bit <-> attachment point mapping(s).
+
+    Raises:
+        ValueError: If there are barcode bits that are not associated with a
+            substituent attachment point (i.e., there are extra bits).
+        ValueError: If there are substituent attachment points that are not
+            associated with barcode bits (i.e., there are missing bits).
+    """
+    
+    nonzero_barcode_bits = set(
+        bit for bit in barcode.barcode_labels if bit != 0
+    )
+
+    used_barcode_bits: set[int] = set()
+    for substituent in substituents:
+        used_barcode_bits.update(substituent.barcode_bits)
+
+    extra_barcode_bits = nonzero_barcode_bits - used_barcode_bits
+    if extra_barcode_bits:
+        raise ValueError(
+            f'bullvalene barcode ({barcode}) contains extra bits '
+            f'(extra bits = {extra_barcode_bits}) not associated with any '
+            f'of the supplied substituent'
+        )
+    
+    missing_barcode_bits = used_barcode_bits - nonzero_barcode_bits
+    if missing_barcode_bits:
+        raise ValueError(
+            f'bullvalene barcode ({barcode}) is missing bits '
+            f'(missing bits = {missing_barcode_bits}) associated with one or '
+            f'more of the supplied substituent(s)'
+        )
 
 def _add_substituents(
     bullvalene: Chem.Mol,
