@@ -21,7 +21,7 @@ this program.  If not, see <https://www.gnu.org/licenses/>.
 
 import bullviso as bv
 import datetime
-from . import utils
+from .utils.list_utils import all_same_length
 from tqdm import tqdm
 from dataclasses import dataclass
 from importlib import resources
@@ -52,7 +52,7 @@ class BullvisoParams:
 
     def __post_init__(self):
         
-        if not utils.all_same_length(
+        if not all_same_length(
             self.sub_smiles,
             self.n_subs,
             self.sub_attach_idx
