@@ -71,60 +71,34 @@ class BVBarcode:
     @classmethod
     def from_substituents(
         cls: type[T],
-        sub_smiles: list[str],
-        sub_attach_idx: list[int | list[int]],
+        subs: tuple[Substituent, ...],
         canonicalize: bool = False
     ) -> T:
         """
-        Creates a new bullvalene barcode from a list of substituent SMILEs
-        strings and a list of attachment points.
+        Generates a bullvalene barcode from a tuple of `Substituent` instances.
 
         Args:
-            sub_smiles (list[str]): List of SMILEs strings specifying the
-                substituents attached to the bullvalene.
-            sub_attach_idx (list[Union[int, list[int]]]): List of substituent
-                attachment points, supplied (for each substituent) as either:
-                    - int: defining a single attachment point;
-                    - list[int]: defining multiple attachment points.
+            subs (tuple[Substituent, ...]): Tuple of `Substituent` instances.
             canonicalize (bool, optional): If `True`, the bullvalene barcode
-                is canonicalised. Defaults to `False`.
-
-        Raises:
-            ValueError: If `sub_smiles` and `sub_attach_idx` are not of equal
-                length.
-            ValueError: If the number of attachment points is greater than 9.
+                is canonicalized. Defaults to `False`.
 
         Returns:
             BVBarcode: Bullvalene barcode.
         """
         
-        if not utils.all_same_length(sub_smiles, sub_attach_idx):
-            raise ValueError(
-                f'`sub_smiles` and `sub_attach_idx` should have equal '
-                f'length: got lists with length {len(sub_smiles)} and '
-                f'{len(sub_attach_idx)}'
-            )
+        hash_strings: list[str] = []
+        for sub in subs:
+            for attachment_idx in sub.attachment_idxs:
+                hash_strings.append(f'{sub.smiles}_{attachment_idx}')
 
-        groups = [
-            f'{sub_smiles[n]}_{idx}' for (n, idx)
-                in utils.iterate_and_index(sub_attach_idx)
-        ]
-
-        n_attachment_points = len(groups)
-        if n_attachment_points > 9:
-            raise ValueError(
-                f'too many attachment points defined: got '
-                f'{n_attachment_points} (maximum allowed = 9)'
-            )
-
-        equivalent_group_map = {
-            group: i for i, group in enumerate(
-                utils.unique_elements(groups), start = 1
-            )
+        unique_hashes = list(dict.fromkeys(hash_strings))
+        
+        hash_to_group_map = {
+            hash_string: i + 1 for i, hash_string in enumerate(unique_hashes)
         }
 
         barcode = utils.pad_list(
-            [equivalent_group_map[group] for group in groups],
+            [hash_to_group_map[hash_string] for hash_string in hash_strings],
             length = 10,
             direction = 'left'
         )
