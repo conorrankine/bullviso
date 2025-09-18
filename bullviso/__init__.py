@@ -27,7 +27,6 @@ __version__ = '3.0.0'
 
 from . import barcodes
 from . import substituents
-from . import graphs
 from . import conformers
 from . import io
 from .barcodes import BVBarcode, BVTSBarcode
