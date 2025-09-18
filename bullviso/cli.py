@@ -202,8 +202,30 @@ def _normalise_substituent_config_vars(
             f'length of `sub_attach_idx` should be i) 1, or ii) equal to the '
             f'length of `sub_smiles` ({n_smiles}): got {len(sub_attach_idx)}'
         )
+    
+    sub_attach_idx = [
+        [attach_idx] if not isinstance(attach_idx, list) else attach_idx
+        for attach_idx in sub_attach_idx
+    ]
+
+    sub_attach_idx = _to_zero_based_idxs(sub_attach_idx)
 
     return n_subs, sub_attach_idx
+
+def _to_zero_based_idxs(
+    idxs: list[list[int]]
+) -> list[list[int]]:
+    """
+    Converts a 2D list of 1-based indices into a 2D list of 0-based indices.
+
+    Args:
+        idxs (list[list[int]]): (2D) Nested list of 1-based indices.
+
+    Returns:
+        list[list[int]]: (2D) Nested list of 0-based indices.
+    """
+    
+    return [[idx - 1 for idx in sublist] for sublist in idxs]
 
 @app.command()
 def bullviso_cli(

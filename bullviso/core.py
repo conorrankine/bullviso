@@ -20,7 +20,6 @@ this program.  If not, see <https://www.gnu.org/licenses/>.
 # =============================================================================
 
 import bullviso as bv
-import networkx as nx
 import datetime
 from . import utils
 from tqdm import tqdm
@@ -36,7 +35,7 @@ from rdkit import Chem
 class BullvisoParams:
     sub_smiles: list[str]
     n_subs: list[int]
-    sub_attach_idx: list[int | list[int]]
+    sub_attach_idx: list[list[int]]
     m_confs: int
     embed_n_confs: int
     embed_rmsd_threshold: float
@@ -90,28 +89,16 @@ def _bullviso(
         print(f'{i}. {sub_smile:<30} {str(n_sub):>10} {str(attach_idx):>15}')
     print('-' * 60 + '\n')
 
-    sub_smiles = utils.repeat_list_elements(
-        params.sub_smiles, params.n_subs
+    bullvalene = bv.substituents.load_bullvalene_from_library()
+
+    substituents = bv.substituents.substituents_from_specifications(
+        params.sub_smiles,
+        params.n_subs,
+        params.sub_attach_idx
     )
 
-    sub_attach_idx = utils.repeat_list_elements(
-        params.sub_attach_idx, params.n_subs
-    )
-
-    n_attachment_points = utils.count_list_elements(sub_attach_idx)
-    if n_attachment_points > 9:
-        raise ValueError(
-            f'too many attachment points defined: got {n_attachment_points} '
-            f'(maximum allowed = 9)'
-        )
-
-    canonical_barcode = bv.BVBarcode.from_substituents(
-        sub_smiles,
-        sub_attach_idx
-    )
+    canonical_barcode = bv.BVBarcode.from_substituents(substituents)
     print(f'canonical barcode: {canonical_barcode}\n')
-
-    connectivity_map = _build_connectivity_map(sub_attach_idx)
 
     print('identifying unique bullvalene barcodes:')
     barcodes = set(
@@ -124,15 +111,7 @@ def _bullviso(
     )
     print('')
 
-    bv_template_filepath = Path(__file__).parent / 'structures' / 'bv.sdf'
-
-    bv_mol = bv.io.sdf_to_mol(bv_template_filepath)
-
-    sub_mols = [bv.io.smiles_to_mol(sub_smile) for sub_smile in sub_smiles]
-
-    super_G = _build_molecular_supergraph_from_mols(bv_mol, sub_mols)
-
-    coord_map = bv.conformers.get_coord_map(bv_mol)
+    coord_map = bv.conformers.get_coord_map(bullvalene)
 
     print('building bullvalene isomers:')
     for barcode in tqdm(
@@ -140,12 +119,11 @@ def _bullviso(
         ncols = 60,
         bar_format='{l_bar}{bar}| [{elapsed}<{remaining}]'
     ):
-        super_G_ = _connect_molecular_supergraph(
-            super_G,
+        
+        mol = bv.substituents.build_bullvalene_from_barcode(
             barcode,
-            connectivity_map
+            substituents
         )
-        mol = bv.graphs.graph_to_mol(super_G_)
         mol.SetProp('barcode', str(barcode))
         mol = bv.conformers.generate_confs(
             mol,
@@ -173,174 +151,6 @@ def _bullviso(
 
     datetime_ = datetime.datetime.now()
     print(f'finished @ {datetime_.strftime("%H:%M:%S (%Y-%m-%d)")}')
-
-def _build_connectivity_map(
-    sub_attach_idx: list[int | list[int]]
-) -> dict[int, tuple[int]]:
-    """
-    Builds a connectivity map (`int` -> `tuple[int, int]`) relating each unique
-    bullvalene barcode bit value to a substituent attachment point.
-    
-    Each element in `sub_attach_idx` represents the attachment point(s) for
-    each substituent; these are flattened into a mapping from unique bullvalene
-    barcode bit values (1-based) to substituent attachment points (1-based;
-    tuple of indices defining the i) substituent and ii) atom).
-
-    Args:
-        sub_attach_idx (list[int | list[int]]): List of substituent attachment
-            points, supplied (for each substituent) as either:
-                - int: defining a single attachment point;
-                - list[int]: defining multiple attachment points.
-
-    Returns:
-        dict[int, tuple[int]]: Dictionary mapping unique bullvalene barcode bit
-            values (1-based) to substitutent attachment points (1-based;
-            tuple of indices defining the i) substituent and ii) atom).
-    """
-
-    if not sub_attach_idx:
-        raise ValueError(
-            'no substituent attachment indices defined: `sub_attach_idx` '
-            'can\'t be empty'
-        )
-
-    try:
-        connectivity_map = {
-            i: (n+1, idx) for i, (n, idx) in enumerate(
-                utils.iterate_and_index(sub_attach_idx), start = 1
-            )
-        }
-    except Exception as e:
-        raise ValueError(
-            f'failed to build connectivity map: {e}'
-        )
-
-    return connectivity_map
-
-def _build_molecular_supergraph_from_mols(
-    bv_mol: Chem.Mol,
-    sub_mols: list[Chem.Mol]
-) -> nx.Graph:
-    """
-    Builds a molecular supergraph comprising the molecular graphs of bullvalene
-    and the supplied substituents as disconnected entities.
-
-    Args:
-        bv_mol (Chem.Mol): Bullvalene (`Chem.Mol` representation).
-        sub_mols (list[Chem.Mol]): Substituents (`Chem.Mol` representations).
-
-    Returns:
-        nx.Graph: Molecular supergraph comprising the molecular graphs of
-            bullvalene and the supplied substituents as disconnected entities.
-    """
-
-    try:
-        bv_mol_G = _bv_mol_to_graph(bv_mol)
-        sub_mol_Gs = [
-            bv.graphs.mol_to_graph(sub_mol, node_label_prefix = f'sub{i}_')
-            for i, sub_mol in enumerate(sub_mols, start = 1)
-        ]
-        super_G = nx.compose_all([bv_mol_G, *sub_mol_Gs])
-    except Exception as e:
-        raise ValueError(
-            f'failed to build molecular supergraph: {e}'
-        )
-
-    return super_G
-
-def _connect_molecular_supergraph(
-    super_G: nx.Graph,
-    barcode: bv.BVBarcode,
-    connectivity_map: dict[int, tuple[int]],
-    inplace: bool = False
-) -> nx.Graph:
-    """
-    Connects the molecular graphs of bullvalene and the supplied substituents
-    in the molecular supergraph using the bullvalene barcode and the associated
-    instructions encoded in the connectivity map.
-
-    For each non-zero bit in the bullvalene barcode, an edge is added to the
-    molecular supergraph between a bullvalene atom node (`bullvalene_[I]`,
-    where [I] is the index of the non-zero bit) and a substituent atom node
-    (`sub[J]_[K]`), where [J] and [K] are derived from the connectivity map
-    as [BIT_VALUE] -> ([J],[K]).
-
-    Args:
-        super_G (nx.Graph): Molecular supergraph.
-        barcode (bv.BVBarcode): Bullvalene barcode.
-        connectivity_map (dict[int, tuple[int]]): Dictionary mapping unique
-            bullvalene barcode bit values (1-based) to substitutent attachment
-            points (1-based; tuple of indices defining the i) substituent and
-            ii) atom).
-        inplace (bool, optional): If True, `super_G` is modified in place,
-            else a copy is made, modified, and returned. Defaults to False.
-
-    Returns:
-        nx.Graph: Molecular supergraph with additional connections.
-    """
-    
-    G = super_G if inplace else super_G.copy()
-
-    for i, bit in enumerate(barcode.barcode_labels, start = 1):
-        if bit != 0:
-            if bit not in connectivity_map:
-                raise KeyError(
-                    f'bullvalene barcode bit value {bit} (position {i}) '
-                    f'is not defined in the connectivity map'
-                )
-            bv_atom_idx = i
-            bv_node = f'bullvalene_{bv_atom_idx}'
-            if bv_node not in G.nodes():
-                raise ValueError(
-                    f'bullvalene node `{bv_node}` is not a node in the graph'
-                )
-            sub_idx, sub_atom_idx = connectivity_map[bit]
-            sub_node = f'sub{sub_idx}_{sub_atom_idx}'
-            if sub_node not in G.nodes():
-                raise ValueError(
-                    f'substituent node `{sub_node}` is not a node in the graph'
-                )
-            G.add_edge(bv_node, sub_node)
-
-    return G
-
-def _bv_mol_to_graph(
-    bv_mol: Chem.Mol,
-    set_stereochemistry: bool = True
-) -> nx.Graph:
-    """
-    Converts an RDKit `Chem.Mol` representation of a bullvalene into a
-    molecular graph representation with nodes labelled as 'bullvalene_[N]'
-    (where [N] is the atom index in the range [1,10]). Optionally sets the
-    correct stereochemical tags for the `bullviso` workflow.
-
-    Args:
-        bv_mol (Chem.Mol): Bullvalene (`Chem.Mol` representation).
-        set_stereochemistry (bool, optional): Sets the correct stereochemical
-            tags for the `bullviso` workflow. Defaults to True.
-
-    Returns:
-        nx.Graph: Bullvalene (molecular graph representation).
-    """
-
-    # TODO: validate that `bv_mol` is a valid representation of bullvalene
-
-    bv_mol_G = bv.graphs.mol_to_graph(
-        bv_mol, node_label_prefix = 'bullvalene_'
-    )
-    
-    if set_stereochemistry:
-        bv.graphs.set_atom_stereochemistry(
-            bv_mol_G,
-            atom_stereo_map = {
-                'bullvalene_1'  : 'ccw',
-                'bullvalene_4'  : 'cw',
-                'bullvalene_7'  : 'ccw',
-                'bullvalene_10' : 'cw'
-            }
-        )
-
-    return bv_mol_G
 
 def _get_conf_ids(
     mol: Chem.Mol,
