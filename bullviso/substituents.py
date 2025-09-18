@@ -170,13 +170,14 @@ def build_bullvalene_from_barcode(
     barcode: BVBarcode | BVTSBarcode,
     substituents: tuple[Substituent, ...],
     sanitize: bool = True,
+    set_properties: bool = True,
     set_stereochemistry: bool = True
 ) -> Chem.Mol:
     """
     Builds a substituted bullvalene with the supplied substituents attached.
 
     If the bullvalene barcode supplied is a `BVTSBarcode` instance, a
-    bullvalene transition state is built instead of an equilibrium/'stable-
+    bullvalene transition state is built instead of a minimum-energy/'stable-
     state' bullvalene.
 
     Args:
@@ -188,6 +189,10 @@ def build_bullvalene_from_barcode(
         sanitize (bool, optional): If `True`, the substituted bullvalene is
             sanitized by RDKit using `Chem.SanitizeMol()` before return.
             Defaults to `True`.
+        set_properties (bool, optional): If `True`, the `barcode` and
+            `transition_state` properties are set for the substituted
+            bullvalene by RDKit using `Chem.SetProp()` and `Chem.SetBoolProp()`
+            respectively. Defaults to `True`.
         set_stereochemistry (bool, optional): If `True`, the stereochemistry of
             the substituted bullvalene is set for compatibility with BULLVISO.
             Defaults to `True`.
@@ -213,6 +218,14 @@ def build_bullvalene_from_barcode(
 
     if sanitize:
         Chem.SanitizeMol(substituted_bullvalene)
+
+    if set_properties:
+        substituted_bullvalene.SetProp(
+            'barcode', str(barcode)
+        )
+        substituted_bullvalene.SetBoolProp(
+            'transition_state', transition_state
+        )
 
     if set_stereochemistry:
         stereo_map = (

@@ -129,8 +129,6 @@ def _bullviso(
                 barcode,
                 substituents
             )
-            mol.SetProp('barcode', str(barcode))
-            mol.SetBoolProp('transition_state', transition_state)
             mol = bv.conformers.generate_confs(
                 mol,
                 embed_n_confs = params.embed_n_confs,
