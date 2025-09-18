@@ -19,20 +19,36 @@ this program.  If not, see <https://www.gnu.org/licenses/>.
 #                               LIBRARY IMPORTS
 # =============================================================================
 
-from typing import Union, Generator, Any
+from typing import TypeVar
+
+# =============================================================================
+#                                   GLOBALS
+# =============================================================================
+
+T = TypeVar('T')
+
+# =============================================================================
+#                                  CONSTANTS
+# =============================================================================
+
+PADDING_LEFT = 'left'
+PADDING_RIGHT = 'right'
 
 # =============================================================================
 #                                  FUNCTIONS
 # =============================================================================
 
 def all_same_length(
-    *input_lists: list[Any] 
+    *input_lists: list
 ) -> bool:
     """
-    Validates that all of the input lists have the same length.
+    Validates that all the input lists have the same length.
+
+    Args:
+        *input_lists (list): Variable number of input lists to validate.
 
     Returns:
-        bool: True if all of the input lists have the same length, else False.
+        bool: `True` if all the input lists have the same length, else `False`.
     """
     
     if not input_lists:
@@ -41,81 +57,100 @@ def all_same_length(
         return len({len(input_list) for input_list in input_lists}) == 1
 
 def pad_list(
-    input_list: list[Any],
+    input_list: list[T],
     length: int,
-    direction: str = 'right'
-) -> list[Any]:
+    direction: str = PADDING_RIGHT
+) -> list[T | int]:
     """
     Zero-pads a list up to the specified length.
 
     Args:
-        input_list (list[Any]): Input list.
-        length (int): Integer specifying the length of the list post-padding;
-            lists longer than this are returned as-is without padding.
-        direction (str, optional): String specifying the direction of the
-            padding; options are `left` or `right`. Defaults to 'right'.
+        input_list (list[T]): Input list.
+        length (int): Length target for the padded list; lists longer than this
+            are returned as-is, i.e., without padding.
+        direction (str, optional): Direction of padding; use `PADDING_RIGHT`
+            for right padding and `PADDING_LEFT` for left padding. Defaults to
+            'PADDING_RIGHT'.
 
     Raises:
-        ValueError: If `direction` is not valid; i.e. if it is not one of
-            either `left` or `right`.
+        ValueError: If `length` is negative (< 0).
+        ValueError: If `direction` is not valid, i.e., if it is not one of
+            {'left', 'right'}. 
 
     Returns:
-        list[Any]: List containing the elements of the input list, padded with
-            zeros up to the specified length.
+        list[T | int]: List containing the elements of the input list, padded
+            with zeros up to the specified length. If the input list is already
+            at or above the length target, a copy is returned as-is.
     """
     
+    if length < 0:
+        raise ValueError(
+            f'`length should be non-negative (>= 0): got {length}'
+        )
+
     if len(input_list) < length:
         padding = [0] * (length - len(input_list))
-        if direction == 'left':
+        if direction == PADDING_LEFT:
             return padding + input_list
-        elif direction == 'right':
+        elif direction == PADDING_RIGHT:
             return input_list + padding
         else:
             raise ValueError(
-                '`direction` should be either `left` or `right`'
+                f'`direction` should be one of {{{PADDING_LEFT!r}, '
+                f'{PADDING_RIGHT!r}}}; got {direction!r}'
             )
     else:
-        return input_list
+        return input_list.copy()
 
-def maxdepth(
-    input_list: Any
-) -> int:
-    """
-    Returns the maximum depth of a list that contains nested (sub)lists.
-
-    Args:
-        input_list (list): Input list.
-
-    Returns:
-        int: Maximum depth of the input list.
-    """
-    
-    if not isinstance(input_list, list):
-        return 0
-    else:
-        return 1 + max(
-            (maxdepth(item) for item in input_list), default = 0
-        )
-    
 def roll(
-    input_list: list[Any],
+    input_list: list[T],
     n: int
-) -> list[Any]:
+) -> list[T]:
     """
     Rolls/rotates a list forwards (if `n` is positive) or backwards (if `n` is
     negative) by `n` places.
 
     Args:
-        input_list (list[Any]): Input list.
-        n (int): Integer specifying the number of places to roll/rotate the
-            input list forwards or backwards by.
+        input_list (list[T]): Input list.
+        n (int): Number of places to roll/rotate the input list by:
+            - positive values = forward rotation (elements move right).
+            - negative values = backward rotation (elements move left).
 
     Returns:
-        list[Any]: List containing the elements of the input list
-            rolled/rotated forwards or backwards by `n` places.
+        list[T]: List containing the elements of the input list rolled/
+            rotated forwards or backwards by `n` places.
     """
     
+    if not input_list:
+        return []
+    
+    n = n % len(input_list)
+
     return input_list[-n:] + input_list[:-n]
+
+def maxdepth(
+    input_data: object
+) -> int:
+    """
+    Returns the maximum depth of any nested (sub)lists in the input data.
+
+    This function recursively traverses the input data to find the deepest
+    level of list nesting. Elements of the input data that are not lists, e.g.,
+    other data types, have a depth of zero.
+
+    Args:
+        input_data (object): Input; can be list or any other data type.
+
+    Returns:
+        int: Maximum depth of any nested (sub)lists in the input.
+    """
+    
+    if not isinstance(input_data, list):
+        return 0
+    else:
+        return 1 + max(
+            (maxdepth(item) for item in input_data), default = 0
+        )
 
 # =============================================================================
 #                                     EOF
