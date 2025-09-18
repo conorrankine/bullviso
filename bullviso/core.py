@@ -24,6 +24,7 @@ import datetime
 from . import utils
 from tqdm import tqdm
 from dataclasses import dataclass
+from importlib import resources
 from pathlib import Path
 from rdkit import Chem
 
@@ -75,8 +76,7 @@ def _bullviso(
     datetime_ = datetime.datetime.now()
     print(f'launched @ {datetime_.strftime("%H:%M:%S (%Y-%m-%d)")}\n')
 
-    header_f = Path(__file__).parent / 'assets' / 'banners' / 'banner.txt'
-    with open(header_f, 'r') as f:
+    with resources.open_text('bullviso.assets.banners','banner.txt') as f:
         for line in f.readlines():
             print(line.rstrip())
     print('\n')
