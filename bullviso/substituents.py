@@ -53,7 +53,12 @@ BOND_STEREO_FLAGS = Enum(
     }
 )
 
-BULLVALENE_STEREO_MAP = {0: 'CCW', 3: 'CW', 6: 'CCW', 9: 'CW'}
+BULLVALENE_STEREO_MAP = {
+    0: 'CCW', 3: 'CW', 6: 'CCW', 9: 'CW'
+}
+BULLVALENE_TS_STEREO_MAP = {
+    0: 'CW', 2: 'CCW', 3: 'CCW', 5: 'CW', 6: 'CCW', 9: 'CW'
+}
 
 # =============================================================================
 #                                   CLASSES
@@ -210,10 +215,11 @@ def build_bullvalene_from_barcode(
         Chem.SanitizeMol(substituted_bullvalene)
 
     if set_stereochemistry:
-        _set_atom_stereochemistry(
-            substituted_bullvalene,
-            BULLVALENE_STEREO_MAP
+        stereo_map = (
+            BULLVALENE_STEREO_MAP if not transition_state
+            else BULLVALENE_TS_STEREO_MAP
         )
+        _set_atom_stereochemistry(substituted_bullvalene, stereo_map)
 
     return substituted_bullvalene
 
