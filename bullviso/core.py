@@ -89,65 +89,71 @@ def _bullviso(
         print(f'{i}. {sub_smile:<30} {str(n_sub):>10} {str(attach_idx):>15}')
     print('-' * 60 + '\n')
 
-    bullvalene = bv.substituents.load_bullvalene_from_library()
+    for transition_state in (False, True):
 
-    substituents = bv.substituents.substituents_from_specifications(
-        params.sub_smiles,
-        params.n_subs,
-        params.sub_attach_idx
-    )
-
-    canonical_barcode = bv.BVBarcode.from_substituents(substituents)
-    print(f'canonical barcode: {canonical_barcode}\n')
-
-    print('identifying unique bullvalene barcodes:')
-    barcodes = set(
-        barcode for barcode in tqdm(
-            canonical_barcode.permutations(),
-            ncols = 60,
-            total = 3628800,
-            bar_format='{l_bar}{bar}| [{elapsed}<{remaining}]'
+        bullvalene = bv.substituents.load_bullvalene_from_library(
+            transition_state = transition_state
         )
-    )
-    print('')
 
-    coord_map = bv.conformers.get_coord_map(bullvalene)
+        substituents = bv.substituents.substituents_from_specifications(
+            params.sub_smiles,
+            params.n_subs,
+            params.sub_attach_idx
+        )
 
-    print('building bullvalene isomers:')
-    for barcode in tqdm(
-        barcodes,
-        ncols = 60,
-        bar_format='{l_bar}{bar}| [{elapsed}<{remaining}]'
-    ):
-        
-        mol = bv.substituents.build_bullvalene_from_barcode(
-            barcode,
-            substituents
-        )
-        mol.SetProp('barcode', str(barcode))
-        mol = bv.conformers.generate_confs(
-            mol,
-            embed_n_confs = params.embed_n_confs,
-            embed_rmsd_threshold = params.embed_rmsd_threshold,
-            embed_timeout = params.embed_timeout,
-            embed_seed = params.embed_seed,
-            calculator_type = params.calculator_type,
-            max_iter = params.max_iter,
-            coord_map = coord_map,
-            energy_threshold = params.energy_threshold,
-            rmsd_threshold = params.rmsd_threshold,
-            rmsd_atom_idxs = [i for i in range(10)],
-            n_proc = params.n_proc
-        )
-        conf_ids = _get_conf_ids(mol, max_conf_ids = params.m_confs)
-        for conf_id in conf_ids:
-            _write_conf_to_file(
-                mol,
-                conf_id,
-                params.output_dir,
-                params.output_filetype
+        barcode_type = bv.BVTSBarcode if transition_state else bv.BVBarcode
+        canonical_barcode = barcode_type.from_substituents(substituents)
+        print(f'canonical barcode: {canonical_barcode}\n')
+
+        print('identifying unique bullvalene barcodes:')
+        barcodes = set(
+            barcode for barcode in tqdm(
+                canonical_barcode.permutations(),
+                ncols = 60,
+                total = 3628800,
+                bar_format='{l_bar}{bar}| [{elapsed}<{remaining}]'
             )
-    print('')
+        )
+        print('')
+
+        coord_map = bv.conformers.get_coord_map(bullvalene)
+
+        print('building bullvalene isomers:')
+        for barcode in tqdm(
+            barcodes,
+            ncols = 60,
+            bar_format='{l_bar}{bar}| [{elapsed}<{remaining}]'
+        ):
+            
+            mol = bv.substituents.build_bullvalene_from_barcode(
+                barcode,
+                substituents
+            )
+            mol.SetProp('barcode', str(barcode))
+            mol.SetBoolProp('transition_state', transition_state)
+            mol = bv.conformers.generate_confs(
+                mol,
+                embed_n_confs = params.embed_n_confs,
+                embed_rmsd_threshold = params.embed_rmsd_threshold,
+                embed_timeout = params.embed_timeout,
+                embed_seed = params.embed_seed,
+                calculator_type = params.calculator_type,
+                max_iter = params.max_iter,
+                coord_map = coord_map,
+                energy_threshold = params.energy_threshold,
+                rmsd_threshold = params.rmsd_threshold,
+                rmsd_atom_idxs = [i for i in range(10)],
+                n_proc = params.n_proc
+            )
+            conf_ids = _get_conf_ids(mol, max_conf_ids = params.m_confs)
+            for conf_id in conf_ids:
+                _write_conf_to_file(
+                    mol,
+                    conf_id,
+                    params.output_dir,
+                    params.output_filetype
+                )
+        print('')
 
     datetime_ = datetime.datetime.now()
     print(f'finished @ {datetime_.strftime("%H:%M:%S (%Y-%m-%d)")}')
@@ -206,6 +212,7 @@ def _write_conf_to_file(
 
     Raises:
         ValueError: If the molecule does not have a `barcode` property.
+        ValueError: If the molecule does not have a `transition_state` property.
     """
 
     if not mol.HasProp('barcode'):
@@ -215,8 +222,20 @@ def _write_conf_to_file(
         )
     barcode = mol.GetProp('barcode')
 
+    if not mol.HasProp('transition_state'):
+        raise ValueError(
+            'molecule does not have a \'transition_state\' property; set one '
+            'using `mol.SetBoolProp(\'transition_state\', [TRUE/FALSE])`'
+        )
+    transition_state = mol.GetBoolProp('transition_state')
+
     try:
-        conf_dir = output_dir / barcode / f'{barcode}_{(conf_id+1):03d}'
+        conf_dir = (
+            output_dir
+            / ('minima' if not transition_state else 'transition_states')
+            / barcode
+            / f'{barcode}_{(conf_id+1):03d}'
+        )
         conf_dir.mkdir(parents = True, exist_ok = True)
         conf_file = conf_dir / f'{barcode}_{(conf_id+1):03d}'
         bv.io.mol_to_file(
