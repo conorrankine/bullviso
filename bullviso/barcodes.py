@@ -19,10 +19,14 @@ this program.  If not, see <https://www.gnu.org/licenses/>.
 #                               LIBRARY IMPORTS
 # =============================================================================
 
+from __future__ import annotations
 from . import utils
 from itertools import permutations, count
 from functools import cached_property
-from typing import Generator, TypeVar
+from typing import Generator, TypeVar, TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from .substituents import Substituent
 
 # =============================================================================
 #                                   GLOBALS
