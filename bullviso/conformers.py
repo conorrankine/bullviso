@@ -156,7 +156,8 @@ def generate_confs(
         mol,
         clusters = cluster_confs(
             mol,
-            rmsd_threshold = rmsd_threshold
+            rmsd_threshold = rmsd_threshold,
+            heavy_atoms_only = True
         )
     )
 
@@ -343,7 +344,7 @@ def align_confs(
 def cluster_confs(
     mol: Chem.Mol,
     rmsd_threshold: float = 0.5,
-    rmsd_atom_idxs: list[int] = None
+    heavy_atoms_only: bool = True
 ) -> tuple[tuple[int]]:
     """
     Clusters conformers of a molecule `mol` based on their pairwise RMSDs
@@ -355,9 +356,8 @@ def cluster_confs(
         rmsd_threshold (float, optional): RMSD threshold for Butina clustering;
             conformers with RMSDs below the RMSD threshold are considered to
             belong to the same Butina cluster. Defaults to 0.5 (Angstroem).
-        rmsd_atom_idxs (list[int], optional): List of atom indices defining the
-            atoms to align pre-calculation of the pairwise RMSDs; if `None`,
-            all atoms are used to align. Defaults to `None`.
+        heavy_atoms_only (bool, optional): Cluster on heavy atoms only; ignores
+            hydrogen atoms when calculating pairwise RMSDs. Defaults to `True`.
 
     Returns:
         tuple[tuple[int]]: Tuple of Butina clusters where each Butina cluster
@@ -365,8 +365,7 @@ def cluster_confs(
     """    
 
     rms_matrix = AllChem.GetConformerRMSMatrix(
-        mol,
-        atomIds = rmsd_atom_idxs
+        mol if not heavy_atoms_only else Chem.RemoveHs(mol)
     )
 
     clusters = Butina.ClusterData(
