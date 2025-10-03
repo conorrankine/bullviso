@@ -252,6 +252,11 @@ def bullviso_cli(
         min = 1, max = None,
         help = 'maximum number of conformers to output'
     ),
+    transition_state: bool = typer.Option(
+        True,
+        '--transition_state/--no_transition_state', '-ts/-no-ts',
+        help = 'generate transition state geometries'
+    ),
     embed_n_confs: int = typer.Option(
         None, '--embed_n_confs', '-en',
         min = 1, max = None,
@@ -322,6 +327,7 @@ def bullviso_cli(
             sub_smiles = sub_smiles,
             n_subs = n_subs,
             sub_attach_idx = sub_attach_idx,
+            transition_state = transition_state,
             m_confs = m_confs,
             embed_n_confs = embed_n_confs,
             embed_rmsd_threshold = embed_rmsd_threshold,
@@ -333,7 +339,7 @@ def bullviso_cli(
             rmsd_threshold = rmsd_threshold,
             n_proc = n_proc,
             output_dir = output_dir,
-            output_filetype = output_filetype
+            output_filetype = output_filetype,
         )
     
         core._bullviso(params)
