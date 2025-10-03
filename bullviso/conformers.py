@@ -60,7 +60,7 @@ def generate_confs(
     max_iter: int = 600,
     energy_threshold: float = 10.0,
     rmsd_threshold: float = 0.5,
-    rmsd_atom_idxs: list[int] = None,
+    align_atom_idxs: list[int] = None,
     coord_map: dict[int, rdGeometry.Point3D] = None,
     n_proc: int = 1
 ) -> Chem.Mol:
@@ -80,12 +80,14 @@ def generate_confs(
            threshold relative to the lowest-energy conformer;
 
         4. clustered using the Butina algorithm to group structurally similar
-           instances based on pairwise RMSD;
+           instances based on heavy-atom pairwise RMSDs;
 
         5. selected from the Butina clusters, retaining only the lowest-energy
            instance belonging to each;
 
-        6. sorted in ascending order by energy.
+        6. sorted in ascending order by energy;
+
+        7. aligned.
 
     Args:
         mol (Chem.Mol): Molecule.
@@ -110,9 +112,9 @@ def generate_confs(
         rmsd_threshold (float, optional): RMSD threshold for Butina clustering;
             conformers with RMSDs below the RMSD threshold are considered to
             belong to the same Butina cluster. Defaults to 0.5 (Angstroem).
-        rmsd_atom_idxs (list[int], optional): List of atom indices defining the
-            atoms to align pre-calculation of the pairwise RMSDs; if `None`,
-            all atoms are used to align. Defaults to `None`.
+        align_atom_idxs (list[int], optional): List of atom indices defining
+            the atoms to use as alignment anchors; if `None`, all atoms are
+            used as alignment anchors. Defaults to `None`.
         coord_map (dict[int, rdGeometry.Point3D], optional): Coordinate map
             dictionary mapping atom indices to their 3D coordinates
             (represented as rdGeometry.Point3D instances); these atoms are fixed
@@ -167,7 +169,7 @@ def generate_confs(
 
     align_confs(
         mol,
-        rmsd_atom_idxs = rmsd_atom_idxs
+        align_atom_idxs = align_atom_idxs
     )
 
     return mol
@@ -323,7 +325,7 @@ def filter_low_energy_confs(
 
 def align_confs(
     mol: Chem.Mol,
-    rmsd_atom_idxs: list[int] = None
+    align_atom_idxs: list[int] = None
 ) -> None:
     """
     Aligns conformers of a molecule `mol` using the first conformer (i.e., the
@@ -331,14 +333,14 @@ def align_confs(
 
     Args:
         mol (Chem.Mol): Molecule.
-        rmsd_atom_idxs (list[int], optional): List of atom indices defining the
-            atoms to use as alignment points; if `None`, all atoms are used as
-            alignment points. Defaults to `None`.
+        align_atom_idxs (list[int], optional): List of atom indices defining
+            the atoms to use as alignment anchors; if `None`, all atoms are
+            used as alignment anchors. Defaults to `None`.
     """
     
     AlignMolConformers(
         mol,
-        atomIds = rmsd_atom_idxs
+        atomIds = align_atom_idxs
     )
 
 def cluster_confs(

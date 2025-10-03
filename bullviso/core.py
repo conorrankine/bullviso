@@ -140,7 +140,7 @@ def _bullviso(
                 coord_map = coord_map,
                 energy_threshold = params.energy_threshold,
                 rmsd_threshold = params.rmsd_threshold,
-                rmsd_atom_idxs = [i for i in range(10)],
+                align_atom_idxs = [i for i in range(10)],
                 n_proc = params.n_proc
             )
             conf_ids = _get_conf_ids(mol, max_conf_ids = params.m_confs)
