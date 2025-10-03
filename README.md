@@ -45,7 +45,7 @@ If you enjoy BULLVISO, don't forget to cite:
 
 ## ⚙️ SETUP
 
-Our favourite way to use BULLVISO is with <a href="https://docs.astral.sh/uv/" > `uv` </a> from <a href="https://astral.sh/" > Astral</a>! It's super-easy to install from your terminal (if you don't have it already) with:
+Our favourite way to use BULLVISO is with <a href="https://docs.astral.sh/uv/" > uv </a> from <a href="https://astral.sh/" > Astral</a>! It's super-easy to install from your terminal (if you don't have it already) with:
 
 ```
 pip install uv
@@ -54,20 +54,20 @@ pip install uv
 You can use `uv` to create and activate a virtual environment:
 
 ```
-uv venv .venv
-source .venv/bin/activate
+uv venv bullviso --python 3.10
+source bullviso/bin/activate
 ```
 
 and then install BULLVISO directly into your new virtual environment with:
 
 ```
-uv pip install git+https://www.gitlab.com/conorrankine/bullviso
+uv pip install git+https://www.github.com/conorrankine/bullviso
 ```
 
 Don't forget to keep BULLVISO up to date; it's still under development, after all! It's easy to do with:
 
 ```
-uv pip install --upgrade git+https://www.gitlab.com/conorrankine/bullviso
+uv pip install --upgrade git+https://www.github.com/conorrankine/bullviso
 ```
 
 When you're done with BULLVISO, you can deactivate your virtual environment with:
@@ -76,10 +76,10 @@ When you're done with BULLVISO, you can deactivate your virtual environment with
 deactivate
 ```
 
-and reactivate it later with:
+and, on returning to the same directory where you created your virtual environment, reactivate it later with:
 
 ```
-source .venv/bin/activate
+source bullviso/bin/activate
 ```
 
 Now you're good to go!
