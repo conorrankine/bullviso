@@ -92,6 +92,8 @@ BULLVISO has one core command line script: `bullviso`.
 
 #### HOMOSUBSTITUTED BULLVALENES
 
+##### MINIMUM-ENERGY GEOMETRIES
+
 You can use `bullviso` to generate the unique constitutional isomers of a monosubstituted bullvalene by passing the SMILES string of the substituent as a command line argument, *e.g.*,
 
 ```
@@ -99,6 +101,8 @@ bullviso "C"
 ```
 
 generates the four unique constitutional isomers of methylbullvalene.
+
+The Cartesian coordinates for the minimum-energy geometries are written to `<output>/minima/`. Instructions on how to set the `<output>` directory and on the supported file formats are available under the section on [output options](#output-options).
 
 You can use the `-n [N_SUBS]` flag to generate di- , tri-, *etc.* substituted (*i.e* *n*-substituted) bullvalenes, *e.g.*,
 
@@ -168,6 +172,19 @@ bullviso "C(=C/F)/F"
 
 output the four unique constitutional isomers of (*E*-1,2-difluoroethenyl)bullvalene and (*Z*-1,2-difluoroethenyl)bullvalene, respectively.
 
+##### TRANSITION STATE GEOMETRIES
+
+In addition to the unique minimum-energy geometries, BULLVISO also generates the transition-state (TS) geometries that connect the minima *via* Cope rearrangement.
+
+The Cartesian coordinates for the TS geometries are written to `<output>/transition_states/`.
+
+If you only need the minimum-energy geometries, you can disable TS geometry generation with the `-no-ts` flag, *e.g.*,
+
+```
+bullviso "C" -no-ts
+```
+
+generates the four unique constitutional isomers of methylbullvalene *without* the TS geometries that connect the minima *via* Cope rearrangement.
 
 #### CONFORMER GENERATION
 
@@ -255,9 +272,28 @@ generates the 2520 unique constitutional isomers of (dimethyl,diethyl,isopropyl)
 
 #### OUTPUT OPTIONS
 
-BULLVISO organises the outputted structures of the substituted bullvalenes into separate directories labelled using the bullvalene isomer barcode and, inside these, into (sub)directories labelled using the bullvalene isomer barcode and conformational isomer number.
+The parent output directory (`<output>`) contains two subdirectories, `<output>/minima` and `<output>/transition_states`, containing the minimum-energy and TS geometries, respectively. Beneath these subdirectories, BULLVISO organises the outputted geometries into separate subdirectories labelled using the bullvalene isomer barcode and, beneath these, into further subdirectories labelled using the bullvalene isomer barcode and conformational isomer number.
 
-By default, these output directories are created in the present working directory (PWD), although you can use the `-o [OUTPUT_DIR]` flag to create the output directory hierarchy somewhere else on your system by providing an alternative path. If the output directory doesn't exist, BULLVISO will try to create it.
+A simple schema for the output directory hierarchy is given here:
+
+```
+<output>/
+├── minima/
+│   ├── 0000010010/
+│   │   ├── 0000010010_001/
+│   │   │   └── 0000010010_001.xyz
+│   │   ├── 0000010010_002/
+│   │   │   └── 0000010010_002.xyz
+│   │   └── …
+│   └── …
+└── transition_states/
+    ├── 0000010010/
+    │   └── …
+    └── …
+```
+
+
+By default, the parent output directory (`<output>`) is created in the present working directory (PWD), although you can use the `-o [OUTPUT_DIR]` flag to create the output directory hierarchy somewhere else on your system by providing an alternative path. If the output directory doesn't exist, BULLVISO will try to create it.
 
 BULLVISO outputs the structures of the substituted bullvalenes in .xyz format by default, although you can use the `-f [OUTPUT_FILETYPE]` flag to output in an alternative format, *e.g.* .sdf/.mol (`-f sdf`), or a basic customisable input file for <a href="https://gaussian.com/gaussian16/" > Gaussian </a> (`-f gaussian`) or <a href="https://kofo.mpg.de/en/research/services/orca" > Orca </a> (`-f orca`).
 

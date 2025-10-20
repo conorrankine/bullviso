@@ -37,6 +37,7 @@ class BullvisoParams:
     sub_smiles: list[str]
     n_subs: list[int]
     sub_attach_idx: list[list[int]]
+    transition_state: bool
     m_confs: int
     embed_n_confs: int
     embed_rmsd_threshold: float
@@ -89,7 +90,9 @@ def _bullviso(
         print(f'{i}. {sub_smile:<30} {str(n_sub):>10} {str(attach_idx):>15}')
     print('-' * 60 + '\n')
 
-    for transition_state in (False, True):
+    transition_states = (False, True) if params.transition_state else (False,)
+
+    for transition_state in transition_states:
 
         bullvalene = bv.substituents.load_bullvalene_from_library(
             transition_state = transition_state
