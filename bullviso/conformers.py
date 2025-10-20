@@ -26,7 +26,7 @@ from rdkit import Chem
 from rdkit.Chem import AllChem
 from rdkit.Chem import rdMolDescriptors
 from rdkit.Chem.rdDistGeom import EmbedMultipleConfs
-from rdkit.Chem.rdMolAlign import AlignMolConformers
+from rdkit.Chem.rdMolAlign import AlignMolConformers, GetAllConformerBestRMS
 from rdkit.Geometry import rdGeometry
 from rdkit.ForceField import rdForceField
 from rdkit.ML.Cluster import Butina
@@ -346,7 +346,9 @@ def align_confs(
 def cluster_confs(
     mol: Chem.Mol,
     rmsd_threshold: float = 0.5,
-    heavy_atoms_only: bool = True
+    best_rmsd: bool = False,
+    heavy_atoms_only: bool = True,
+    n_proc: int = 1
 ) -> tuple[tuple[int]]:
     """
     Clusters conformers of a molecule `mol` based on their pairwise RMSDs
@@ -358,17 +360,29 @@ def cluster_confs(
         rmsd_threshold (float, optional): RMSD threshold for Butina clustering;
             conformers with RMSDs below the RMSD threshold are considered to
             belong to the same Butina cluster. Defaults to 0.5 (Angstroem).
+        best_rmsd (bool, optional): Use the best-RMS alignment algorithm for
+            calculating pairwise RMSDs; if `True`, symmetry-aware atom matching
+            between conformers is enabled. Defaults to `False`.
         heavy_atoms_only (bool, optional): Cluster on heavy atoms only; ignores
             hydrogen atoms when calculating pairwise RMSDs. Defaults to `True`.
+        n_proc (int, optional): Number of (parallel) processes for calculating
+            pairwise RMSDs using the best-RMS alignment algorithm; ignored
+            unless `best_rmsd` is `True`. Defaults to 1.
 
     Returns:
         tuple[tuple[int]]: Tuple of Butina clusters where each Butina cluster
             is represented as a tuple of conformer IDs.
-    """    
+    """
 
-    rms_matrix = AllChem.GetConformerRMSMatrix(
-        mol if not heavy_atoms_only else Chem.RemoveHs(mol)
-    )
+    if best_rmsd:
+        rms_matrix = GetAllConformerBestRMS(
+            mol if not heavy_atoms_only else Chem.RemoveHs(mol),
+            numThreads = n_proc
+        )
+    else:
+        rms_matrix = AllChem.GetConformerRMSMatrix(
+            mol if not heavy_atoms_only else Chem.RemoveHs(mol)
+        )
 
     clusters = Butina.ClusterData(
         rms_matrix,
