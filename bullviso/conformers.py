@@ -352,8 +352,7 @@ def cluster_confs(
 ) -> tuple[tuple[int]]:
     """
     Clusters conformers of a molecule `mol` based on their pairwise RMSDs
-    using the Butina algorithm; as a side effect, the conformers of the
-    molecule are left in an aligned state.
+    using the Butina algorithm.
 
     Args:
         mol (Chem.Mol): Molecule.
@@ -374,15 +373,12 @@ def cluster_confs(
             is represented as a tuple of conformer IDs.
     """
 
-    if best_rmsd:
-        rms_matrix = GetAllConformerBestRMS(
-            mol if not heavy_atoms_only else Chem.RemoveHs(mol),
-            numThreads = n_proc
-        )
-    else:
-        rms_matrix = AllChem.GetConformerRMSMatrix(
-            mol if not heavy_atoms_only else Chem.RemoveHs(mol)
-        )
+    rms_matrix = _get_rmsd_matrix(
+        mol,
+        best_rmsd = best_rmsd,
+        heavy_atoms_only = heavy_atoms_only,
+        n_proc = n_proc
+    )
 
     clusters = Butina.ClusterData(
         rms_matrix,
@@ -398,6 +394,38 @@ def cluster_confs(
     )
 
     return conf_id_clusters
+
+def _get_rmsd_matrix(
+    mol: Chem.Mol,
+    best_rmsd: bool = False,
+    heavy_atoms_only: bool = True,
+    n_proc: int = 1
+):
+    """
+    Returns the pairwise RMSD matrix for the conformers of a molecule `mol`.
+
+    Args:
+        mol (Chem.Mol): Molecule.
+        best_rmsd (bool, optional): Use the best-RMS alignment algorithm when
+            computing pairwise RMSDs; enables symmetry-aware matching between
+            conformers. Defaults to `False`.
+        heavy_atoms_only (bool, optional): Cluster on heavy atoms only; ignores
+            hydrogen atoms when calculating pairwise RMSDs. Defaults to `True`.
+        n_proc (int, optional): Number of threads used when calculating the
+            best-RMS distance matrix; ignored unless `best_rmsd` is `True`.
+            Defaults to 1.
+
+    Returns:
+        list[float]: Pairwise RMSD distance matrix in the condensed lower
+            triangular format expected by RDKit's clustering utilities.
+    """
+
+    mol_ = mol if not heavy_atoms_only else Chem.RemoveHs(mol)
+    
+    if best_rmsd:
+        return GetAllConformerBestRMS(mol_, numThreads = n_proc)
+    else:
+        return AllChem.GetConformerRMSMatrix(mol_)
 
 def select_cluster_representatives(
     mol: Chem.Mol,
