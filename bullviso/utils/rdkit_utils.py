@@ -77,17 +77,11 @@ def reorder_confs(
         ValueError: If any conformer ID is missing from the molecule.
     """
 
+    _validate_conf_ids(mol, conf_ids)
+    
     conf_by_id = {
         conf.GetId(): Chem.Conformer(conf) for conf in mol.GetConformers()
     }
-    missing_conf_ids = [
-        conf_id for conf_id in conf_ids if conf_id not in conf_by_id
-    ]
-    if missing_conf_ids:
-        raise ValueError(
-            f'`conf_ids` contains conformer IDs that are missing from the '
-            f'specified molecule: {{{",".join(map(str, missing_conf_ids))}}}'
-        )
 
     mol.RemoveAllConformers()
     for conf_id in conf_ids:
@@ -105,9 +99,32 @@ def remove_confs(
         conf_ids (list[int]): List of conformer IDs to remove.
     """
 
-    conf_by_id = {
-        conf.GetId() for conf in mol.GetConformers()
-    }
+    _validate_conf_ids(mol, conf_ids)
+
+    conf_ids_to_remove = set(conf_ids)
+    for conf in list(mol.GetConformers()):
+        if conf.GetId() in conf_ids_to_remove:
+            mol.RemoveConformer(conf.GetId())
+
+def _validate_conf_ids(
+    mol: Chem.Mol,
+    conf_ids: list[int]
+) -> set[int]:
+    """
+    Validates that all supplied conformer IDs exist in the molecule.
+
+    Args:
+        mol (Chem.Mol): Molecule.
+        conf_ids (list[int]): List of conformer IDs to validate.
+
+    Raises:
+        ValueError: If any conformer IDs are missing from the molecule.
+        
+    Returns:
+        set[int]: Set of conformer IDs confirmed to exist in the molecule.
+    """
+
+    conf_by_id = {conf.GetId() for conf in mol.GetConformers()}
     missing_conf_ids = [
         conf_id for conf_id in conf_ids if conf_id not in conf_by_id
     ]
@@ -116,11 +133,8 @@ def remove_confs(
             f'`conf_ids` contains conformer IDs that are missing from the '
             f'specified molecule: {{{",".join(map(str, missing_conf_ids))}}}'
         )
-
-    conf_ids_to_remove = set(conf_ids)
-    for conf in list(mol.GetConformers()):
-        if conf.GetId() in conf_ids_to_remove:
-            mol.RemoveConformer(conf.GetId())
+    
+    return conf_by_id
 
 # =============================================================================
 #                                     EOF
