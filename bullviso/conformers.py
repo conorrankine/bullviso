@@ -29,6 +29,7 @@ from rdkit.Chem.rdMolAlign import AlignMolConformers
 from rdkit.Geometry import rdGeometry
 from rdkit.ForceField import rdForceField
 from rdkit.ML.Cluster import Butina
+from .utils.rdkit_utils import get_conf_props, reorder_confs
 from .xtb_wrapper import XTBCalculator
 
 # =============================================================================
@@ -288,10 +289,6 @@ def filter_low_energy_confs(
     specified threshold `energy_threshold` (in kcal/mol) relative to the
     lowest-energy conformation.
 
-    Absolute conformer energies (in kcal/mol) are expected to be stored as
-    properties under the key 'energy' and, consequently, accessible via
-    `conf.GetDoubleProp('energy')` for each conformer `conf`.
-
     Args:
         mol (Chem.Mol): Molecule.
         energy_threshold (float, optional): Maximum allowed energy difference
@@ -302,14 +299,13 @@ def filter_low_energy_confs(
     if mol.GetNumConformers() > 0:
 
         keep_conf_ids = []
-
-        min_energy = min(
-            conf.GetDoubleProp('energy') for conf in mol.GetConformers()
+        conf_ids, energies = zip(
+            *get_conf_props(mol, 'energy', prop_type = 'double')
         )
-
-        for conf in mol.GetConformers():
-            if (conf.GetDoubleProp('energy') - min_energy) < energy_threshold:
-                keep_conf_ids.append(conf.GetId())
+        min_energy = min(energies)
+        for conf_id, energy in zip(conf_ids, energies):
+            if (energy - min_energy) < energy_threshold:
+                keep_conf_ids.append(conf_id)
 
         _prune_confs(mol, keep_conf_ids)
 
@@ -385,10 +381,6 @@ def select_cluster_representatives(
     Removes conformers of a molecule `mol` such that only the lowest-energy
     conformation belonging to each Butina cluster in `clusters` is retained.
 
-    Absolute conformer energies (in kcal/mol) are expected to be stored as
-    properties under the key 'energy' and, consequently, accessible via
-    `conf.GetDoubleProp('energy')` for each conformer `conf`.
-
     Args:
         mol (Chem.Mol): Molecule.
         clusters (tuple[tuple[int]]): Tuple of Butina clusters where each
@@ -396,12 +388,7 @@ def select_cluster_representatives(
     """
     
     keep_conf_ids = []
-
-    energies = {
-        conf.GetId(): conf.GetDoubleProp('energy')
-        for conf in mol.GetConformers()
-    }
-
+    energies = dict(get_conf_props(mol, 'energy', prop_type = 'double'))
     for cluster in clusters:
         keep_conf_ids.append(
             min(cluster, key = lambda conf_id: energies[conf_id])
@@ -410,35 +397,23 @@ def select_cluster_representatives(
     _prune_confs(mol, keep_conf_ids)
 
 def order_confs_by_energy(
-     mol: Chem.Mol,
+     mol: Chem.Mol
 ) -> None:
     """
-    (Re)orders conformers of a molecule `mol` in ascending order by energy.
-
-    Absolute conformer energies (in kcal/mol) are expected to be stored as
-    properties under the key 'energy' and, consequently, accessible via
-    `conf.GetDoubleProp('energy')` for each conformer `conf`.
+    Reorders the conformers of the specified molecule in ascending order
+    (lowest to highest) by energy.
 
     Args:
         mol (Chem.Mol): Molecule.
     """
-       
-    energies = [
-        conf.GetDoubleProp('energy') for conf in mol.GetConformers()
-    ]
 
-    mol_ = copy.deepcopy(mol)
-    
-    ordered_confs = [
-        conf for _, conf in sorted(
-            zip(energies, mol_.GetConformers()),
-            key = lambda x: x[0]
-        )
-    ]
-    
-    mol.RemoveAllConformers()
-    for conf in ordered_confs:
-        mol.AddConformer(conf, assignId = True)
+    if mol.GetNumConformers() > 0:
+
+        conf_props = get_conf_props(mol, 'energy', prop_type = 'double')
+        ordered_conf_ids = [
+            conf_id for conf_id, _ in sorted(conf_props, key = lambda t: t[1])
+        ]
+        reorder_confs(mol, ordered_conf_ids)
 
 def get_coord_map(
     mol: Chem.Mol,
