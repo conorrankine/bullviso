@@ -66,7 +66,7 @@ def reorder_confs(
     conf_ids: list[int]
 ) -> None:
     """
-    Reorders the conformers of the specified molecule to match the supplied
+    Reorders conformers of the specified molecule to match the supplied
     sequence of conformer IDs.
 
     Args:
@@ -92,6 +92,35 @@ def reorder_confs(
     mol.RemoveAllConformers()
     for conf_id in conf_ids:
         mol.AddConformer(conf_by_id[conf_id], assignId = True)
+
+def remove_confs(
+    mol: Chem.Mol,
+    conf_ids: list[int]
+) -> None:
+    """
+    Removes conformers of the specified molecule by conformer ID.
+
+    Args:
+        mol (Chem.Mol): Molecule.
+        conf_ids (list[int]): List of conformer IDs to remove.
+    """
+
+    conf_by_id = {
+        conf.GetId() for conf in mol.GetConformers()
+    }
+    missing_conf_ids = [
+        conf_id for conf_id in conf_ids if conf_id not in conf_by_id
+    ]
+    if missing_conf_ids:
+        raise ValueError(
+            f'`conf_ids` contains conformer IDs that are missing from the '
+            f'specified molecule: {{{",".join(map(str, missing_conf_ids))}}}'
+        )
+
+    conf_ids_to_remove = set(conf_ids)
+    for conf in list(mol.GetConformers()):
+        if conf.GetId() in conf_ids_to_remove:
+            mol.RemoveConformer(conf.GetId())
 
 # =============================================================================
 #                                     EOF
