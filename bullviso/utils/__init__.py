@@ -20,9 +20,11 @@ this program.  If not, see <https://www.gnu.org/licenses/>.
 # =============================================================================
 
 from . import list_utils
+from . import rdkit_utils
 
 __all__ = [
-    'list_utils'
+    'list_utils',
+    'rdkit_utils'
 ]
 
 # =============================================================================
