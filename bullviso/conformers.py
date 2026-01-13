@@ -29,7 +29,7 @@ from rdkit.Chem.rdMolAlign import AlignMolConformers
 from rdkit.Geometry import rdGeometry
 from rdkit.ForceField import rdForceField
 from rdkit.ML.Cluster import Butina
-from .utils.rdkit_utils import get_conf_props, reorder_confs
+from .utils.rdkit_utils import get_conf_props, reorder_confs, remove_confs
 from .xtb_wrapper import XTBCalculator
 
 # =============================================================================
@@ -262,9 +262,7 @@ def optimise_confs(
     """
     
     if mol.GetNumConformers() > 0:
-
-        keep_conf_ids = []
-
+        remove_conf_ids = []
         for conf in mol.GetConformers():            
             calculator = _get_calculator(
                 calculator_type, mol, conf_id = conf.GetId()
@@ -276,9 +274,9 @@ def optimise_confs(
             opt_result = calculator.Minimize(maxIts = max_iter)
             if opt_result == 0:
                 conf.SetDoubleProp('energy', calculator.CalcEnergy())
-                keep_conf_ids.append(conf.GetId())
-
-        _prune_confs(mol, keep_conf_ids)
+            else:
+                remove_conf_ids.append(conf.GetId())
+        remove_confs(mol, remove_conf_ids)
 
 def filter_low_energy_confs(
     mol: Chem.Mol,
@@ -297,17 +295,15 @@ def filter_low_energy_confs(
     """
     
     if mol.GetNumConformers() > 0:
-
-        keep_conf_ids = []
+        remove_conf_ids = []
         conf_ids, energies = zip(
             *get_conf_props(mol, 'energy', prop_type = 'double')
         )
         min_energy = min(energies)
         for conf_id, energy in zip(conf_ids, energies):
-            if (energy - min_energy) < energy_threshold:
-                keep_conf_ids.append(conf_id)
-
-        _prune_confs(mol, keep_conf_ids)
+            if (energy - min_energy) > energy_threshold:
+                remove_conf_ids.append(conf_id)
+        remove_confs(mol, remove_conf_ids)
 
 def align_confs(
     mol: Chem.Mol,
@@ -387,14 +383,15 @@ def select_cluster_representatives(
             Butina cluster is a tuple of conformer IDs.
     """
     
-    keep_conf_ids = []
     energies = dict(get_conf_props(mol, 'energy', prop_type = 'double'))
+    remove_conf_ids = []
     for cluster in clusters:
-        keep_conf_ids.append(
+        cluster_conf_ids = set(cluster)
+        cluster_conf_ids.remove(
             min(cluster, key = lambda conf_id: energies[conf_id])
         )
-        
-    _prune_confs(mol, keep_conf_ids)
+        remove_conf_ids.extend(cluster_conf_ids)
+    remove_confs(mol, remove_conf_ids)
 
 def order_confs_by_energy(
      mol: Chem.Mol
@@ -408,7 +405,6 @@ def order_confs_by_energy(
     """
 
     if mol.GetNumConformers() > 0:
-
         conf_props = get_conf_props(mol, 'energy', prop_type = 'double')
         ordered_conf_ids = [
             conf_id for conf_id, _ in sorted(conf_props, key = lambda t: t[1])
@@ -445,24 +441,6 @@ def get_coord_map(
     conf = mol.GetConformer(conf_id)
     
     return {i: conf.GetAtomPosition(i) for i in atom_idx}
-
-def _prune_confs(
-    mol: Chem.Mol,
-    keep_conf_ids: list[int]
-) -> None:
-    """
-    Removes conformers of a molecule `mol` by ID such that only conformers with
-    IDs listed in `keep_conf_ids` are retained.
-
-    Args:
-        mol (Chem.Mol): Molecule.
-        keep_conf_ids (list[int]): List of conformer IDs defining the set of
-            conformers to retain.
-    """
-    
-    for conf in list(mol.GetConformers()):
-        if conf.GetId() not in keep_conf_ids:
-            mol.RemoveConformer(conf.GetId())
 
 def _determine_n_confs_to_embed(
     mol: Chem.Mol,
