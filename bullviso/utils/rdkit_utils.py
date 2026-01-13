@@ -74,8 +74,15 @@ def reorder_confs(
         conf_ids (list[int]): Ordered list of conformer IDs to retain.
 
     Raises:
+        ValueError: If the supplied sequence of conformer IDs contains
+            duplicated entries.
         ValueError: If any conformer ID is missing from the molecule.
     """
+
+    if len(conf_ids) != len(set(conf_ids)):
+        raise ValueError(
+            '`conf_ids` contains duplicated conformer IDs'
+        )
 
     _validate_conf_ids(mol, conf_ids)
     
@@ -126,7 +133,7 @@ def _validate_conf_ids(
     if missing_conf_ids:
         raise ValueError(
             f'`conf_ids` contains conformer IDs that are missing from the '
-            f'specified molecule: {{{",".join(map(str, missing_conf_ids))}}}'
+            f'specified molecule: {{{", ".join(map(str, missing_conf_ids))}}}'
         )
 
 # =============================================================================
