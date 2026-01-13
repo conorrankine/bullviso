@@ -28,13 +28,6 @@ from typing import TypeVar
 T = TypeVar('T')
 
 # =============================================================================
-#                                  CONSTANTS
-# =============================================================================
-
-PADDING_LEFT = 'left'
-PADDING_RIGHT = 'right'
-
-# =============================================================================
 #                                  FUNCTIONS
 # =============================================================================
 
@@ -59,7 +52,7 @@ def all_same_length(
 def pad_list(
     input_list: list[T],
     length: int,
-    direction: str = PADDING_RIGHT
+    direction: str = 'right'
 ) -> list[T | int]:
     """
     Zero-pads a list up to the specified length.
@@ -68,9 +61,8 @@ def pad_list(
         input_list (list[T]): Input list.
         length (int): Length target for the padded list; lists longer than this
             are returned as-is, i.e., without padding.
-        direction (str, optional): Direction of padding; use `PADDING_RIGHT`
-            for right padding and `PADDING_LEFT` for left padding. Defaults to
-            'PADDING_RIGHT'.
+        direction (str, optional): Direction of padding; use 'right' for right
+            padding and 'left' for left padding. Defaults to 'right'.
 
     Raises:
         ValueError: If `length` is negative (< 0).
@@ -90,14 +82,14 @@ def pad_list(
 
     if len(input_list) < length:
         padding = [0] * (length - len(input_list))
-        if direction == PADDING_LEFT:
+        if direction == 'left':
             return padding + input_list
-        elif direction == PADDING_RIGHT:
+        elif direction == 'right':
             return input_list + padding
         else:
             raise ValueError(
-                f'`direction` should be one of {{{PADDING_LEFT!r}, '
-                f'{PADDING_RIGHT!r}}}; got {direction!r}'
+                f'`direction` should be one of {{"left", "right"}}; got '
+                f'{direction!r}'
             )
     else:
         return input_list.copy()
@@ -123,7 +115,7 @@ def roll(
     
     if not input_list:
         return []
-    
+
     n = n % len(input_list)
 
     return input_list[-n:] + input_list[:-n]
