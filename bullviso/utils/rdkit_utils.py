@@ -40,6 +40,9 @@ def get_conf_props(
         prop_type (str, optional): Property type; one of {'str', 'double',
             'int'}. Defaults to 'str'.
 
+    Raises:
+        ValueError: If `prop_type` is not one of {'str', 'double', 'int'}.
+
     Returns:
         list[tuple[int, str | float | int]]: List of ([CONFORMER_ID],
             [PROPERTY_VALUE]) tuples.
@@ -76,7 +79,7 @@ def reorder_confs(
     Raises:
         ValueError: If the supplied sequence of conformer IDs contains
             duplicated entries.
-        ValueError: If any conformer ID is missing from the molecule.
+        ValueError: If any conformer IDs are missing from the molecule.
     """
 
     if len(conf_ids) != len(set(conf_ids)):
@@ -104,6 +107,9 @@ def remove_confs(
     Args:
         mol (Chem.Mol): Molecule.
         conf_ids (list[int]): List of conformer IDs to remove.
+
+    Raises:
+        ValueError: If any conformer IDs are missing from the molecule.
     """
 
     _validate_conf_ids(mol, conf_ids)
