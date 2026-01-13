@@ -109,7 +109,7 @@ def remove_confs(
 def _validate_conf_ids(
     mol: Chem.Mol,
     conf_ids: list[int]
-) -> set[int]:
+) -> None:
     """
     Validates that all supplied conformer IDs exist in the molecule.
 
@@ -119,9 +119,6 @@ def _validate_conf_ids(
 
     Raises:
         ValueError: If any conformer IDs are missing from the molecule.
-        
-    Returns:
-        set[int]: Set of conformer IDs confirmed to exist in the molecule.
     """
 
     conf_by_id = set(conf.GetId() for conf in mol.GetConformers())
@@ -131,8 +128,6 @@ def _validate_conf_ids(
             f'`conf_ids` contains conformer IDs that are missing from the '
             f'specified molecule: {{{",".join(map(str, missing_conf_ids))}}}'
         )
-    
-    return conf_by_id
 
 # =============================================================================
 #                                     EOF
