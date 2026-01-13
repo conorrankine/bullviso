@@ -20,7 +20,7 @@ this program.  If not, see <https://www.gnu.org/licenses/>.
 # =============================================================================
 
 from __future__ import annotations
-from . import utils
+from .utils.list_utils import roll, pad_list
 from itertools import permutations, count
 from functools import cached_property
 from typing import Generator, TypeVar, TYPE_CHECKING
@@ -101,7 +101,7 @@ class BVBarcode:
             hash_string: i + 1 for i, hash_string in enumerate(unique_hashes)
         }
 
-        barcode = utils.pad_list(
+        barcode = pad_list(
             [hash_to_group_map[hash_string] for hash_string in hash_strings],
             length = 10,
             direction = 'left'
@@ -351,7 +351,7 @@ class BVBarcode:
         """
         
         return tuple(
-            (utils.roll(self._barcode[:-1], i * 3) + self._barcode[-1:])
+            (roll(self._barcode[:-1], i * 3) + self._barcode[-1:])
             for i in range(3)
         )
 

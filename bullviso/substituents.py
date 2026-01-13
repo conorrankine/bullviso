@@ -26,7 +26,7 @@ from functools import lru_cache
 from itertools import count
 from enum import Enum
 from rdkit import Chem
-from .utils import all_same_length
+from .utils.list_utils import all_same_length
 from .barcodes import BVBarcode, BVTSBarcode
 
 __all__ = [

@@ -23,7 +23,7 @@ import click
 import typer
 import ast
 from . import core
-from . import utils
+from .utils.list_utils import maxdepth
 from pathlib import Path
 
 # =============================================================================
@@ -112,7 +112,7 @@ class NestedIntListParamType(click.ParamType):
                     f'sublists must be positive integers (> 0): got {result}'
                 )
         
-        max_depth = utils.maxdepth(result)
+        max_depth = maxdepth(result)
         if max_depth > self.max_depth:
             raise click.BadParameter(
                 f'input list exceeds max allowed depth ({self.max_depth}): '

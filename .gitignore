@@ -1,6 +1,7 @@
 build
 bullviso.egg-info/
 bullviso/__pycache__/
+bullviso/utils/__pycache__/
 bullviso/structures/__pycache__/
 bullviso/assets/__pycache__/
 bullviso/assets/banners/__pycache__/
