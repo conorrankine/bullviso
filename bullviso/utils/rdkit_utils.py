@@ -124,10 +124,8 @@ def _validate_conf_ids(
         set[int]: Set of conformer IDs confirmed to exist in the molecule.
     """
 
-    conf_by_id = {conf.GetId() for conf in mol.GetConformers()}
-    missing_conf_ids = [
-        conf_id for conf_id in conf_ids if conf_id not in conf_by_id
-    ]
+    conf_by_id = set(conf.GetId() for conf in mol.GetConformers())
+    missing_conf_ids = sorted(set(conf_ids) - conf_by_id)
     if missing_conf_ids:
         raise ValueError(
             f'`conf_ids` contains conformer IDs that are missing from the '
