@@ -139,21 +139,7 @@ class Substituents():
         transition_state: bool = False
     ) -> BVBarcode | BVTSBarcode:
 
-        hash_strs: list[str] = []
-        for substituent_idx, substituent in enumerate(self._substituents):
-            for attach_sym_cls in substituent.attach_sym_cls:
-                if substituent.is_multidentate:
-                    hash_str = '{}_{}_{}'.format(
-                        substituent.smiles,
-                        attach_sym_cls,
-                        substituent_idx
-                    )
-                else:
-                    hash_str = '{}_{}'.format(
-                        substituent.smiles,
-                        attach_sym_cls
-                    )
-                hash_strs.append(hash_str)
+        hash_strs = self._get_hash_strs()
 
         unique_hash_strs = list(dict.fromkeys(hash_strs))
 
@@ -171,6 +157,28 @@ class Substituents():
             return BVTSBarcode(barcode, canonicalize = canonicalize)
         else:
             return BVBarcode(barcode, canonicalize = canonicalize)
+
+    def _get_hash_strs(
+        self
+    ) -> list[str]:
+
+        hash_strs: list[str] = []
+        for substituent_idx, substituent in enumerate(self._substituents):
+            for attach_sym_cls in substituent.attach_sym_cls:
+                if substituent.is_multidentate:
+                    hash_str = '{}_{}_{}'.format(
+                        substituent.smiles,
+                        attach_sym_cls,
+                        substituent_idx
+                    )
+                else:
+                    hash_str = '{}_{}'.format(
+                        substituent.smiles,
+                        attach_sym_cls
+                    )
+                hash_strs.append(hash_str)
+
+        return hash_strs
 
     def __iter__(
         self
