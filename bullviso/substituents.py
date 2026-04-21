@@ -24,6 +24,7 @@ from importlib import resources
 from functools import lru_cache
 from itertools import count
 from enum import Enum
+from typing import Iterable, Iterator
 from rdkit import Chem
 from .utils.list_utils import all_same_length
 from .barcodes import BVBarcode, BVTSBarcode
@@ -68,8 +69,8 @@ class Substituent():
     def __init__(
         self,
         smiles: str,
-        attach_idx: int | list[int],
-        barcode_bits: int | list[int]
+        attach_idx: int | Iterable[int],
+        barcode_bits: int | Iterable[int]
     ) -> None:
 
         self.smiles = smiles
@@ -83,6 +84,7 @@ class Substituent():
 
         if isinstance(attach_idx, int):
             attach_idx = [attach_idx]
+        attach_idx = tuple(attach_idx)
         if not attach_idx:
             raise ValueError(
                 f'empty `attach_idx` for \"{self.smiles}\"; no attachment '
@@ -94,7 +96,7 @@ class Substituent():
                 f'{attach_idx}; valid attachment indices for this substituent '
                 f'are in the range 0 <= `idx` < {self.mol.GetNumAtoms()}'
             )
-        self.attach_idx = tuple(attach_idx)
+        self.attach_idx = attach_idx
 
         canonical_ranks = Chem.CanonicalRankAtoms(self.mol, breakTies = False)
         self.attach_sym_cls = tuple(
@@ -109,7 +111,7 @@ class Substituents():
 
     def __init__(
         self,
-        substituents: list[Substituent] | None = None
+        substituents: Iterable[Substituent] | None = None
     ) -> None:
 
         self._substituents: list[Substituent] = []
@@ -131,7 +133,7 @@ class Substituents():
 
     def __iter__(
         self
-    ):
+    ) -> Iterator[Substituent]:
 
         return iter(self._substituents)
 
