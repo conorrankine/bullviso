@@ -20,7 +20,6 @@ this program.  If not, see <https://www.gnu.org/licenses/>.
 # =============================================================================
 
 from __future__ import annotations
-from dataclasses import dataclass
 from importlib import resources
 from functools import lru_cache
 from itertools import count
@@ -64,20 +63,47 @@ BULLVALENE_TS_STEREO_MAP = {
 #                                   CLASSES
 # =============================================================================
 
-@dataclass
-class Substituent:
-    """
-    Defines a substituent that can be attached to a bullvalene.
+class Substituent():
 
-    Attributes: 
-        smiles (str): SMILES string for the substituent.
-        attachment_idxs (list[int]): [#TODO: DESCRIPTION]
-        barcode_bits (list[int]): [#TODO: DESCRIPTION]   
-    """
+    def __init__(
+        self,
+        smiles: str,
+        attach_idx: int | list[int],
+        barcode_bits: int | list[int]
+    ) -> None:
 
-    smiles: str
-    attachment_idxs: list[int]
-    barcode_bits: list[int]
+        self.smiles = smiles
+        
+        self.mol = Chem.MolFromSmiles(self.smiles)
+        if self.mol is None:
+            raise ValueError(
+                f'error generating a valid substituent from SMILES string '
+                f'\"{self.smiles}\"'
+            )
+
+        if isinstance(attach_idx, int):
+            attach_idx = [attach_idx]
+        if not attach_idx:
+            raise ValueError(
+                f'empty `attach_idx` for \"{self.smiles}\"; no attachment '
+                f'indices are defined for this substituent'
+            )
+        if min(attach_idx) < 0 or max(attach_idx) >= self.mol.GetNumAtoms():
+            raise ValueError(
+                f'invalid attachment index defined for \"{self.smiles}\" in '
+                f'{attach_idx}; valid attachment indices for this substituent '
+                f'are in the range 0 <= `idx` < {self.mol.GetNumAtoms()}'
+            )
+        self.attach_idx = tuple(attach_idx)
+
+        canonical_ranks = Chem.CanonicalRankAtoms(self.mol, breakTies = False)
+        self.attach_sym_cls = tuple(
+            canonical_ranks[idx] for idx in self.attach_idx
+        )
+
+        if isinstance(barcode_bits, int):
+            barcode_bits = [barcode_bits]
+        self.barcode_bits = tuple(barcode_bits)
 
 # =============================================================================
 #                                  FUNCTIONS
@@ -86,7 +112,7 @@ class Substituent:
 def substituents_from_specifications(
     substituent_smiles: list[str],
     substituent_counts: list[int],
-    attachment_idxs: list[list[int]]
+    attach_idx: list[list[int]]
 ) -> tuple[Substituent, ...]:
     """
     Generates a tuple of `Substituent` instances from a user-friendly shorthand
@@ -102,15 +128,15 @@ def substituents_from_specifications(
         substituent_counts (list[int]): Sequence of integers (one per
             substituent) defining the substituent count, i.e., the number of
             times that the corresponding substituent should appear. 
-        attachment_idxs (list[list[int]]): Sequence of integer sequences (one
+        attach_idx (list[list[int]]): Sequence of integer sequences (one
             per substituent) defining the atom indices of the attachment
             point(s) for the corresponding substituent.
 
     Raises:
         ValueError: If `substituent_smiles`, `substituent_count`, and
-            `attachment_idxs` are not all of equal length.
+            `attach_idx` are not all of equal length.
         ValueError: If any element of `substituent_count` is < 0.
-        ValueError: If any element of `attachment_idxs` is empty.
+        ValueError: If any element of `attach_idx` is empty.
         ValueError: If more than 9 attachment points are specified (summed over
             all substituents).
 
@@ -120,48 +146,48 @@ def substituents_from_specifications(
     """
 
     if not all_same_length(
-        substituent_smiles, substituent_counts, attachment_idxs
+        substituent_smiles, substituent_counts, attach_idx
     ):
         raise ValueError(
-            f'`substituent_smiles`, `substituent_count`, and `attachment_idxs` '
+            f'`substituent_smiles`, `substituent_count`, and `attach_idx` '
             f'should all be of equal length; got sequences with lengths '
             f'{len(substituent_smiles)}, {len(substituent_counts)}, and '
-            f'{len(attachment_idxs)} (respectively)'
+            f'{len(attach_idx)} (respectively)'
         )
     
     substituents: list[Substituent] = []
 
     barcode_bit_value = count(start = 1)
 
-    for smiles_, substituent_count_, attachment_idxs_ in zip(
-        substituent_smiles, substituent_counts, attachment_idxs
+    for smiles_, substituent_count_, attach_idx_ in zip(
+        substituent_smiles, substituent_counts, attach_idx
     ):
         if substituent_count_ <= 0:
             raise ValueError(
                 f'`substituent_count` should be positive: got '
                 f'{substituent_count_} for SMILES = \'{smiles_}\''
             )
-        if not attachment_idxs_:
+        if not attach_idx_:
             raise ValueError(
-                f'`attachment_idxs` should not be empty: got '
-                f'{attachment_idxs_} for SMILES = \'{smiles_}\''
+                f'`attach_idx` should not be empty: got '
+                f'{attach_idx_} for SMILES = \'{smiles_}\''
             )
         for _ in range(substituent_count_):
             substituents.append(
                 Substituent(
                     smiles = smiles_,
-                    attachment_idxs = attachment_idxs_,
+                    attach_idx = attach_idx_,
                     barcode_bits = [
-                        next(barcode_bit_value) for _ in attachment_idxs_
+                        next(barcode_bit_value) for _ in attach_idx_
                     ]
                 )
             )
 
-    num_attachment_idxs = next(barcode_bit_value) - 1
-    if num_attachment_idxs > 9:
+    num_attach_idx = next(barcode_bit_value) - 1
+    if num_attach_idx > 9:
         raise ValueError(
             f'support is only available for up to 9 attachment points: got '
-            f'{num_attachment_idxs} attachment points across all substituents'
+            f'{num_attach_idx} attachment points across all substituents'
         )
 
     return tuple(substituents)
@@ -386,17 +412,17 @@ def _add_substituent(
         bullvalene.GetNumAtoms() - substituent_mol.GetNumAtoms()
     )
     
-    for barcode_bit, attachment_idx in zip(
-        substituent.barcode_bits, substituent.attachment_idxs
+    for barcode_bit, attach_idx in zip(
+        substituent.barcode_bits, substituent.attach_idx
     ):
-        attachment_idx_bullvalene = barcode.barcode_labels.index(barcode_bit)
-        attachment_idx_substituent = attachment_idx + offset
+        attach_idx_bullvalene = barcode.barcode_labels.index(barcode_bit)
+        attach_idx_substituent = attach_idx + offset
         _remove_explicit_hydrogens(
-            bullvalene, attachment_idx_bullvalene
+            bullvalene, attach_idx_bullvalene
         )
         bullvalene.AddBond(
-            attachment_idx_bullvalene,
-            attachment_idx_substituent,
+            attach_idx_bullvalene,
+            attach_idx_substituent,
             Chem.rdchem.BondType.SINGLE
         )
 

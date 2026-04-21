@@ -92,12 +92,12 @@ class BVBarcode:
         
         hash_strings: list[str] = []
         for sub_idx, sub in enumerate(subs):
-            multidentate = len(sub.attachment_idxs) > 1
-            for attachment_idx in sub.attachment_idxs:
+            multidentate = len(sub.attach_idx) > 1
+            for attach_idx in sub.attach_idx:
                 if multidentate:
-                    hash_string = f'{sub.smiles}#{sub_idx}_{attachment_idx}'
+                    hash_string = f'{sub.smiles}#{sub_idx}_{attach_idx}'
                 else:
-                    hash_string = f'{sub.smiles}_{attachment_idx}'
+                    hash_string = f'{sub.smiles}_{attach_idx}'
                 hash_strings.append(hash_string)
 
         unique_hashes = list(dict.fromkeys(hash_strings))
