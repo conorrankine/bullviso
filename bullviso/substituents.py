@@ -91,6 +91,11 @@ class Substituent():
                 f'empty `attach_idx` for \"{self.smiles}\"; no attachment '
                 f'indices are defined for this substituent'
             )
+        if len(attach_idx) > 9:
+            raise ValueError(
+                f'>9 elements in `attach_idx` for \"{self.smiles}\"; too many '
+                f'attachment indices are defined for this substituent'
+            )
         if min(attach_idx) < 0 or max(attach_idx) >= self.mol.GetNumAtoms():
             raise ValueError(
                 f'invalid attachment index defined for \"{self.smiles}\" in '
