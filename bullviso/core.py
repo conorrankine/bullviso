@@ -104,8 +104,10 @@ def _bullviso(
             params.sub_attach_idx
         )
 
-        barcode_type = bv.BVTSBarcode if transition_state else bv.BVBarcode
-        canonical_barcode = barcode_type.from_substituents(substituents)
+        canonical_barcode = substituents.to_barcode(
+            canonicalize = True,
+            transition_state = transition_state
+        )
         print(f'canonical barcode: {canonical_barcode}\n')
 
         print('identifying unique bullvalene barcodes:')
