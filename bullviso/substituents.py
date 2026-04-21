@@ -105,6 +105,49 @@ class Substituent():
             barcode_bits = [barcode_bits]
         self.barcode_bits = tuple(barcode_bits)
 
+class Substituents():
+
+    def __init__(
+        self,
+        substituents: list[Substituent] | None = None
+    ) -> None:
+
+        self._substituents: list[Substituent] = []
+        if substituents is not None:
+            for substituent in substituents:
+                self.add(substituent)
+
+    def add(
+        self,
+        substituent: Substituent
+    ) -> None:
+
+        if not isinstance(substituent, Substituent):
+            raise ValueError(
+                f'expected a `Substituent` instance; got an object of type '
+                f'{type(substituent).__name__}'
+            )
+        self._substituents.append(substituent)
+
+    def __iter__(
+        self
+    ):
+
+        return iter(self._substituents)
+
+    def __len__(
+        self
+    ) -> int:
+
+        return len(self._substituents)
+
+    def __getitem__(
+        self,
+        idx: int
+    ) -> Substituent:
+
+        return self._substituents[idx]
+
 # =============================================================================
 #                                  FUNCTIONS
 # =============================================================================
