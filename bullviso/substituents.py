@@ -26,7 +26,7 @@ from itertools import count
 from enum import Enum
 from typing import Iterable, Iterator
 from rdkit import Chem
-from .utils.list_utils import all_same_length
+from .utils.list_utils import all_same_length, pad_list
 from .barcodes import BVBarcode, BVTSBarcode
 
 __all__ = [
@@ -103,6 +103,8 @@ class Substituent():
             canonical_ranks[idx] for idx in self.attach_idx
         )
 
+        self.is_multidentate = len(self.attach_idx) > 1
+
         if isinstance(barcode_bits, int):
             barcode_bits = [barcode_bits]
         self.barcode_bits = tuple(barcode_bits)
@@ -130,6 +132,45 @@ class Substituents():
                 f'{type(substituent).__name__}'
             )
         self._substituents.append(substituent)
+
+    def to_barcode(
+        self,
+        canonicalize: bool = True,
+        transition_state: bool = False
+    ) -> BVBarcode | BVTSBarcode:
+
+        hash_strs: list[str] = []
+        for substituent_idx, substituent in enumerate(self._substituents):
+            for attach_sym_cls in substituent.attach_sym_cls:
+                if substituent.is_multidentate:
+                    hash_str = '{}_{}_{}'.format(
+                        substituent.smiles,
+                        attach_sym_cls,
+                        substituent_idx
+                    )
+                else:
+                    hash_str = '{}_{}'.format(
+                        substituent.smiles,
+                        attach_sym_cls
+                    )
+                hash_strs.append(hash_str)
+
+        unique_hash_strs = list(dict.fromkeys(hash_strs))
+
+        hash_str_to_group_map = {
+            hash_str: i + 1 for i, hash_str in enumerate(unique_hash_strs)
+        }
+
+        barcode = pad_list(
+            [hash_str_to_group_map[hash_str] for hash_str in hash_strs],
+            length = 10,
+            direction = 'left'
+        )
+
+        if transition_state:
+            return BVTSBarcode(barcode, canonicalize = canonicalize)
+        else:
+            return BVBarcode(barcode, canonicalize = canonicalize)
 
     def __iter__(
         self
