@@ -123,6 +123,8 @@ class Substituents():
     ) -> None:
 
         self._substituents: list[Substituent] = []
+        self._n_substituents: int = 0
+        self._n_attach_idx: int = 0
         if substituents is not None:
             for substituent in substituents:
                 self.add(substituent)
@@ -137,7 +139,17 @@ class Substituents():
                 f'expected a `Substituent` instance; got an object of type '
                 f'{type(substituent).__name__}'
             )
+        n_attach_idx_proj = self._n_attach_idx + len(substituent.attach_idx)
+        if n_attach_idx_proj > 9:
+            raise ValueError(
+                f'support is only available for up to 9 attachment points; '
+                f'adding this substituent gives a projected number of '
+                f'attachment points of {n_attach_idx_proj}'
+            )
         self._substituents.append(substituent)
+
+        self._n_substituents += 1
+        self._n_attach_idx += len(substituent.attach_idx)
 
     def to_barcode(
         self,
@@ -232,8 +244,6 @@ def substituents_from_specifications(
         ValueError: If `substituent_smiles`, `substituent_count`, and
             `attach_idx` are not all of equal length.
         ValueError: If any element of `substituent_count` is <= 0.
-        ValueError: If more than 9 attachment points are specified (summed over
-            all substituents).
 
     Returns:
         Substituents: `Substituents` instance with a unique bullvalene barcode
@@ -245,10 +255,19 @@ def substituents_from_specifications(
     ):
         raise ValueError(
             f'`substituent_smiles` ({len(substituent_smiles)} elements), '
-            f'`substituent_count` ({len(substituent_counts)} elements), and '
+            f'`substituent_counts` ({len(substituent_counts)} elements), and '
             f'`attach_idx` ({len(attach_idx)} elements) should all be of '
             f'equal length'
         )
+
+    for smiles_, substituent_count_ in zip(
+        substituent_smiles, substituent_counts
+    ):
+        if substituent_count_ <= 0:
+            raise ValueError(
+                f'`substituent_count` should be a positive (>0) integer: got '
+                f'{substituent_count_} for \"{smiles_}\"'
+            )
     
     substituents = Substituents()
 
@@ -257,11 +276,6 @@ def substituents_from_specifications(
     for smiles_, substituent_count_, attach_idx_ in zip(
         substituent_smiles, substituent_counts, attach_idx
     ):
-        if substituent_count_ <= 0:
-            raise ValueError(
-                f'`substituent_count` should be positive: got '
-                f'{substituent_count_} for \"{smiles_}\"'
-            )
         for _ in range(substituent_count_):
             substituent = Substituent(
                 smiles = smiles_,
@@ -271,13 +285,6 @@ def substituents_from_specifications(
                 ]
             )
             substituents.add(substituent)
-
-    num_attach_idx = next(barcode_bit_value) - 1
-    if num_attach_idx > 9:
-        raise ValueError(
-            f'support is only available for up to 9 attachment points: got '
-            f'{num_attach_idx} attachment points across all substituents'
-        )
 
     return substituents
 
