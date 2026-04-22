@@ -102,9 +102,9 @@ def _bullviso(
 
         bullvalene = bv.substituents.Bullvalene(substituents)
 
-        canonical_barcode = substituents.to_barcode(
-            canonicalize = True,
-            transition_state = transition_state
+        canonical_barcode = (
+            bullvalene.barcode if not transition_state
+            else bullvalene.barcode_ts
         )
         print(f'canonical barcode: {canonical_barcode}\n')
 
@@ -120,8 +120,8 @@ def _bullviso(
         print('')
 
         coord_map = bv.conformers.get_coord_map(
-            bullvalene.template if not transition_state
-            else bullvalene.template_ts
+            bullvalene._template if not transition_state
+            else bullvalene._template_ts
         )
 
         print('building bullvalene isomers:')

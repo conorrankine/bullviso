@@ -72,8 +72,7 @@ class Substituent():
     def __init__(
         self,
         smiles: str,
-        attach_idx: int | Iterable[int],
-        barcode_bits: int | Iterable[int]
+        attach_idx: int | Iterable[int]
     ) -> None:
 
         self.smiles = smiles
@@ -112,10 +111,6 @@ class Substituent():
         )
 
         self.is_multidentate = len(self.attach_idx) > 1
-
-        if isinstance(barcode_bits, int):
-            barcode_bits = [barcode_bits]
-        self.barcode_bits = tuple(barcode_bits)
 
 class Substituents():
 
@@ -226,13 +221,28 @@ class Bullvalene():
         substituents: Substituents
     ) -> None:
 
+        if not isinstance(substituents, Substituents):
+            raise ValueError(
+                f'expected a `Substituents` instance; got an object of type '
+                f'{type(substituents).__name__}'
+            )
+
         self.substituents = substituents
 
-        self._template = self._load_template(
+        self._template = self._load_template(ts = False)
+        self.barcode = substituents.to_barcode(
+            canonicalize = True,
             transition_state = False
-        )
-        self._template_ts = self._load_template(
+        )        
+        
+        self._template_ts = self._load_template(ts = True)
+        self.barcode_ts = substituents.to_barcode(
+            canonicalize = True,
             transition_state = True
+        )
+        
+        self._barcode_bit_to_sub_atom_offset = (
+            self._get_barcode_bit_to_sub_atom_offset()
         )
 
     def build(
@@ -244,21 +254,36 @@ class Bullvalene():
     ) -> Chem.Mol:
 
         is_ts = isinstance(barcode, BVTSBarcode)
+        self._validate_barcode_compatibility(barcode)
 
         template = self._template_ts if is_ts else self._template
+        substituted_bullvalene = Chem.RWMol(Chem.Mol(template))
+        for substituent in self.substituents:
+            substituted_bullvalene.InsertMol(Chem.Mol(substituent.mol))
 
-        substituted_bullvalene = _add_substituents(
-            Chem.Mol(template),
-            self.substituents,
-            barcode
-        ).GetMol()
+        for attach_idx_bullvalene, barcode_bit in enumerate(barcode.barcode_labels):
+            if barcode_bit == 0:
+                continue
+            attach_idx_substituent = (
+                template.GetNumAtoms()
+                + self._barcode_bit_to_sub_atom_offset[barcode_bit]
+            )
+            _remove_explicit_hydrogens(
+                substituted_bullvalene, attach_idx_bullvalene
+            )
+            substituted_bullvalene.AddBond(
+                attach_idx_bullvalene,
+                attach_idx_substituent,
+                Chem.rdchem.BondType.SINGLE
+            )
+        substituted_bullvalene = substituted_bullvalene.GetMol()
 
         if sanitize:
             Chem.SanitizeMol(substituted_bullvalene)
 
         if set_stereochemistry:
             stereo_map = (
-                BULLVALENE_TS_STEREO_MAP if is_ts else BULLVALENE_TS_STEREO_MAP
+                BULLVALENE_TS_STEREO_MAP if is_ts else BULLVALENE_STEREO_MAP
             )
             _set_atom_stereochemistry(substituted_bullvalene, stereo_map)
 
@@ -267,6 +292,64 @@ class Bullvalene():
             substituted_bullvalene.SetBoolProp('transition_state', is_ts)
 
         return substituted_bullvalene
+
+    def _get_barcode_bit_to_sub_atom_offset(
+        self
+    ) -> dict[int, int]:
+        """
+        Precomputes the mapping of barcode bit to substituent atom offset.
+
+        Returns:
+            dict[int, int]: Mapping of barcode bit value to substituent atom
+                index offset within the combined inserted substituent block.
+        """
+
+        barcode_bit_to_sub_atom_offset: dict[int, int] = {}
+
+        barcode_bits = iter(
+            bit for bit in self.barcode.barcode_labels if bit != 0
+        )
+
+        atom_offset = 0
+        for substituent in self.substituents:
+            for attach_idx in substituent.attach_idx:
+                barcode_bit_to_sub_atom_offset[next(barcode_bits)] = (
+                    atom_offset + attach_idx
+                )
+            atom_offset += substituent.mol.GetNumAtoms()
+
+        return barcode_bit_to_sub_atom_offset
+
+    def _validate_barcode_compatibility(
+        self,
+        barcode: BVBarcode | BVTSBarcode
+    ) -> None:
+        """
+        Validates that a barcode is compatible with this bullvalene instance.
+
+        Args:
+            barcode (BVBarcode | BVTSBarcode): Barcode to validate.
+
+        Raises:
+            ValueError: If the barcode is incompatible with this bullvalene
+                instance's substituent set.
+        """
+
+        expected_barcode = (
+            self.barcode_ts if isinstance(barcode, BVTSBarcode)
+            else self.barcode
+        )
+        expected_nonzero_bits = {
+            bit for bit in expected_barcode.barcode_labels if bit != 0
+        }
+        actual_nonzero_bits = {
+            bit for bit in barcode.barcode_labels if bit != 0
+        }
+        if actual_nonzero_bits != expected_nonzero_bits:
+            raise ValueError(
+                f'barcode ({barcode}) is incompatible with this bullvalene '
+                f'instance'
+            )
 
     @staticmethod
     def _load_template(
@@ -299,7 +382,7 @@ class Bullvalene():
             template = Chem.MolFromMolBlock(template_file.read())
         if template is None:
             raise ValueError(
-                f'error loading template geometry from \'{mol_file_name}\' '
+                f'error loading template geometry from \'{template_file_name}\' '
                 f'in `{BULLVALENE_STRUCTURE_PACKAGE}`: check that the file '
                 f'exists and points to a valid mol (.sdf) file'
             )
@@ -360,103 +443,17 @@ def substituents_from_specifications(
     
     substituents = Substituents()
 
-    barcode_bit_value = count(start = 1)
-
     for smiles_, substituent_count_, attach_idx_ in zip(
         substituent_smiles, substituent_counts, attach_idx
     ):
         for _ in range(substituent_count_):
             substituent = Substituent(
                 smiles = smiles_,
-                attach_idx = attach_idx_,
-                barcode_bits = [
-                    next(barcode_bit_value) for _ in attach_idx_
-                ]
+                attach_idx = attach_idx_
             )
             substituents.add(substituent)
 
     return substituents
-
-def _add_substituents(
-    bullvalene: Chem.Mol,
-    substituents: tuple[Substituent, ...],
-    barcode: BVBarcode | BVTSBarcode
-) -> Chem.RWMol:
-    """
-    Attaches multiple substituents to a bullvalene.
-
-    Args:
-        bullvalene (Chem.Mol): Bullvalene.
-        substituents (tuple[Substituent, ...]): Tuple of `Substituent`
-            instances defining the substituents to attach to the bullvalene
-            and the barcode bit <-> attachment point mapping(s).
-        barcode (BVBarcode | BVTSBarcode): `BVBarcode` or `BVTSBarcode`
-            instance defining the substitution configuration of the bullvalene.
-
-    Returns:
-        Chem.RWMol: Bullvalene (mutable) with the substituents attached.
-    """
-
-    substituted_bullvalene = Chem.RWMol(bullvalene)
-    for substituent in substituents:
-        substituted_bullvalene = _add_substituent(
-            substituted_bullvalene,
-            substituent,
-            barcode
-        )
-
-    return substituted_bullvalene
-
-def _add_substituent(
-    bullvalene: Chem.RWMol,
-    substituent: Substituent,
-    barcode: BVBarcode | BVTSBarcode
-) -> Chem.RWMol:
-    """
-    Attaches a single substituent to a bullvalene.
-
-    Args:
-        bullvalene (Chem.RWMol): Bullvalene (mutable).
-        substituent (Substituent): `Substituent` instance defining the
-            substituent to attach to the bullvalene and the barcode bit <->
-            attachment point mapping(s).
-        barcode (BVBarcode | BVTSBarcode): `BVBarcode` or `BVTSBarcode`
-            instance defining the substitution configuration of the bullvalene.
-
-    Raises:
-        ValueError: If the substituent SMILES string is invalid.
-
-    Returns:
-        Chem.RWMol: Bullvalene (mutable) with the substituent attached.
-    """
-
-    substituent_mol = Chem.MolFromSmiles(substituent.smiles)
-    if substituent_mol is None:
-        raise ValueError(
-            f'invalid substituent SMILES string: got {substituent.smiles}'
-        )
-
-    bullvalene.InsertMol(substituent_mol)
-    
-    offset = (
-        bullvalene.GetNumAtoms() - substituent_mol.GetNumAtoms()
-    )
-    
-    for barcode_bit, attach_idx in zip(
-        substituent.barcode_bits, substituent.attach_idx
-    ):
-        attach_idx_bullvalene = barcode.barcode_labels.index(barcode_bit)
-        attach_idx_substituent = attach_idx + offset
-        _remove_explicit_hydrogens(
-            bullvalene, attach_idx_bullvalene
-        )
-        bullvalene.AddBond(
-            attach_idx_bullvalene,
-            attach_idx_substituent,
-            Chem.rdchem.BondType.SINGLE
-        )
-
-    return bullvalene
 
 def _remove_explicit_hydrogens(
     mol: Chem.Mol,
