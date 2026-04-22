@@ -102,7 +102,7 @@ def _bullviso(
 
         bullvalene = bv.substituents.Bullvalene(
             substituents,
-            ts = transition_state
+            transition_state = transition_state
         )
 
         canonical_barcode = bullvalene.barcode
@@ -119,7 +119,7 @@ def _bullviso(
         )
         print('')
 
-        coord_map = bv.conformers.get_coord_map(bullvalene._template)
+        coord_map = bv.conformers.get_coord_map(bullvalene.template_mol)
 
         print('building bullvalene isomers:')
         for barcode in tqdm(

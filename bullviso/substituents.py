@@ -293,6 +293,19 @@ class Bullvalene():
 
         return substituted_bullvalene
 
+    @property
+    def template_mol(
+        self
+    ) -> Chem.Mol:
+        """
+        Returns a copy of the stored bullvalene template geometry.
+
+        Returns:
+            Chem.Mol: Copy of the bullvalene template geometry.
+        """
+
+        return Chem.Mol(self._template)
+
     def _get_barcode_bit_to_sub_atom_offset(
         self
     ) -> dict[int, int]:
