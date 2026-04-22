@@ -231,7 +231,7 @@ class Bullvalene():
         self.substituents = substituents
         self.transition_state = transition_state
 
-        self.barcode = substituents.to_barcode(
+        self._barcode = substituents.to_barcode(
             canonicalize = True,
             transition_state = transition_state
         )
@@ -294,12 +294,21 @@ class Bullvalene():
         return substituted_bullvalene
 
     @property
+    def barcode(
+        self
+    ) -> BVBarcode | BVTSBarcode:
+        """
+        Returns:
+            BVBarcode | BVTSBarcode: Copy of the bullvalene barcode.
+        """
+
+        return self._barcode
+
+    @property
     def template_mol(
         self
     ) -> Chem.Mol:
         """
-        Returns a copy of the stored bullvalene template geometry.
-
         Returns:
             Chem.Mol: Copy of the bullvalene template geometry.
         """
@@ -320,7 +329,7 @@ class Bullvalene():
         barcode_bit_to_sub_atom_offset: dict[int, int] = {}
 
         barcode_bits = iter(
-            bit for bit in self.barcode.barcode_labels if bit != 0
+            bit for bit in self._barcode.barcode_labels if bit != 0
         )
 
         atom_offset = 0
@@ -354,7 +363,7 @@ class Bullvalene():
                 f'instance'
             )
 
-        expected_barcode = self.barcode
+        expected_barcode = self._barcode
         expected_nonzero_bits = {
             bit for bit in expected_barcode.barcode_labels if bit != 0
         }
