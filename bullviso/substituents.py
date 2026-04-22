@@ -21,7 +21,6 @@ this program.  If not, see <https://www.gnu.org/licenses/>.
 
 from __future__ import annotations
 from importlib import resources
-from functools import lru_cache
 from itertools import count
 from enum import Enum
 from typing import Iterable, Iterator, Sequence
@@ -32,8 +31,7 @@ from .barcodes import BVBarcode, BVTSBarcode
 __all__ = [
     "Substituent",
     "Substituents",
-    "build_bullvalene_from_barcode",
-    "load_bullvalene_from_library"
+    "Bullvalene"
 ]
 
 # =============================================================================
@@ -60,6 +58,10 @@ BULLVALENE_STEREO_MAP = {
 BULLVALENE_TS_STEREO_MAP = {
     0: 'CW', 2: 'CCW', 3: 'CCW', 5: 'CW', 6: 'CCW', 9: 'CW'
 }
+
+BULLVALENE_STRUCTURE_PACKAGE = 'bullviso.structures'
+BULLVALENE_MOL_FILE = 'bv.sdf'
+BULLVALENE_TS_MOL_FILE = 'bv_ts.sdf'
 
 # =============================================================================
 #                                   CLASSES
@@ -217,6 +219,93 @@ class Substituents():
 
         return self._substituents[idx]
 
+class Bullvalene():
+
+    def __init__(
+        self,
+        substituents: Substituents
+    ) -> None:
+
+        self.substituents = substituents
+
+        self._template = self._load_template(
+            transition_state = False
+        )
+        self._template_ts = self._load_template(
+            transition_state = True
+        )
+
+    def build(
+        self,
+        barcode: BVBarcode | BVTSBarcode,
+        sanitize: bool = True,
+        set_properties: bool = True,
+        set_stereochemistry: bool = True
+    ) -> Chem.Mol:
+
+        is_ts = isinstance(barcode, BVTSBarcode)
+
+        template = self._template_ts if is_ts else self._template
+
+        substituted_bullvalene = _add_substituents(
+            Chem.Mol(template),
+            self.substituents,
+            barcode
+        ).GetMol()
+
+        if sanitize:
+            Chem.SanitizeMol(substituted_bullvalene)
+
+        if set_stereochemistry:
+            stereo_map = (
+                BULLVALENE_TS_STEREO_MAP if is_ts else BULLVALENE_TS_STEREO_MAP
+            )
+            _set_atom_stereochemistry(substituted_bullvalene, stereo_map)
+
+        if set_properties:
+            substituted_bullvalene.SetProp('barcode', str(barcode))
+            substituted_bullvalene.SetBoolProp('transition_state', is_ts)
+
+        return substituted_bullvalene
+
+    @staticmethod
+    def _load_template(
+        ts: bool = False
+    ) -> Chem.Mol:
+        """
+        Loads a bullvalene or, optionally, Cope rearrangement transition state,
+        template geometry as an RDKit `Chem.Mol` instance from the
+        `bullviso.structures` library with preset 3D/Cartesian coordinates.
+
+        Args:
+            ts (bool, optional): If `True`, a Cope rearrangement transition
+                state template geometry is returned. Defaults to `False`.
+
+        Raises:
+            ValueError: If the RDKit `Chem.Mol` instance fails to load from the
+                relevant mol (.sdf) file in the `bullviso.structures` library.
+
+        Returns:
+            Chem.Mol: Bullvalene template geometry.
+        """
+
+        template_file_name = (
+            BULLVALENE_TS_MOL_FILE if ts else BULLVALENE_MOL_FILE
+        )
+        
+        with resources.open_text(
+            BULLVALENE_STRUCTURE_PACKAGE, template_file_name
+        ) as template_file:
+            template = Chem.MolFromMolBlock(template_file.read())
+        if template is None:
+            raise ValueError(
+                f'error loading template geometry from \'{mol_file_name}\' '
+                f'in `{BULLVALENE_STRUCTURE_PACKAGE}`: check that the file '
+                f'exists and points to a valid mol (.sdf) file'
+            )
+
+        return template
+
 # =============================================================================
 #                                  FUNCTIONS
 # =============================================================================
@@ -287,161 +376,6 @@ def substituents_from_specifications(
             substituents.add(substituent)
 
     return substituents
-
-def build_bullvalene_from_barcode(
-    barcode: BVBarcode | BVTSBarcode,
-    substituents: tuple[Substituent, ...],
-    sanitize: bool = True,
-    set_properties: bool = True,
-    set_stereochemistry: bool = True
-) -> Chem.Mol:
-    """
-    Builds a substituted bullvalene with the supplied substituents attached.
-
-    If the bullvalene barcode supplied is a `BVTSBarcode` instance, a
-    bullvalene transition state is built instead of a minimum-energy/'stable-
-    state' bullvalene.
-
-    Args:
-        barcode (BVBarcode | BVTSBarcode): `BVBarcode` or `BVTSBarcode`
-            instance defining the substitution configuration of the bullvalene.
-        substituents (tuple[Substituent, ...]): Tuple of `Substituent`
-            instances defining the substituents to attach to the bullvalene
-            and the barcode bit <-> attachment point mapping(s).
-        sanitize (bool, optional): If `True`, the substituted bullvalene is
-            sanitized by RDKit using `Chem.SanitizeMol()` before return.
-            Defaults to `True`.
-        set_properties (bool, optional): If `True`, the `barcode` and
-            `transition_state` properties are set for the substituted
-            bullvalene by RDKit using `Chem.SetProp()` and `Chem.SetBoolProp()`
-            respectively. Defaults to `True`.
-        set_stereochemistry (bool, optional): If `True`, the stereochemistry of
-            the substituted bullvalene is set for compatibility with BULLVISO.
-            Defaults to `True`.
-
-    Returns:
-        Chem.Mol: Substituted bullvalene.
-    """
-
-    _validate_barcode_substituent_compatibility(barcode, substituents)
-
-    transition_state = isinstance(barcode, BVTSBarcode)
-    bullvalene = load_bullvalene_from_library(
-        transition_state = transition_state
-    )
-
-    substituted_bullvalene = _add_substituents(
-        bullvalene,
-        substituents,
-        barcode
-    )
-
-    substituted_bullvalene = substituted_bullvalene.GetMol()
-
-    if sanitize:
-        Chem.SanitizeMol(substituted_bullvalene)
-
-    if set_properties:
-        substituted_bullvalene.SetProp(
-            'barcode', str(barcode)
-        )
-        substituted_bullvalene.SetBoolProp(
-            'transition_state', transition_state
-        )
-
-    if set_stereochemistry:
-        stereo_map = (
-            BULLVALENE_STEREO_MAP if not transition_state
-            else BULLVALENE_TS_STEREO_MAP
-        )
-        _set_atom_stereochemistry(substituted_bullvalene, stereo_map)
-
-    return substituted_bullvalene
-
-@lru_cache(maxsize = 2)
-def load_bullvalene_from_library(
-    transition_state: bool = False
-) -> Chem.Mol:
-    """
-    Loads a bullvalene (or, optionally, Cope rearrangement transition state)
-    RDKit `Chem.Mol` instance from the `bullviso.structures` library with
-    preset 3D/Cartesian coordinates.
-
-    Args:
-        transition_state (bool, optional): If `True`, a Cope rearrangement
-            transition state bullvalene is returned rather than a stable-state
-            bullvalene. Defaults to `False`.
-
-    Raises:
-        ValueError: If the RDKit `Chem.Mol` instance fails to load from the
-            relevant mol (.sdf) file in the `bullviso.structures` library.
-
-    Returns:
-        Chem.Mol: Bullvalene.
-    """
-    
-    mol_file_name = 'bv.sdf' if not transition_state else 'bv_ts.sdf'
-    with resources.open_text('bullviso.structures', mol_file_name) as mol_file:
-        bullvalene = Chem.MolFromMolBlock(mol_file.read())
-    
-    if bullvalene is None:
-        raise ValueError(
-            f'failed to load structure from \'{mol_file_name}\' in '
-            f'`bullviso.structures`: check that the file exists and contains a '
-            f'valid mol (.sdf) file'
-        )
-    
-    return bullvalene
-
-def _validate_barcode_substituent_compatibility(
-    barcode: BVBarcode | BVTSBarcode,
-    substituents: tuple[Substituent, ...]
-) -> None:
-    """
-    Validates compatibility between the bullvalene barcode and substituents.
-
-    This function checks that every barcode bit is associated with a
-    corresponding substituent attachment point (i.e., there are no extra bits),
-    and that no substituents have attachment points that are not associated
-    with a corresponding barcode bit (i.e., there are no missing bits).
-
-    Args:
-        barcode (BVBarcode | BVTSBarcode): `BVBarcode` or `BVTSBarcode`
-            instance defining the substitution configuration of the bullvalene.
-        substituents (tuple[Substituent, ...]): Tuple of `Substituent`
-            instances defining the substituents to attach to the bullvalene
-            and the barcode bit <-> attachment point mapping(s).
-
-    Raises:
-        ValueError: If there are barcode bits that are not associated with a
-            substituent attachment point (i.e., there are extra bits).
-        ValueError: If there are substituent attachment points that are not
-            associated with barcode bits (i.e., there are missing bits).
-    """
-    
-    nonzero_barcode_bits = set(
-        bit for bit in barcode.barcode_labels if bit != 0
-    )
-
-    used_barcode_bits: set[int] = set()
-    for substituent in substituents:
-        used_barcode_bits.update(substituent.barcode_bits)
-
-    extra_barcode_bits = nonzero_barcode_bits - used_barcode_bits
-    if extra_barcode_bits:
-        raise ValueError(
-            f'bullvalene barcode ({barcode}) contains extra bits '
-            f'(extra bits = {extra_barcode_bits}) not associated with any '
-            f'of the supplied substituent'
-        )
-    
-    missing_barcode_bits = used_barcode_bits - nonzero_barcode_bits
-    if missing_barcode_bits:
-        raise ValueError(
-            f'bullvalene barcode ({barcode}) is missing bits '
-            f'(missing bits = {missing_barcode_bits}) associated with one or '
-            f'more of the supplied substituent(s)'
-        )
 
 def _add_substituents(
     bullvalene: Chem.Mol,

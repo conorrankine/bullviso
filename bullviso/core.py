@@ -94,15 +94,13 @@ def _bullviso(
 
     for transition_state in transition_states:
 
-        bullvalene = bv.substituents.load_bullvalene_from_library(
-            transition_state = transition_state
-        )
-
         substituents = bv.substituents.substituents_from_specifications(
             params.sub_smiles,
             params.n_subs,
             params.sub_attach_idx
         )
+
+        bullvalene = bv.substituents.Bullvalene(substituents)
 
         canonical_barcode = substituents.to_barcode(
             canonicalize = True,
@@ -121,7 +119,10 @@ def _bullviso(
         )
         print('')
 
-        coord_map = bv.conformers.get_coord_map(bullvalene)
+        coord_map = bv.conformers.get_coord_map(
+            bullvalene.template if not transition_state
+            else bullvalene.template_ts
+        )
 
         print('building bullvalene isomers:')
         for barcode in tqdm(
@@ -130,10 +131,7 @@ def _bullviso(
             bar_format='{l_bar}{bar}| [{elapsed}<{remaining}]'
         ):
             
-            mol = bv.substituents.build_bullvalene_from_barcode(
-                barcode,
-                substituents
-            )
+            mol = bullvalene.build(barcode)
             mol = bv.conformers.generate_confs(
                 mol,
                 embed_n_confs = params.embed_n_confs,
