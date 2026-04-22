@@ -23,16 +23,7 @@ from __future__ import annotations
 from .utils.list_utils import roll, pad_list
 from itertools import permutations, count
 from functools import cached_property
-from typing import Generator, TypeVar, TYPE_CHECKING
-
-if TYPE_CHECKING:
-    from .substituents import Substituent
-
-# =============================================================================
-#                                   GLOBALS
-# =============================================================================
-
-T = TypeVar('T', bound = 'BVBarcode')
+from typing import Generator
 
 # =============================================================================
 #                                   CLASSES
@@ -71,48 +62,6 @@ class BVBarcode:
 
         if canonicalize:
             self.canonicalize()
-
-    @classmethod
-    def from_substituents(
-        cls: type[T],
-        subs: tuple[Substituent, ...],
-        canonicalize: bool = False
-    ) -> T:
-        """
-        Generates a bullvalene barcode from a tuple of `Substituent` instances.
-
-        Args:
-            subs (tuple[Substituent, ...]): Tuple of `Substituent` instances.
-            canonicalize (bool, optional): If `True`, the bullvalene barcode
-                is canonicalized. Defaults to `False`.
-
-        Returns:
-            BVBarcode: Bullvalene barcode.
-        """
-        
-        hash_strings: list[str] = []
-        for sub_idx, sub in enumerate(subs):
-            multidentate = len(sub.attach_idx) > 1
-            for attach_idx in sub.attach_idx:
-                if multidentate:
-                    hash_string = f'{sub.smiles}#{sub_idx}_{attach_idx}'
-                else:
-                    hash_string = f'{sub.smiles}_{attach_idx}'
-                hash_strings.append(hash_string)
-
-        unique_hashes = list(dict.fromkeys(hash_strings))
-        
-        hash_to_group_map = {
-            hash_string: i + 1 for i, hash_string in enumerate(unique_hashes)
-        }
-
-        barcode = pad_list(
-            [hash_to_group_map[hash_string] for hash_string in hash_strings],
-            length = 10,
-            direction = 'left'
-        )
-
-        return cls(barcode, canonicalize = canonicalize)
 
     def __str__(
         self
