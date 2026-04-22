@@ -100,12 +100,12 @@ def _bullviso(
             params.sub_attach_idx
         )
 
-        bullvalene = bv.substituents.Bullvalene(substituents)
-
-        canonical_barcode = (
-            bullvalene.barcode if not transition_state
-            else bullvalene.barcode_ts
+        bullvalene = bv.substituents.Bullvalene(
+            substituents,
+            ts = transition_state
         )
+
+        canonical_barcode = bullvalene.barcode
         print(f'canonical barcode: {canonical_barcode}\n')
 
         print('identifying unique bullvalene barcodes:')
@@ -119,10 +119,7 @@ def _bullviso(
         )
         print('')
 
-        coord_map = bv.conformers.get_coord_map(
-            bullvalene._template if not transition_state
-            else bullvalene._template_ts
-        )
+        coord_map = bv.conformers.get_coord_map(bullvalene._template)
 
         print('building bullvalene isomers:')
         for barcode in tqdm(

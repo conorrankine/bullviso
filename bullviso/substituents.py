@@ -218,7 +218,8 @@ class Bullvalene():
 
     def __init__(
         self,
-        substituents: Substituents
+        substituents: Substituents,
+        transition_state: bool = False
     ) -> None:
 
         if not isinstance(substituents, Substituents):
@@ -228,17 +229,15 @@ class Bullvalene():
             )
 
         self.substituents = substituents
+        self.transition_state = transition_state
 
-        self._template = self._load_template(ts = False)
         self.barcode = substituents.to_barcode(
             canonicalize = True,
-            transition_state = False
-        )        
+            transition_state = transition_state
+        )
         
-        self._template_ts = self._load_template(ts = True)
-        self.barcode_ts = substituents.to_barcode(
-            canonicalize = True,
-            transition_state = True
+        self._template = self._load_template(
+            transition_state = transition_state
         )
         
         self._barcode_bit_to_sub_atom_offset = (
@@ -253,11 +252,9 @@ class Bullvalene():
         set_stereochemistry: bool = True
     ) -> Chem.Mol:
 
-        is_ts = isinstance(barcode, BVTSBarcode)
         self._validate_barcode_compatibility(barcode)
 
-        template = self._template_ts if is_ts else self._template
-        substituted_bullvalene = Chem.RWMol(Chem.Mol(template))
+        substituted_bullvalene = Chem.RWMol(Chem.Mol(self._template))
         for substituent in self.substituents:
             substituted_bullvalene.InsertMol(Chem.Mol(substituent.mol))
 
@@ -265,7 +262,7 @@ class Bullvalene():
             if barcode_bit == 0:
                 continue
             attach_idx_substituent = (
-                template.GetNumAtoms()
+                self._template.GetNumAtoms()
                 + self._barcode_bit_to_sub_atom_offset[barcode_bit]
             )
             _remove_explicit_hydrogens(
@@ -283,13 +280,16 @@ class Bullvalene():
 
         if set_stereochemistry:
             stereo_map = (
-                BULLVALENE_TS_STEREO_MAP if is_ts else BULLVALENE_STEREO_MAP
+                BULLVALENE_TS_STEREO_MAP if self.transition_state
+                else BULLVALENE_STEREO_MAP
             )
             _set_atom_stereochemistry(substituted_bullvalene, stereo_map)
 
         if set_properties:
             substituted_bullvalene.SetProp('barcode', str(barcode))
-            substituted_bullvalene.SetBoolProp('transition_state', is_ts)
+            substituted_bullvalene.SetBoolProp(
+                'transition_state', self.transition_state
+            )
 
         return substituted_bullvalene
 
@@ -335,10 +335,13 @@ class Bullvalene():
                 instance's substituent set.
         """
 
-        expected_barcode = (
-            self.barcode_ts if isinstance(barcode, BVTSBarcode)
-            else self.barcode
-        )
+        if isinstance(barcode, BVTSBarcode) != self.transition_state:
+            raise ValueError(
+                f'barcode ({barcode}) is incompatible with this bullvalene '
+                f'instance'
+            )
+
+        expected_barcode = self.barcode
         expected_nonzero_bits = {
             bit for bit in expected_barcode.barcode_labels if bit != 0
         }
@@ -353,7 +356,7 @@ class Bullvalene():
 
     @staticmethod
     def _load_template(
-        ts: bool = False
+        transition_state: bool = False
     ) -> Chem.Mol:
         """
         Loads a bullvalene or, optionally, Cope rearrangement transition state,
@@ -361,8 +364,9 @@ class Bullvalene():
         `bullviso.structures` library with preset 3D/Cartesian coordinates.
 
         Args:
-            ts (bool, optional): If `True`, a Cope rearrangement transition
-                state template geometry is returned. Defaults to `False`.
+            transition_state (bool, optional): If `True`, a Cope rearrangement
+                transition state template geometry is returned. Defaults to
+                `False`.
 
         Raises:
             ValueError: If the RDKit `Chem.Mol` instance fails to load from the
@@ -373,7 +377,7 @@ class Bullvalene():
         """
 
         template_file_name = (
-            BULLVALENE_TS_MOL_FILE if ts else BULLVALENE_MOL_FILE
+            BULLVALENE_TS_MOL_FILE if transition_state else BULLVALENE_MOL_FILE
         )
         
         with resources.open_text(
@@ -382,7 +386,7 @@ class Bullvalene():
             template = Chem.MolFromMolBlock(template_file.read())
         if template is None:
             raise ValueError(
-                f'error loading template geometry from \'{template_file_name}\' '
+                f'error loading template geometry from `{template_file_name}` '
                 f'in `{BULLVALENE_STRUCTURE_PACKAGE}`: check that the file '
                 f'exists and points to a valid mol (.sdf) file'
             )
