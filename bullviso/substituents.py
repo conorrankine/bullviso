@@ -390,6 +390,14 @@ class Substituents():
 
 class Bullvalene():
 
+    __slots__ = (
+        '_substituents',
+        '_transition_state',
+        '_barcode',
+        '_template',
+        '_barcode_bit_to_sub_atom_offset'
+    )
+
     def __init__(
         self,
         substituents: Substituents,
@@ -415,16 +423,16 @@ class Bullvalene():
                 f'{type(substituents).__name__}'
             )
 
-        self.substituents = substituents
-        self.transition_state = transition_state
+        self._substituents = Substituents(substituents)
+        self._transition_state = transition_state
 
-        self._barcode = substituents.to_barcode(
+        self._barcode = self._substituents.to_barcode(
             canonicalize = True,
-            transition_state = transition_state
+            transition_state = self._transition_state
         )
         
         self._template = self._load_template(
-            transition_state = transition_state
+            transition_state = self._transition_state
         )
         
         self._barcode_bit_to_sub_atom_offset = (
@@ -464,7 +472,7 @@ class Bullvalene():
         self._validate_barcode_compatibility(barcode)
 
         substituted_bullvalene = Chem.RWMol(Chem.Mol(self._template))
-        for substituent in self.substituents:
+        for substituent in self._substituents:
             substituent_mol = substituent.mol
             substituted_bullvalene.InsertMol(substituent_mol)
 
@@ -490,7 +498,7 @@ class Bullvalene():
 
         if set_stereochemistry:
             stereo_map = (
-                BULLVALENE_TS_STEREO_MAP if self.transition_state
+                BULLVALENE_TS_STEREO_MAP if self._transition_state
                 else BULLVALENE_STEREO_MAP
             )
             set_atom_stereochemistry(substituted_bullvalene, stereo_map)
@@ -498,10 +506,32 @@ class Bullvalene():
         if set_properties:
             substituted_bullvalene.SetProp('barcode', str(barcode))
             substituted_bullvalene.SetBoolProp(
-                'transition_state', self.transition_state
+                'transition_state', self._transition_state
             )
 
         return substituted_bullvalene
+
+    @property
+    def substituents(
+        self
+    ) -> Substituents:
+        """
+        Returns:
+            Substituents: Copy of the stored substituents container.
+        """
+
+        return Substituents(self._substituents)
+
+    @property
+    def transition_state(
+        self
+    ) -> bool:
+        """
+        Returns:
+            bool: `True` if this bullvalene is a transition-state template.
+        """
+
+        return self._transition_state
 
     @property
     def barcode(
@@ -512,7 +542,7 @@ class Bullvalene():
             BVBarcode | BVTSBarcode: Bullvalene barcode.
         """
 
-        return self._barcode
+        return type(self._barcode)(self._barcode.barcode)
 
     @property
     def template_mol(
@@ -543,7 +573,7 @@ class Bullvalene():
         )
 
         atom_offset = 0
-        for substituent in self.substituents:
+        for substituent in self._substituents:
             for attach_idx in substituent.attach_idx:
                 barcode_bit_to_sub_atom_offset[next(barcode_bits)] = (
                     atom_offset + attach_idx
@@ -567,7 +597,7 @@ class Bullvalene():
                 instance's substituent set.
         """
 
-        if isinstance(barcode, BVTSBarcode) != self.transition_state:
+        if isinstance(barcode, BVTSBarcode) != self._transition_state:
             raise ValueError(
                 f'barcode ({barcode}) is incompatible with this bullvalene '
                 f'instance'
