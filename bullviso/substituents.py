@@ -113,8 +113,6 @@ class Substituents():
     ) -> None:
 
         self._substituents: list[Substituent] = []
-        self._n_substituents: int = 0
-        self._n_attach_idx: int = 0
         if substituents is not None:
             for substituent in substituents:
                 self.add(substituent)
@@ -125,11 +123,11 @@ class Substituents():
     ) -> None:
 
         if not isinstance(substituent, Substituent):
-            raise ValueError(
+            raise TypeError(
                 f'expected a `Substituent` instance; got an object of type '
                 f'{type(substituent).__name__}'
             )
-        n_attach_idx_proj = self._n_attach_idx + len(substituent.attach_idx)
+        n_attach_idx_proj = self.n_attach_idx + len(substituent.attach_idx)
         if n_attach_idx_proj > 9:
             raise ValueError(
                 f'support is only available for up to 9 attachment points; '
@@ -137,9 +135,6 @@ class Substituents():
                 f'attachment points of {n_attach_idx_proj}'
             )
         self._substituents.append(substituent)
-
-        self._n_substituents += 1
-        self._n_attach_idx += len(substituent.attach_idx)
 
     def to_barcode(
         self,
@@ -165,6 +160,20 @@ class Substituents():
             return BVTSBarcode(barcode, canonicalize = canonicalize)
         else:
             return BVBarcode(barcode, canonicalize = canonicalize)
+
+    @property
+    def n_substituents(
+        self
+    ) -> int:
+
+        return len(self._substituents)
+
+    @property
+    def n_attach_idx(
+        self
+    ) -> int:
+
+        return sum(len(s.attach_idx) for s in self._substituents)
 
     def _get_hash_strs(
         self
