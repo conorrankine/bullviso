@@ -191,6 +191,10 @@ class Substituent():
 
 class Substituents():
 
+    __slots__ = (
+        '_substituents',
+    )
+
     def __init__(
         self,
         substituents: Iterable[Substituent] | None = None
