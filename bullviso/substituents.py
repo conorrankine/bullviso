@@ -21,7 +21,6 @@ this program.  If not, see <https://www.gnu.org/licenses/>.
 
 from __future__ import annotations
 from importlib import resources
-from itertools import count
 from typing import Iterable, Iterator, Sequence
 from rdkit import Chem
 from .utils.list_utils import (
@@ -38,7 +37,9 @@ from .barcodes import BVBarcode, BVTSBarcode
 __all__ = [
     "Substituent",
     "Substituents",
-    "Bullvalene"
+    "Bullvalene",
+    "substituent_from_specifications",
+    "substituents_from_specifications"
 ]
 
 # =============================================================================
@@ -658,6 +659,30 @@ class Bullvalene():
 # =============================================================================
 #                                  FUNCTIONS
 # =============================================================================
+
+def substituent_from_specifications(
+    substituent_smiles: str,
+    attach_idx: Sequence[int] | int
+) -> Substituent:
+    """
+    Generates a Substituent instance from a user-friendly shorthand single-
+    substituent specification.
+
+    Args:
+        substituent_smiles (str): SMILES string specifying the substituent
+            structure.
+        attach_idx (Sequence[int] | int): Integer sequence, or integer, defining
+            the atom index/indices of the substituent attachment point(s).
+
+    Returns:
+        Substituent: Substituent instance generated from the supplied shorthand
+            single-substituent specification.
+    """
+
+    return Substituent(
+        smiles = substituent_smiles,
+        attach_idx = attach_idx
+    )
 
 def substituents_from_specifications(
     substituent_smiles: Sequence[str],
