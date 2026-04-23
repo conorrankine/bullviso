@@ -67,6 +67,23 @@ class Substituent():
         smiles: str,
         attach_idx: int | Iterable[int]
     ) -> None:
+        """
+        Initialises a Substituent instance from a SMILES string and one or
+        more atom indices defining the attachment point(s).
+
+        Args:
+            smiles (str): SMILES string.
+            attach_idx (int | Iterable[int]): Atom index, or iterable of atom
+                indices, specifying the attachment point(s) on the substituent.
+
+        Raises:
+            ValueError: If `smiles` does not define a valid substituent.
+            ValueError: If no attachment indices are supplied.
+            ValueError: If more than nine attachment indices are supplied.
+            ValueError: If any attachment index is out of bounds for the
+                substituent, i.e., less than zero, or greater than / equal to
+                the maximum number of atoms in the substituent.
+        """
 
         self.smiles = smiles
         
@@ -111,6 +128,16 @@ class Substituents():
         self,
         substituents: Iterable[Substituent] | None = None
     ) -> None:
+        """
+        Initialises a Substituents instance from an iterable of Substituent
+        instances.
+
+        Args:
+            substituents (Iterable[Substituent] | None, optional): Iterable of
+                Substituent instances to add to the Substituents container. If
+                `None`, an empty Substituents container is initialised.
+                Defaults to `None`.
+        """
 
         self._substituents: list[Substituent] = []
         if substituents is not None:
@@ -121,6 +148,18 @@ class Substituents():
         self,
         substituent: Substituent
     ) -> None:
+        """
+        Adds a substituent to the Substituents container.
+
+        Args:
+            substituent (Substituent): Substituent to add to the Substituents
+                container.
+
+        Raises:
+            TypeError: If `substituent` is not a Substituent instance.
+            ValueError: If adding `substituent` to the Substituents container
+                would result in more than nine total attachment points.
+        """
 
         if not isinstance(substituent, Substituent):
             raise TypeError(
@@ -141,6 +180,18 @@ class Substituents():
         canonicalize: bool = True,
         transition_state: bool = False
     ) -> BVBarcode | BVTSBarcode:
+        """
+        Returns the bullvalene barcode for the Substituents container.
+
+        Args:
+            canonicalize (bool, optional): If `True`, the bullvalene barcode is
+                canonicalised. Defaults to `True`.
+            transition_state (bool, optional): If `True`, a transition-state
+                bullvalene barcode is returned. Defaults to `False`.
+
+        Returns:
+            BVBarcode | BVTSBarcode: Bullvalene barcode.
+        """
 
         hash_strs = self._get_hash_strs()
 
@@ -165,6 +216,10 @@ class Substituents():
     def n_substituents(
         self
     ) -> int:
+        """
+        Returns:
+            int: Number of substituents in the Substituents container.
+        """
 
         return len(self._substituents)
 
@@ -172,12 +227,30 @@ class Substituents():
     def n_attach_idx(
         self
     ) -> int:
+        """
+        Returns:
+            int: Total number of attachment points across all substituents
+                in the Substituents container.
+        """
 
         return sum(len(s.attach_idx) for s in self._substituents)
 
     def _get_hash_strs(
         self
     ) -> list[str]:
+        """
+        Generates hash strings used to map substituent attachment points to
+        bullvalene barcode bit labels.
+
+        Each hash string encodes the substituent SMILES string together with
+        the symmetry class of the corresponding attachment atom. For
+        multidentate substituents, the substituent index is also included so
+        that attachment points belonging to different instances of the same
+        multidentate substituent are assigned distinct barcode bit labels.
+
+        Returns:
+            list[str]: Hash strings for each substituent attachment point.
+        """
 
         hash_strs: list[str] = []
         for substituent_idx, substituent in enumerate(self._substituents):
@@ -200,12 +273,21 @@ class Substituents():
     def __iter__(
         self
     ) -> Iterator[Substituent]:
+        """
+        Returns:
+            Iterator[Substituent]: Iterator over the substituents in the
+                Substituents container.
+        """
 
         return iter(self._substituents)
 
     def __len__(
         self
     ) -> int:
+        """
+        Returns:
+            int: Number of substituents in the Substituents container.
+        """
 
         return len(self._substituents)
 
@@ -213,6 +295,14 @@ class Substituents():
         self,
         idx: int
     ) -> Substituent:
+        """
+        Args:
+            idx (int): Index.
+
+        Returns:
+            Substituent: Substituent at the specified index in the Substituents
+                container.
+        """
 
         return self._substituents[idx]
 
@@ -223,6 +313,19 @@ class Bullvalene():
         substituents: Substituents,
         transition_state: bool = False
     ) -> None:
+        """
+        Initialises a Bullvalene instance from a Substituents instance
+        specifying the attached substituents and their configuration; templates
+        either a regular or Cope rearrangement transition-state bullvalene.
+
+        Args:
+            substituents (Substituents): Substituents.
+            transition_state (bool, optional): If `True`, a Cope rearrangement
+                transition-state template is initialised. Defaults to `False`.
+
+        Raises:
+            ValueError: If `substituents` is not a `Substituents` instance.
+        """
 
         if not isinstance(substituents, Substituents):
             raise ValueError(
@@ -253,6 +356,28 @@ class Bullvalene():
         set_properties: bool = True,
         set_stereochemistry: bool = True
     ) -> Chem.Mol:
+        """
+        Builds a substituted bullvalene structure corresponding to the supplied
+        bullvalene barcode by connecting the substituents to the bullvalene
+        template.
+
+        Args:
+            barcode (BVBarcode | BVTSBarcode): Bullvalene barcode.
+            sanitize (bool, optional): If `True`, the substituted bullvalene is
+                sanitised before being returned. Defaults to `True`.
+            set_properties (bool, optional): If `True`, the `barcode` and
+                `transition_state` properties are set for the substituted
+                bullvalene. Defaults to `True`.
+            set_stereochemistry (bool, optional): If `True`, the substituted
+                bullvalene is assigned stereochemistry. Defaults to `True`.
+
+        Raises:
+            ValueError: If `barcode` is incompatible with the stored
+                substituents.
+
+        Returns:
+            Chem.Mol: Substituted bullvalene.
+        """
 
         self._validate_barcode_compatibility(barcode)
 
@@ -301,7 +426,7 @@ class Bullvalene():
     ) -> BVBarcode | BVTSBarcode:
         """
         Returns:
-            BVBarcode | BVTSBarcode: Copy of the bullvalene barcode.
+            BVBarcode | BVTSBarcode: Bullvalene barcode.
         """
 
         return self._barcode
@@ -312,7 +437,7 @@ class Bullvalene():
     ) -> Chem.Mol:
         """
         Returns:
-            Chem.Mol: Copy of the bullvalene template geometry.
+            Chem.Mol: Copy of the bullvalene template.
         """
 
         return Chem.Mol(self._template)
@@ -397,7 +522,7 @@ class Bullvalene():
                 relevant mol (.sdf) file in the `bullviso.structures` library.
 
         Returns:
-            Chem.Mol: Bullvalene template geometry.
+            Chem.Mol: Bullvalene template.
         """
 
         template_file_name = (
@@ -427,27 +552,31 @@ def substituents_from_specifications(
     attach_idx: Sequence[Sequence[int]]
 ) -> Substituents:
     """
-    Generates a `Substituents` instance from a user-friendly shorthand multi-
-    substituent specification; ensures that a unique bullvalene barcode bit
-    label is assigned to each attachment index.
+    Generates a Substituents instance from a user-friendly shorthand multi-
+    substituent specification.
+
+    Each element of `substituent_smiles`, `substituent_counts`, and
+    `attach_idx` defines one substituent specification: the substituent SMILES
+    string, the substituent count, and the atom index/indices defining the
+    substituent attachment point(s), respectively.
 
     Args:
         substituent_smiles (Sequence[str]): Sequence of SMILES strings (one
-            per substituent).
+            per substituent) specifying the substituent structure.
         substituent_counts (Sequence[int]): Sequence of integers (one per
-            substituent) defining the substituent count. 
+            substituent) specifying the substituent count. 
         attach_idx (Sequence[Sequence[int]]): Sequence of integer sequences
-            (one per substituent) defining the atom indices of the attachment
-            point(s) for the corresponding substituent.
+            (one per substituent) defining the atom index/indices of the
+            substituent attachment point(s) for the corresponding substituent.
 
     Raises:
-        ValueError: If `substituent_smiles`, `substituent_count`, and
+        ValueError: If `substituent_smiles`, `substituent_counts`, and
             `attach_idx` are not all of equal length.
-        ValueError: If any element of `substituent_count` is <= 0.
+        ValueError: If any element of `substituent_counts` is <= 0.
 
     Returns:
-        Substituents: `Substituents` instance with a unique bullvalene barcode
-            bit label assigned to each attachment index.
+        Substituents: Substituents instance generated from the supplied
+            shorthand multi-substituent specification(s).
     """
 
     if not all_same_length(
