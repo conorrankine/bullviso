@@ -603,14 +603,14 @@ class Bullvalene():
                 f'instance'
             )
 
-        expected_barcode = self._barcode
-        expected_nonzero_bits = {
-            bit for bit in expected_barcode.barcode_labels if bit != 0
-        }
-        actual_nonzero_bits = {
-            bit for bit in barcode.barcode_labels if bit != 0
-        }
-        if actual_nonzero_bits != expected_nonzero_bits:
+        nonzero_bits = sorted(
+            bit for bit in barcode.barcode if bit != 0
+        )
+        expected_nonzero_bits = sorted(
+            bit for bit in self._barcode.barcode if bit != 0
+        )
+
+        if nonzero_bits != expected_nonzero_bits:
             raise ValueError(
                 f'barcode ({barcode}) is incompatible with this bullvalene '
                 f'instance'
