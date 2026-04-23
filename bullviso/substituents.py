@@ -62,6 +62,14 @@ BULLVALENE_TS_MOL_FILE = 'bv_ts.sdf'
 
 class Substituent():
 
+    __slots__ = (
+        '_smiles',
+        '_mol',
+        '_attach_idx',
+        '_attach_sym_cls',
+        '_is_multidentate'
+    )
+
     def __init__(
         self,
         smiles: str,
@@ -85,13 +93,13 @@ class Substituent():
                 the maximum number of atoms in the substituent.
         """
 
-        self.smiles = smiles
+        self._smiles = smiles
         
-        self.mol = Chem.MolFromSmiles(self.smiles)
-        if self.mol is None:
+        mol = Chem.MolFromSmiles(self._smiles)
+        if mol is None:
             raise ValueError(
                 f'error generating a valid substituent from SMILES string '
-                f'\"{self.smiles}\"'
+                f'\"{self._smiles}\"'
             )
 
         if isinstance(attach_idx, int):
@@ -99,28 +107,87 @@ class Substituent():
         attach_idx = tuple(attach_idx)
         if not attach_idx:
             raise ValueError(
-                f'empty `attach_idx` for \"{self.smiles}\"; no attachment '
+                f'empty `attach_idx` for \"{self._smiles}\"; no attachment '
                 f'indices are defined for this substituent'
             )
         if len(attach_idx) > 9:
             raise ValueError(
-                f'>9 elements in `attach_idx` for \"{self.smiles}\"; too many '
+                f'>9 elements in `attach_idx` for \"{self._smiles}\"; too many '
                 f'attachment indices are defined for this substituent'
             )
-        if min(attach_idx) < 0 or max(attach_idx) >= self.mol.GetNumAtoms():
+        if min(attach_idx) < 0 or max(attach_idx) >= mol.GetNumAtoms():
             raise ValueError(
-                f'invalid attachment index defined for \"{self.smiles}\" in '
+                f'invalid attachment index defined for \"{self._smiles}\" in '
                 f'{attach_idx}; valid attachment indices for this substituent '
-                f'are in the range 0 <= `idx` < {self.mol.GetNumAtoms()}'
+                f'are in the range 0 <= `idx` < {mol.GetNumAtoms()}'
             )
-        self.attach_idx = attach_idx
+        self._mol = mol
+        self._attach_idx = attach_idx
 
-        canonical_ranks = Chem.CanonicalRankAtoms(self.mol, breakTies = False)
-        self.attach_sym_cls = tuple(
-            canonical_ranks[idx] for idx in self.attach_idx
+        canonical_ranks = Chem.CanonicalRankAtoms(self._mol, breakTies = False)
+        self._attach_sym_cls = tuple(
+            canonical_ranks[idx] for idx in self._attach_idx
         )
 
-        self.is_multidentate = len(self.attach_idx) > 1
+        self._is_multidentate = len(self._attach_idx) > 1
+
+    @property
+    def smiles(
+        self
+    ) -> str:
+        """
+        Returns:
+            str: SMILES string representing the substituent.
+        """
+
+        return self._smiles
+
+    @property
+    def mol(
+        self
+    ) -> Chem.Mol:
+        """
+        Returns:
+            Chem.Mol: Copy of the RDKit Chem.Mol instance representing the
+                substituent.
+        """
+
+        return Chem.Mol(self._mol)
+
+    @property
+    def attach_idx(
+        self
+    ) -> tuple[int, ...]:
+        """
+        Returns:
+            tuple[int, ...]: Attachment indices for the substituent.
+        """
+
+        return self._attach_idx
+
+    @property
+    def attach_sym_cls(
+        self
+    ) -> tuple[int, ...]:
+        """
+        Returns:
+            tuple[int, ...]: Symmetry classes of the atoms indexed by the
+                attachment indices for the substituent.
+        """
+
+        return self._attach_sym_cls
+
+    @property
+    def is_multidentate(
+        self
+    ) -> bool:
+        """
+        Returns:
+            bool: `True` if the substituent is multidentate, i.e., if it has
+                multiple attachment points, else `False`.
+        """
+
+        return self._is_multidentate
 
 class Substituents():
 
