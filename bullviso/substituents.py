@@ -155,6 +155,17 @@ class Substituent():
         return Chem.Mol(self._mol)
 
     @property
+    def n_atoms(
+        self
+    ) -> int:
+        """
+        Returns:
+            int: Number of atoms in the substituent.
+        """
+
+        return self._mol.GetNumAtoms()
+
+    @property
     def attach_idx(
         self
     ) -> tuple[int, ...]:
@@ -454,7 +465,8 @@ class Bullvalene():
 
         substituted_bullvalene = Chem.RWMol(Chem.Mol(self._template))
         for substituent in self.substituents:
-            substituted_bullvalene.InsertMol(Chem.Mol(substituent.mol))
+            substituent_mol = substituent.mol
+            substituted_bullvalene.InsertMol(substituent_mol)
 
         for attach_idx_bullvalene, barcode_bit in enumerate(barcode.barcode_labels):
             if barcode_bit == 0:
@@ -536,7 +548,7 @@ class Bullvalene():
                 barcode_bit_to_sub_atom_offset[next(barcode_bits)] = (
                     atom_offset + attach_idx
                 )
-            atom_offset += substituent.mol.GetNumAtoms()
+            atom_offset += substituent.n_atoms
 
         return barcode_bit_to_sub_atom_offset
 
