@@ -425,7 +425,7 @@ class Bullvalene:
         '_transition_state',
         '_barcode',
         '_template',
-        '_barcode_bit_to_sub_atom_offset'
+        '_barcode_bit_to_attach_idx_map'
     )
 
     def __init__(
@@ -463,8 +463,8 @@ class Bullvalene:
             transition_state = transition_state
         )
 
-        barcode_bit_to_sub_atom_offset = (
-            type(self)._get_barcode_bit_to_sub_atom_offset(
+        barcode_bit_to_attach_idx_map = (
+            type(self)._get_barcode_bit_to_attach_idx_map(
                 barcode,
                 substituents_
             )
@@ -474,7 +474,7 @@ class Bullvalene:
         self._transition_state = transition_state
         self._barcode = barcode
         self._template = template
-        self._barcode_bit_to_sub_atom_offset = barcode_bit_to_sub_atom_offset
+        self._barcode_bit_to_attach_idx_map = barcode_bit_to_attach_idx_map
 
     def build(
         self,
@@ -485,8 +485,8 @@ class Bullvalene:
     ) -> Chem.Mol:
         """
         Builds a substituted bullvalene structure corresponding to the supplied
-        bullvalene barcode by connecting the substituents to the bullvalene
-        template.
+        bullvalene barcode by connecting the substituents to the unsubstituted
+        bullvalene template.
 
         Args:
             barcode (BVBarcode | BVTSBarcode): Bullvalene barcode.
@@ -520,7 +520,7 @@ class Bullvalene:
                 continue
             attach_idx_substituent = (
                 self._template.GetNumAtoms()
-                + self._barcode_bit_to_sub_atom_offset[barcode_bit]
+                + self._barcode_bit_to_attach_idx_map[barcode_bit]
             )
             remove_explicit_hydrogens(
                 substituted_bullvalene, attach_idx_bullvalene
@@ -599,20 +599,22 @@ class Bullvalene:
         barcode: BVBarcode | BVTSBarcode
     ) -> None:
         """
-        Validates that a barcode is compatible with this bullvalene instance.
+        Validates that the supplied bullvalene barcode is compatible with this
+        Bullvalene instance, i.e., that the sorted list of nonzero barcode
+        bits is the same for the supplied and the stored bullvalene barcodes.
 
         Args:
-            barcode (BVBarcode | BVTSBarcode): Barcode to validate.
+            barcode (BVBarcode | BVTSBarcode): Bullvalene barcode.
 
         Raises:
-            ValueError: If the barcode is incompatible with this bullvalene
-                instance's substituent set.
+            ValueError: If `barcode` is incompatible with this Bullvalene
+                instance.
         """
 
         if isinstance(barcode, BVTSBarcode) != self._transition_state:
             raise ValueError(
-                f'barcode ({barcode}) is incompatible with this bullvalene '
-                f'instance'
+                f'barcode ({barcode}) is incompatible with this Bullvalene '
+                f'instance ({self._barcode})'
             )
 
         nonzero_bits = sorted(
@@ -624,28 +626,39 @@ class Bullvalene:
 
         if nonzero_bits != expected_nonzero_bits:
             raise ValueError(
-                f'barcode ({barcode}) is incompatible with this bullvalene '
-                f'instance'
+                f'barcode ({barcode}) is incompatible with this Bullvalene '
+                f'instance ({self._barcode})'
             )
 
     @staticmethod
-    def _get_barcode_bit_to_sub_atom_offset(
+    def _get_barcode_bit_to_attach_idx_map(
         barcode: BVBarcode | BVTSBarcode,
         substituents: Substituents
     ) -> dict[int, int]:
         """
-        Precomputes the mapping of barcode bit to substituent atom offset.
+        Determines a mapping between each unique nonzero barcode bit value and
+        the corresponding substituent attachment index offset relative to the
+        first atom of the first substituent.
+
+        Note: the substituent attachment indices in the mapping are offset
+        relative to the first atom of the first substituent, i.e., they are not
+        absolute attachment indices for the substituted bullvalene as they do
+        not take into consideration the atom count for the unsubstitued
+        bullvalene template.
 
         Args:
-            barcode (BVBarcode | BVTSBarcode): Bullvalene barcode.
-            substituents (Substituents): Substituents.
+            barcode (BVBarcode | BVTSBarcode): Bullvalene barcode defining the
+                ordering of nonzero barcode bit labels.
+            substituents (Substituents): Substituents whose attachment indices
+                are mapped to the barcode bit labels.
 
         Returns:
-            dict[int, int]: Mapping of barcode bit value to substituent atom
-                index offset within the combined inserted substituent block.
+            dict[int, int]: Mapping between each unique nonzero barcode bit
+                value and the corresponding substituent attachment index offset
+                relative to the first atom of the first substituent.
         """
 
-        barcode_bit_to_sub_atom_offset: dict[int, int] = {}
+        barcode_bit_to_attach_idx_map: dict[int, int] = {}
 
         barcode_bits = iter(
             bit for bit in barcode.barcode_labels if bit != 0
@@ -654,12 +667,12 @@ class Bullvalene:
         atom_offset = 0
         for substituent in substituents:
             for attach_idx in substituent.attach_idx:
-                barcode_bit_to_sub_atom_offset[next(barcode_bits)] = (
+                barcode_bit_to_attach_idx_map[next(barcode_bits)] = (
                     atom_offset + attach_idx
                 )
             atom_offset += substituent.n_atoms
 
-        return barcode_bit_to_sub_atom_offset
+        return barcode_bit_to_attach_idx_map
 
     @staticmethod
     def _load_template(
