@@ -258,6 +258,32 @@ class Substituents():
             )
         self._substituents.append(substituent)
 
+    def pop(
+        self,
+        idx: int
+    ) -> Substituent:
+        """
+        Pops and returns a substituent from the Substituents container.
+
+        Args:
+            idx (int): Index of the substituent to pop from the Substituents
+                container.
+
+        Raises:
+            IndexError: If `idx` is out of range.
+
+        Returns:
+            Substituent: Popped substituent.
+        """
+
+        try:
+            return self._substituents.pop(idx)
+        except IndexError:
+            raise IndexError(
+                f'substituent index {idx} out of range for Substituents '
+                f'container with {self.n_substituents} substituent(s)'
+            ) from None
+
     def to_barcode(
         self,
         canonicalize: bool = True,
