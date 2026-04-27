@@ -112,7 +112,7 @@ bullviso "C" -n 3
 
 generates the 42 unique constitutional isomers of trimethylbullvalene.
 
-For larger substituents, you might also want to specify an alternative attachment point on the SMILES string of the substituent. BULLVISO attachs the substituent *via* the first atom in the SMILES string by default.
+For larger substituents, you might also want to specify an alternative attachment point on the SMILES string of the substituent. BULLVISO attaches the substituent onto the first atom in the SMILES string by default.
 
 You can use the `-a [SUB_ATTACH_IDX]` flag to specify an alternative attachment point, *e.g.*,
 
@@ -206,7 +206,7 @@ Conformers are:
 
 ##### CONTROLLING CONFORMER GENERATION
 
-The conformation generation workflow runs '*under the hood*', and BULLVISO outputs only the lowest-energy conformational isomer for each unique constitutional isomer by default but, if you're working with large or floppy/flexible substituents, you might want to output many conformational isomers for each unique constitutional isomer (ahead of, *e.g.*, population analysis).
+BULLVISO outputs only the lowest-energy conformational isomer for each unique constitutional isomer by default but, if you're working with large or floppy/flexible substituents, you might want to output many conformational isomers for each unique constitutional isomer (ahead of, *e.g.*, population analysis).
 
 You can use the `-m [M_CONFS]` flag to output the *m* lowest-energy conformational isomers of each unique constitutional isomer instead, *e.g.*,
 
@@ -244,7 +244,7 @@ outputs (up to a maximum of) the ten lowest-energy conformational isomers for ea
 
 BULLVISO uses the <a href=https://doi.org/10.1021/acs.jctc.8b01176 > GFN2-xTB </a> parameterisation scheme by default. It is not currently possible to select an alternative parameterisation scheme.
 
-⚠️ **Note**: conformer optimisation and energy calculation at the XTB level is more time- and resource-intensive than at the MMFF/UFF level but provides considerably better geometries and energies that often approximate the results of higher-level electronic structure calculations [*e.g.* density functional theory (DFT)] well. If you need reliable geometries and energies when working with, *e.g.*, electron-rich, exotic, or interacting (*e.g.*, hydrogen bonding) substituents, XTB is your friend!
+⚠️ **Note**: conformer optimisation and energy calculation at the XTB level is more time- and resource-intensive than at the MMFF/UFF level but provides considerably better geometries and energies that often approximate the results of higher-level electronic structure calculations [*e.g.* density functional theory (DFT)] more accurately. If you need reliable geometries and energies when working with, *e.g.*, electron-rich, exotic, or interacting (*e.g.*, hydrogen bonding) substituents, XTB is your friend!
 
 #### HETEROSUBSTITUTED BULLVALENES
 
@@ -331,19 +331,27 @@ generates the 840 unique constitutional isomers of (dimethyl,lactam)bullvalene.
 
 #### MULTIPLY-BRIDGING/MULTIPLEXING SUBSTITUENTS
 
-As long as the total number of attachment points remains below nine, there are no limits as to how many attachment points can be specified for a single substituent, allowing you to create '*multiply-bridging*', '*multiplexed*', or '*polyfunctional*' groups - as long as your ideas are mechanically sound!
+As long as the total number of attachment points remains no greater than nine, there are no limits as to how many attachment points can be specified for a single substituent, allowing you to create '*multiply-bridging*', '*multiplexed*', or '*polyfunctional*' groups - as long as your ideas are mechanically sound!
 
 #### SYMMETRIC VS. ASYMMETRIC BRIDGING SUBSTITUENTS
 
-BULLVISO considers each attachment point on a single substituent as unique, *i.e.*, for a substituted bullvalene with a single substituent attached at two points, like (lactam)bullvalene, the [0000000012] and [0000000021] constitutional isomers are considered inequivalent.
+When a substituent is defined with multiple attachment points, BULLVISO computes and compares the equivalence of those attachment points on the substituent's molecular graph: attachment points that are chemically inequivalent are treated as distinct, while attachment points that are chemically equivalent are treated as indistinct.
 
-This is fine for (lactam)bullvalene since the [1] and [2] bits in the bullvalene isomer barcode correspond to the inequivalent attachment points at the atomic indices 1 (C) and 3 (N), respectively, on the substituent (acetamide; SMILES = "CC(N)=O"). For symmetric substituents attached at two (or more) points, however, this assumption is *not* necessarily valid, *e.g.*,
+For asymmetric bridging substituents where the defined attachment points are chemically inequivalent, each attachment point is assigned a different-valued bit in the bullvalene isomer barcode. In (lactam)bullvalene, *e.g.*,
+
+```
+bullviso "CC(N)=O" -a [[1,3]]
+```
+
+the atoms at indices 1 (C) and 3 (N) are chemically inequivalent in the substituent, so the bullvalene barcode bits ([1] and [2]) are different-valued in order to represent correctly the two chemically inequivalent attachment points. Consequently, *e.g.*, the C(1)-β / N(3)-α ([0000000012]) and C(1)-α / N(3)-β ([0000000021]) constitutional isomers of (lactam)bullvalene are distinct entities.
+
+For symmetric bridging substituents where the attachment points are chemically equivalent, each attachment point is assigned a same-valued bit in the bullvalene isomer barcode. In (disulfide)bullvalene, *e.g.*,
 
 ```
 bullviso "CSSC" -a [[1,4]]
 ```
 
-generates 30 constitutional isomers for (disulfide)bullvalene, but only 15 of these are unique since the [1] and [2] bits in the bullvalene isomer barcode are interchangable (accounting for the symmetry of the substituent): *e.g.*, the structures of the [0000000012] and [0000000021] constitutional isomers are identical.
+the atoms at indices 1 (C) and 4 (C) are chemically equivalent in the substituent, so both share a same-valued bullvalene barcode bit ([1]) in order to represent correctly the two chemically equivalent attachment points. Consequently, and in contrast to (lactam)bullvalene, the C(1)-β / C(4)-α and C(1)-α / C(4)-β constitutional isomers are *not* distinct entities since the attachment points are chemically indistinguishable in the substituent and the bullvalene barcode collapses to [0000000011]: constitutional isomers that differ only by swapping equivalent attachment points are not duplicated in the output.
 
 ## 🗒️ LICENSE
 
