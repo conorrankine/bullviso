@@ -94,43 +94,44 @@ class Substituent:
                 the maximum number of atoms in the substituent.
         """
 
-        self._smiles = smiles
-        
-        mol = Chem.MolFromSmiles(self._smiles)
+        mol = Chem.MolFromSmiles(smiles)
         if mol is None:
             raise ValueError(
                 f'error generating a valid substituent from SMILES string '
-                f'\"{self._smiles}\"'
+                f'\"{smiles}\"'
             )
 
         if isinstance(attach_idx, int):
-            attach_idx = [attach_idx]
-        attach_idx = tuple(attach_idx)
-        if not attach_idx:
+            attach_idx_ = tuple([attach_idx])
+        else:
+            attach_idx_ = tuple(attach_idx)
+        if not attach_idx_:
             raise ValueError(
-                f'empty `attach_idx` for \"{self._smiles}\"; no attachment '
+                f'empty `attach_idx` for \"{smiles}\"; no attachment '
                 f'indices are defined for this substituent'
             )
-        if len(attach_idx) > 9:
+        if len(attach_idx_) > 9:
             raise ValueError(
-                f'>9 elements in `attach_idx` for \"{self._smiles}\"; too many '
+                f'>9 elements in `attach_idx` for \"{smiles}\"; too many '
                 f'attachment indices are defined for this substituent'
             )
-        if min(attach_idx) < 0 or max(attach_idx) >= mol.GetNumAtoms():
+        if min(attach_idx_) < 0 or max(attach_idx_) >= mol.GetNumAtoms():
             raise ValueError(
-                f'invalid attachment index defined for \"{self._smiles}\" in '
-                f'{attach_idx}; valid attachment indices for this substituent '
+                f'invalid attachment index defined for \"{smiles}\" in '
+                f'{attach_idx_}; valid attachment indices for this substituent '
                 f'are in the range 0 <= `idx` < {mol.GetNumAtoms()}'
             )
-        self._mol = mol
-        self._attach_idx = attach_idx
 
-        canonical_ranks = Chem.CanonicalRankAtoms(self._mol, breakTies = False)
-        self._attach_sym_cls = tuple(
-            canonical_ranks[idx] for idx in self._attach_idx
+        canonical_ranks = Chem.CanonicalRankAtoms(mol, breakTies = False)
+        attach_sym_cls = tuple(
+            canonical_ranks[idx] for idx in attach_idx_
         )
 
-        self._is_multidentate = len(self._attach_idx) > 1
+        self._smiles = smiles
+        self._mol = mol
+        self._attach_idx = attach_idx_
+        self._attach_sym_cls = attach_sym_cls
+        self._is_multidentate = len(attach_idx_) > 1
 
     @property
     def smiles(
@@ -260,14 +261,14 @@ class Substituents:
 
     def pop(
         self,
-        idx: int
+        idx: int = -1
     ) -> Substituent:
         """
         Pops and returns a substituent from the Substituents container.
 
         Args:
             idx (int): Index of the substituent to pop from the Substituents
-                container.
+                container. Defaults to -1.
 
         Raises:
             IndexError: If `idx` is out of range.
@@ -413,10 +414,9 @@ class Substituents:
                 new Substituents container containing the sliced substituents.
         """
 
-        item = self._substituents[idx]
         if isinstance(idx, slice):
-            return Substituents(item)
-        return item
+            return Substituents(self._substituents[idx])
+        return self._substituents[idx]
 
 class Bullvalene:
 
@@ -444,30 +444,37 @@ class Bullvalene:
                 transition-state template is initialised. Defaults to `False`.
 
         Raises:
-            ValueError: If `substituents` is not a `Substituents` instance.
+            TypeError: If `substituents` is not a `Substituents` instance.
         """
 
         if not isinstance(substituents, Substituents):
-            raise ValueError(
+            raise TypeError(
                 f'expected a `Substituents` instance; got an object of type '
                 f'{type(substituents).__name__}'
             )
+        substituents_ = Substituents(substituents)
 
-        self._substituents = Substituents(substituents)
-        self._transition_state = transition_state
-
-        self._barcode = self._substituents.to_barcode(
+        barcode = substituents_.to_barcode(
             canonicalize = True,
-            transition_state = self._transition_state
+            transition_state = transition_state
         )
-        
-        self._template = self._load_template(
-            transition_state = self._transition_state
+
+        template = type(self)._load_template(
+            transition_state = transition_state
         )
-        
-        self._barcode_bit_to_sub_atom_offset = (
-            self._get_barcode_bit_to_sub_atom_offset()
+
+        barcode_bit_to_sub_atom_offset = (
+            type(self)._get_barcode_bit_to_sub_atom_offset(
+                barcode,
+                substituents_
+            )
         )
+
+        self._substituents = substituents_
+        self._transition_state = transition_state
+        self._barcode = barcode
+        self._template = template
+        self._barcode_bit_to_sub_atom_offset = barcode_bit_to_sub_atom_offset
 
     def build(
         self,
@@ -506,7 +513,9 @@ class Bullvalene:
             substituent_mol = substituent.mol
             substituted_bullvalene.InsertMol(substituent_mol)
 
-        for attach_idx_bullvalene, barcode_bit in enumerate(barcode.barcode_labels):
+        for attach_idx_bullvalene, barcode_bit in enumerate(
+            barcode.barcode_labels
+        ):
             if barcode_bit == 0:
                 continue
             attach_idx_substituent = (
@@ -569,7 +578,7 @@ class Bullvalene:
     ) -> BVBarcode | BVTSBarcode:
         """
         Returns:
-            BVBarcode | BVTSBarcode: Bullvalene barcode.
+            BVBarcode | BVTSBarcode: Copy of the bullvalene barcode.
         """
 
         return type(self._barcode)(self._barcode.barcode)
@@ -584,33 +593,6 @@ class Bullvalene:
         """
 
         return Chem.Mol(self._template)
-
-    def _get_barcode_bit_to_sub_atom_offset(
-        self
-    ) -> dict[int, int]:
-        """
-        Precomputes the mapping of barcode bit to substituent atom offset.
-
-        Returns:
-            dict[int, int]: Mapping of barcode bit value to substituent atom
-                index offset within the combined inserted substituent block.
-        """
-
-        barcode_bit_to_sub_atom_offset: dict[int, int] = {}
-
-        barcode_bits = iter(
-            bit for bit in self._barcode.barcode_labels if bit != 0
-        )
-
-        atom_offset = 0
-        for substituent in self._substituents:
-            for attach_idx in substituent.attach_idx:
-                barcode_bit_to_sub_atom_offset[next(barcode_bits)] = (
-                    atom_offset + attach_idx
-                )
-            atom_offset += substituent.n_atoms
-
-        return barcode_bit_to_sub_atom_offset
 
     def _validate_barcode_compatibility(
         self,
@@ -647,6 +629,39 @@ class Bullvalene:
             )
 
     @staticmethod
+    def _get_barcode_bit_to_sub_atom_offset(
+        barcode: BVBarcode | BVTSBarcode,
+        substituents: Substituents
+    ) -> dict[int, int]:
+        """
+        Precomputes the mapping of barcode bit to substituent atom offset.
+
+        Args:
+            barcode (BVBarcode | BVTSBarcode): Bullvalene barcode.
+            substituents (Substituents): Substituents.
+
+        Returns:
+            dict[int, int]: Mapping of barcode bit value to substituent atom
+                index offset within the combined inserted substituent block.
+        """
+
+        barcode_bit_to_sub_atom_offset: dict[int, int] = {}
+
+        barcode_bits = iter(
+            bit for bit in barcode.barcode_labels if bit != 0
+        )
+
+        atom_offset = 0
+        for substituent in substituents:
+            for attach_idx in substituent.attach_idx:
+                barcode_bit_to_sub_atom_offset[next(barcode_bits)] = (
+                    atom_offset + attach_idx
+                )
+            atom_offset += substituent.n_atoms
+
+        return barcode_bit_to_sub_atom_offset
+
+    @staticmethod
     def _load_template(
         transition_state: bool = False
     ) -> Chem.Mol:
@@ -671,7 +686,7 @@ class Bullvalene:
         template_file_name = (
             BULLVALENE_TS_MOL_FILE if transition_state else BULLVALENE_MOL_FILE
         )
-        
+
         with resources.open_text(
             BULLVALENE_STRUCTURE_PACKAGE, template_file_name
         ) as template_file:
@@ -731,7 +746,7 @@ def substituents_from_specifications(
         substituent_smiles (Sequence[str]): Sequence of SMILES strings (one
             per substituent) specifying the substituent structure.
         substituent_counts (Sequence[int]): Sequence of integers (one per
-            substituent) specifying the substituent count. 
+            substituent) specifying the substituent count.
         attach_idx (Sequence[Sequence[int]]): Sequence of integer sequences
             (one per substituent) defining the atom index/indices of the
             substituent attachment point(s) for the corresponding substituent.
@@ -764,7 +779,7 @@ def substituents_from_specifications(
                 f'`substituent_count` should be a positive (>0) integer: got '
                 f'{substituent_count_} for \"{smiles_}\"'
             )
-    
+
     substituents = Substituents()
 
     for smiles_, substituent_count_, attach_idx_ in zip(
