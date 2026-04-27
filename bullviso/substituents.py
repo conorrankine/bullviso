@@ -61,7 +61,7 @@ BULLVALENE_TS_MOL_FILE = 'bv_ts.sdf'
 #                                   CLASSES
 # =============================================================================
 
-class Substituent():
+class Substituent:
 
     __slots__ = (
         '_smiles',
@@ -201,7 +201,7 @@ class Substituent():
 
         return self._is_multidentate
 
-class Substituents():
+class Substituents:
 
     __slots__ = (
         '_substituents',
@@ -418,7 +418,7 @@ class Substituents():
             return Substituents(item)
         return item
 
-class Bullvalene():
+class Bullvalene:
 
     __slots__ = (
         '_substituents',
