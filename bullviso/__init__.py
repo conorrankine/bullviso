@@ -25,11 +25,11 @@ __version__ = '4.1.0'
 #                               LIBRARY IMPORTS
 # =============================================================================
 
-from . import barcodes
 from . import substituents
 from . import conformers
 from . import io
 from .barcodes import BVBarcode, BVTSBarcode
+from .substituents import Substituent, Substituents, Bullvalene
 
 # =============================================================================
 #                                     EOF
