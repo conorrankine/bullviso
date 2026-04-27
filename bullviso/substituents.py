@@ -402,18 +402,21 @@ class Substituents():
 
     def __getitem__(
         self,
-        idx: int
-    ) -> Substituent:
+        idx: int | slice
+    ) -> Substituent | Substituents:
         """
         Args:
-            idx (int): Index.
+            idx (int | slice): Index or slice.
 
         Returns:
-            Substituent: Substituent at the specified index in the Substituents
-                container.
+            Substituent | Substituents: Substituent at the specified index, or
+                new Substituents container containing the sliced substituents.
         """
 
-        return self._substituents[idx]
+        item = self._substituents[idx]
+        if isinstance(idx, slice):
+            return Substituents(item)
+        return item
 
 class Bullvalene():
 
