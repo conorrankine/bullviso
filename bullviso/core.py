@@ -94,7 +94,7 @@ def _bullviso(
 
     for transition_state in transition_states:
 
-        substituents = bv.substituents.substituents_from_specifications(
+        substituents = bv.substituents.Substituents.from_specifications(
             params.sub_smiles,
             params.n_subs,
             params.sub_attach_idx

@@ -37,9 +37,7 @@ from .barcodes import BVBarcode, BVTSBarcode
 __all__ = [
     "Substituent",
     "Substituents",
-    "Bullvalene",
-    "substituent_from_specifications",
-    "substituents_from_specifications"
+    "Bullvalene"
 ]
 
 # =============================================================================
@@ -132,6 +130,33 @@ class Substituent:
         self._attach_idx = attach_idx_
         self._attach_sym_cls = attach_sym_cls
         self._is_multidentate = len(attach_idx_) > 1
+
+    @classmethod
+    def from_specification(
+        cls,
+        substituent_smiles: str,
+        attach_idx: Sequence[int] | int
+    ) -> Substituent:
+        """
+        Generates a Substituent instance from a user-friendly shorthand single-
+        substituent specification.
+
+        Args:
+            substituent_smiles (str): SMILES string specifying the substituent
+                structure.
+            attach_idx (Sequence[int] | int): Integer sequence, or integer,
+                defining the atom index/indices of the substituent attachment
+                point(s).
+
+        Returns:
+            Substituent: Substituent instance generated from the supplied
+                shorthand single-substituent specification.
+        """
+
+        return cls(
+            smiles = substituent_smiles,
+            attach_idx = attach_idx
+        )
 
     @property
     def smiles(
@@ -227,6 +252,75 @@ class Substituents:
         if substituents is not None:
             for substituent in substituents:
                 self.add(substituent)
+
+    @classmethod
+    def from_specifications(
+        cls,
+        substituent_smiles: Sequence[str],
+        substituent_counts: Sequence[int],
+        attach_idx: Sequence[Sequence[int]]
+    ) -> Substituents:
+        """
+        Generates a Substituents instance from user-friendly shorthand multi-
+        substituent specifications.
+
+        Each element of `substituent_smiles`, `substituent_counts`, and
+        `attach_idx` defines one substituent specification: the substituent
+        SMILES string, the substituent count, and the atom index/indices
+        defining the substituent attachment point(s), respectively.
+
+        Args:
+            substituent_smiles (Sequence[str]): Sequence of SMILES strings (one
+                per substituent) specifying the substituent structure.
+            substituent_counts (Sequence[int]): Sequence of integers (one per
+                substituent) specifying the substituent count.
+            attach_idx (Sequence[Sequence[int]]): Sequence of integer sequences
+                (one per substituent) defining the atom index/indices of the
+                substituent attachment point(s) for the corresponding
+                substituent.
+
+        Raises:
+            ValueError: If `substituent_smiles`, `substituent_counts`, and
+                `attach_idx` are not all of equal length.
+            ValueError: If any element of `substituent_counts` is <= 0.
+
+        Returns:
+            Substituents: Substituents instance generated from the supplied
+                shorthand multi-substituent specification(s).
+        """
+
+        if not all_same_length(
+            substituent_smiles, substituent_counts, attach_idx
+        ):
+            raise ValueError(
+                f'`substituent_smiles` ({len(substituent_smiles)} elements), '
+                f'`substituent_counts` ({len(substituent_counts)} elements), '
+                f'and `attach_idx` ({len(attach_idx)} elements) should all be '
+                f'of equal length'
+            )
+
+        for smiles_, substituent_count_ in zip(
+            substituent_smiles, substituent_counts
+        ):
+            if substituent_count_ <= 0:
+                raise ValueError(
+                    f'`substituent_count` should be a positive (>0) integer: '
+                    f'got {substituent_count_} for \"{smiles_}\"'
+                )
+
+        substituents = cls()
+
+        for smiles_, substituent_count_, attach_idx_ in zip(
+            substituent_smiles, substituent_counts, attach_idx
+        ):
+            for _ in range(substituent_count_):
+                substituent = Substituent.from_specification(
+                    substituent_smiles = smiles_,
+                    attach_idx = attach_idx_
+                )
+                substituents.add(substituent)
+
+        return substituents
 
     def add(
         self,
@@ -643,7 +737,7 @@ class Bullvalene:
         Note: the substituent attachment indices in the mapping are offset
         relative to the first atom of the first substituent, i.e., they are not
         absolute attachment indices for the substituted bullvalene as they do
-        not take into consideration the atom count for the unsubstitued
+        not take into consideration the atom count for the unsubstituted
         bullvalene template.
 
         Args:
@@ -712,100 +806,6 @@ class Bullvalene:
             )
 
         return template
-
-# =============================================================================
-#                                  FUNCTIONS
-# =============================================================================
-
-def substituent_from_specifications(
-    substituent_smiles: str,
-    attach_idx: Sequence[int] | int
-) -> Substituent:
-    """
-    Generates a Substituent instance from a user-friendly shorthand single-
-    substituent specification.
-
-    Args:
-        substituent_smiles (str): SMILES string specifying the substituent
-            structure.
-        attach_idx (Sequence[int] | int): Integer sequence, or integer, defining
-            the atom index/indices of the substituent attachment point(s).
-
-    Returns:
-        Substituent: Substituent instance generated from the supplied shorthand
-            single-substituent specification.
-    """
-
-    return Substituent(
-        smiles = substituent_smiles,
-        attach_idx = attach_idx
-    )
-
-def substituents_from_specifications(
-    substituent_smiles: Sequence[str],
-    substituent_counts: Sequence[int],
-    attach_idx: Sequence[Sequence[int]]
-) -> Substituents:
-    """
-    Generates a Substituents instance from a user-friendly shorthand multi-
-    substituent specification.
-
-    Each element of `substituent_smiles`, `substituent_counts`, and
-    `attach_idx` defines one substituent specification: the substituent SMILES
-    string, the substituent count, and the atom index/indices defining the
-    substituent attachment point(s), respectively.
-
-    Args:
-        substituent_smiles (Sequence[str]): Sequence of SMILES strings (one
-            per substituent) specifying the substituent structure.
-        substituent_counts (Sequence[int]): Sequence of integers (one per
-            substituent) specifying the substituent count.
-        attach_idx (Sequence[Sequence[int]]): Sequence of integer sequences
-            (one per substituent) defining the atom index/indices of the
-            substituent attachment point(s) for the corresponding substituent.
-
-    Raises:
-        ValueError: If `substituent_smiles`, `substituent_counts`, and
-            `attach_idx` are not all of equal length.
-        ValueError: If any element of `substituent_counts` is <= 0.
-
-    Returns:
-        Substituents: Substituents instance generated from the supplied
-            shorthand multi-substituent specification(s).
-    """
-
-    if not all_same_length(
-        substituent_smiles, substituent_counts, attach_idx
-    ):
-        raise ValueError(
-            f'`substituent_smiles` ({len(substituent_smiles)} elements), '
-            f'`substituent_counts` ({len(substituent_counts)} elements), and '
-            f'`attach_idx` ({len(attach_idx)} elements) should all be of '
-            f'equal length'
-        )
-
-    for smiles_, substituent_count_ in zip(
-        substituent_smiles, substituent_counts
-    ):
-        if substituent_count_ <= 0:
-            raise ValueError(
-                f'`substituent_count` should be a positive (>0) integer: got '
-                f'{substituent_count_} for \"{smiles_}\"'
-            )
-
-    substituents = Substituents()
-
-    for smiles_, substituent_count_, attach_idx_ in zip(
-        substituent_smiles, substituent_counts, attach_idx
-    ):
-        for _ in range(substituent_count_):
-            substituent = Substituent(
-                smiles = smiles_,
-                attach_idx = attach_idx_
-            )
-            substituents.add(substituent)
-
-    return substituents
 
 # =============================================================================
 #                                     EOF
