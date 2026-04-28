@@ -8,11 +8,11 @@
 # <strong> B U L L V I S O </strong>
 
 <p>
-    <a href="https://linkedin.com/in/conorrankine" > Dr. Conor D. Rankine </a> + <a href="https://york.ac.uk/chemistry/people/pmcgonigal/" > Prof. Paul McGonigal </a> <br> @ <a href="https://york.ac.uk" >The University of York </a>
+    <a href="https://linkedin.com/in/conorrankine" > Dr. Conor D. Rankine </a> + <a href="https://www.chem.ox.ac.uk/people/paul-mcgonigal" > Prof. Paul McGonigal </a> <br> @ <a href="https://www.chem.ox.ac.uk" >The University of Oxford </a>
 </p>
 
 <p>
-    <a href="https://mcgonigalgroup.com/" > The McGonigal Group </a>
+    <a href="https://www.mcgonigalgroup.com/" > The McGonigal Group </a>
     <br>
     with special thanks to
     <br>
