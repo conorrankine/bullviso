@@ -180,9 +180,30 @@ def _format_coordinates(
     for i, atom in enumerate(mol.GetAtoms()):
         coord = mol.GetConformer(conf_id).GetAtomPosition(i)
         coord_lines += coord_line_fmt.format(
-            atom.GetSymbol(), coord.x, coord.y, coord.z
+            _format_atom_symbol(atom), coord.x, coord.y, coord.z
         )
     return coord_lines
+
+def _format_atom_symbol(
+    atom: Chem.Atom
+) -> str:
+    """
+    Returns an isotope-formatted atomic symbol for an RDKit atom.
+
+    Args:
+        atom (Chem.Atom): Atom.
+
+    Returns:
+        str: Atomic symbol, with deuterium and tritium represented as 'D' and
+            'T', respectively.
+    """
+    
+    if atom.GetAtomicNum() == 1:
+        if atom.GetIsotope() == 2:
+            return 'D'
+        if atom.GetIsotope() == 3:
+            return 'T'
+    return atom.GetSymbol()
 
 # =============================================================================
 #                                     EOF

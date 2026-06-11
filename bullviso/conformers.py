@@ -220,7 +220,7 @@ def embed_confs(
     """
 
     mol = copy.deepcopy(mol)
-    if mol.GetNumAtoms() == mol.GetNumHeavyAtoms():
+    if any(atom.GetNumImplicitHs() > 0 for atom in mol.GetAtoms()):
         mol = Chem.AddHs(mol)
 
     if not n_confs:

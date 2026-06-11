@@ -92,7 +92,12 @@ class Substituent:
                 the maximum number of atoms in the substituent.
         """
 
-        mol = Chem.MolFromSmiles(smiles)
+        if smiles not in ("[H]", "[2H]", "[3H]"):
+            mol = Chem.MolFromSmiles(smiles)
+        else:
+            params = Chem.SmilesParserParams()
+            params.removeHs = False
+            mol = Chem.MolFromSmiles(smiles, params)
         if mol is None:
             raise ValueError(
                 f'error generating a valid substituent from SMILES string '
